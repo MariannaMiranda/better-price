@@ -1,0 +1,3091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Better Price! v5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#003366;--brand-h:#002244;--brand-mid:#1a4a8a;--brand-light:#e8eef6;
+  --ok:#10b981;--ok-bg:#ecfdf5;--danger:#ef4444;--warn:#f59e0b;
+  --bg:#f0f4f8;--input-bg:#f2f4f7;--border:#d1d5db;
+  --text:#1f2937;--muted:#6b7280;--white:#ffffff;
+  --shadow:0 2px 12px rgba(0,51,102,.08);--shadow-lg:0 8px 32px rgba(0,51,102,.14);
+  --r:14px;--rsm:10px;
+  --font:'DM Sans',sans-serif;--font-d:'Barlow',sans-serif;--font-m:'JetBrains Mono',monospace;
+}
+
+/* ── DARK MODE — full overhaul for legibility ── */
+body.dark{
+  --bg:#0d1824;
+  --input-bg:#162535;
+  --border:#2a4060;
+  --text:#eef2ff;          /* brighter white-blue for primary text */
+  --muted:#b8cfe8;         /* lighter muted — was #a8c0d8, now more visible */
+  --white:#111f2e;
+  --shadow:0 2px 12px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.5);
+  --brand-light:#1a2f45;   /* darker brand-light so text on it is legible */
+  --ok-bg:#052015;
+  --brand:#4d8fcc;         /* lighter brand so brand-colored text is visible */
+}
+
+/* Dark mode specific overrides for elements that use hardcoded colors */
+body.dark .product-card { background: #111f2e; border-color: #2a4060; }
+body.dark .product-card.best { background:#062018; border-color:#10b981; }
+body.dark .product-card.tied { background:#1c1500; border-color:#f59e0b; }
+
+body.dark .result-line { background:#1a2f45; color:#7ec8f8; }
+body.dark .product-card.best .result-line { background:#062018; color:#34d399; }
+body.dark .product-card.tied .result-line { background:#1c1500; color:#fbbf24; }
+
+body.dark .card-num { background:#1a2f45; color:#7ec8f8; }
+body.dark .card-icon-btn { background:#1a2f45; border-color:#2a4060; color:#b8cfe8; }
+body.dark .card-icon-btn:hover { color:#7ec8f8; border-color:#4d8fcc; background:#1a2f45; }
+
+body.dark .price-input {
+  background:#1a2f45;
+  border-color:#4d8fcc;
+  color:#eef2ff;
+}
+body.dark .price-input::placeholder { color:#5a7a9a; }
+body.dark .card-input,
+body.dark .card-select {
+  background:#162535;
+  border-color:#2a4060;
+  color:#eef2ff;
+}
+body.dark .card-input::placeholder { color:#5a7a9a; }
+body.dark .card-input:focus,
+body.dark .card-select:focus { border-color:#4d8fcc; }
+
+body.dark .scan-btn { background:#1a3d66; }
+body.dark .scan-btn:hover { background:#1e4d80; }
+
+body.dark .card-label { color:#b8cfe8; }
+
+/* Toolbar buttons */
+body.dark .tool-btn {
+  background:#162535;
+  border-color:#2a4060;
+  color:#eef2ff;
+}
+body.dark .tool-btn:hover { border-color:#4d8fcc; color:#7ec8f8; }
+body.dark .tool-btn.primary { background:#1a3d66; color:#eef2ff; border-color:#4d8fcc; }
+body.dark .tool-btn.danger { color:#f87171; border-color:#7f1d1d; }
+body.dark .tool-btn.danger:hover { background:#2a0a0a; }
+
+/* Nav tabs */
+body.dark .nav-tabs { background:#111f2e; border-color:#2a4060; }
+body.dark .nav-tab { color:#b8cfe8; }
+body.dark .nav-tab.active { color:#7ec8f8; border-bottom-color:#4d8fcc; }
+
+/* Auth screen */
+body.dark .auth-right { background:#0d1824; }
+body.dark .auth-input { background:#162535; color:#eef2ff; border-color:#2a4060; }
+body.dark .auth-input::placeholder { color:#5a7a9a; }
+body.dark .auth-input:focus { border-color:#4d8fcc; background:#1a2f45; }
+body.dark .auth-tab { color:#b8cfe8; }
+body.dark .auth-tab.active { color:#7ec8f8; }
+body.dark .auth-tabs { background:#162535; }
+body.dark .tab-pill { background:#1a2f45; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+body.dark .ac-logo-name { color:#7ec8f8; }
+body.dark .lang-sel { background:#162535; border-color:#2a4060; color:#eef2ff; }
+
+/* App header stays dark navy — text already white */
+body.dark .app-header { background:#001a33; }
+
+/* Modal boxes */
+body.dark .modal-box { background:#111f2e; color:#eef2ff; }
+body.dark .modal-title { color:#7ec8f8; }
+body.dark .modal-input {
+  background:#162535;
+  border-color:#2a4060;
+  color:#eef2ff;
+}
+body.dark .modal-input::placeholder { color:#5a7a9a; }
+body.dark .modal-input:focus { border-color:#4d8fcc; }
+body.dark .modal-x { background:#1a2f45; color:#b8cfe8; }
+body.dark .confirm-msg { color:#c8ddf0; }
+body.dark .mbtn-cancel { background:#1a2f45; color:#b8cfe8; }
+body.dark .mbtn-ok { background:#1a3d66; color:#eef2ff; }
+body.dark .mbtn-danger { background:#7f1d1d; color:#fecaca; }
+
+/* Calculator */
+body.dark .calc-display { background:#162535; color:#eef2ff; border-color:#2a4060; }
+body.dark .ck-num { background:#1a2f45; color:#eef2ff; }
+body.dark .ck-num:hover { background:#243a55; }
+body.dark .ck-op { background:#1a3d66; color:#eef2ff; }
+body.dark .ck-op:hover { background:#1e4d80; }
+
+/* Settings */
+body.dark .setting-row { border-color:#2a4060; }
+body.dark .s-label { color:#c8ddf0; }
+body.dark .s-select { background:#162535; border-color:#2a4060; color:#eef2ff; }
+body.dark .curr-note { background:#162535; color:#b8cfe8; }
+
+/* Export */
+body.dark .export-pre { background:#162535; color:#c8ddf0; }
+
+/* History */
+body.dark .history-item { background:#111f2e; border-color:#2a4060; }
+body.dark .h-date { color:#7a9fc0; }
+body.dark .h-winner { color:#34d399; }
+body.dark .h-detail { color:#b8cfe8; }
+body.dark .del-btn { color:#7a9fc0; }
+body.dark .del-btn:hover { color:#f87171; }
+body.dark .tab-title { color:#eef2ff; }
+
+/* Analysis box */
+body.dark #analysisBox {
+  background:#111f2e;
+  border-color:#2a4060;
+  color:#c8ddf0;
+}
+
+/* Grocery */
+body.dark .grocery-sidebar { background:#111f2e; border-color:#2a4060; }
+body.dark .list-nav-item { color:#c8ddf0; }
+body.dark .list-nav-item:hover { background:#1a2f45; }
+body.dark .list-nav-item.active { background:#1a2f45; color:#7ec8f8; border-left-color:#4d8fcc; }
+body.dark .list-nav-count { background:#1a2f45; color:#7a9fc0; }
+body.dark .list-nav-item.active .list-nav-count { background:#162535; color:#7ec8f8; }
+body.dark .sidebar-section-label { color:#7a9fc0; }
+body.dark .sidebar-add-btn { background:#1a3d66; }
+body.dark .sidebar-add-btn:hover { background:#1e4d80; }
+
+body.dark .grocery-add-form { background:#111f2e; border-color:#2a4060; }
+body.dark .gaf-title { color:#7a9fc0; }
+body.dark .g-label { color:#b8cfe8; }
+body.dark .g-input,
+body.dark .g-select {
+  background:#162535;
+  border-color:#2a4060;
+  color:#eef2ff;
+}
+body.dark .g-input::placeholder { color:#5a7a9a; }
+body.dark .g-input:focus,
+body.dark .g-select:focus { border-color:#4d8fcc; }
+
+body.dark .grocery-item { background:#111f2e; border-color:#2a4060; }
+body.dark .gi-name { color:#eef2ff; }
+body.dark .gi-meta { color:#7a9fc0; }
+body.dark .gi-price { color:#7ec8f8; }
+body.dark .gi-store { background:#1a2f45; color:#7a9fc0; }
+body.dark .g-check { border-color:#2a4060; }
+body.dark .g-count { color:#7a9fc0; }
+body.dark .grocery-bottom { border-color:#2a4060; }
+
+body.dark .no-list-state p { color:#7a9fc0; }
+
+/* Presets */
+body.dark .preset-card { background:#111f2e; border-color:#2a4060; }
+body.dark .preset-name-txt { color:#eef2ff; }
+body.dark .preset-meta { color:#7a9fc0; }
+body.dark .btn-load { background:#1a3d66; color:#eef2ff; }
+body.dark .btn-del-p { color:#f87171; border-color:#7f1d1d; }
+body.dark .save-preset-form { background:#111f2e; border-color:#4d8fcc; }
+body.dark .save-preset-form input {
+  background:#162535;
+  border-color:#2a4060;
+  color:#eef2ff;
+}
+body.dark .btn-save-ok { background:#1a3d66; color:#eef2ff; }
+body.dark .btn-save-no { background:#1a2f45; color:#b8cfe8; }
+
+/* Help */
+body.dark .help-h { color:#7ec8f8; border-color:#1a2f45; }
+body.dark .help-step { background:#111f2e; border-color:#2a4060; }
+body.dark .help-step-title { color:#eef2ff; }
+body.dark .help-step-desc { color:#b8cfe8; }
+body.dark .help-tip {
+  background:#1a2f45;
+  border-left-color:#4d8fcc;
+  color:#c8ddf0;
+}
+
+/* Onboarding */
+body.dark .onboard-card { background:#111f2e; }
+body.dark .onboard-title { color:#eef2ff; }
+body.dark .onboard-sub { color:#b8cfe8; }
+body.dark .onboard-dot { background:#2a4060; }
+body.dark .onboard-dot.done { background:#4d8fcc; }
+body.dark .onboard-chip {
+  background:#162535;
+  border-color:#2a4060;
+  color:#b8cfe8;
+}
+body.dark .onboard-chip.selected {
+  border-color:#4d8fcc;
+  background:#1a2f45;
+  color:#7ec8f8;
+}
+body.dark .onboard-skip { color:#7a9fc0; }
+body.dark .stepper-btn { border-color:#4d8fcc; color:#7ec8f8; }
+body.dark .stepper-btn:hover { background:#1a3d66; }
+body.dark .stepper-val { color:#7ec8f8; }
+
+/* Brand dropdown */
+body.dark .brand-dropdown { background:#111f2e; border-color:#4d8fcc; }
+body.dark .brand-opt { color:#c8ddf0; }
+body.dark .brand-opt:hover { background:#1a2f45; color:#7ec8f8; }
+
+/* Error bubbles */
+body.dark .err-bubble { background:#111f2e; border-color:#2a4060; color:#c8ddf0; }
+body.dark .err-bubble::before { border-bottom-color:#2a4060; }
+body.dark .err-bubble::after { border-bottom-color:#111f2e; }
+
+/* Price error */
+body.dark .price-err-msg { background:#2a0a0a; border-color:#7f1d1d; color:#fca5a5; }
+
+/* Toast */
+body.dark #toast { background:#111f2e; color:#eef2ff; border-color:#2a4060; }
+
+/* Empty states */
+body.dark .empty-state { color:#7a9fc0; }
+body.dark .empty-state svg { stroke:#2a4060; }
+body.dark .empty-state p { color:#7a9fc0; }
+
+/* Tab headers */
+body.dark .tab-hdr .tab-title { color:#eef2ff; }
+
+/* Btn save analysis */
+body.dark .btn-save-analysis { background:#1a3d66; }
+body.dark .btn-save-analysis:hover { background:#1e4d80; }
+
+/* Auth button on dark */
+body.dark .auth-btn { background:#1a3d66; }
+body.dark .auth-btn:hover { background:#1e4d80; }
+
+/* Compare button */
+body.dark #compareBtn {
+  background: linear-gradient(135deg, #1a3d66 0%, #1e4d80 100%);
+  box-shadow: 0 4px 20px rgba(77,143,204,.3);
+}
+body.dark #compareBtn:hover { background: linear-gradient(135deg, #1e4d80 0%, #235990 100%); }
+
+/* ──────────────────────────────────── */
+/* ALL ORIGINAL CSS BELOW (unchanged)  */
+/* ──────────────────────────────────── */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s;}
+
+/* ── AUTH ── */
+#auth-screen{display:flex;min-height:100vh;}
+.auth-left{flex:1;display:none;position:relative;overflow:hidden;flex-direction:column;justify-content:center;padding:60px;}
+@media(min-width:900px){.auth-left{display:flex;}}
+.al-bg{position:absolute;inset:0;background:linear-gradient(135deg,#003366 0%,#1a4a8a 50%,#002244 100%);}
+.al-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 60px);}
+.al-content{position:relative;z-index:1;}
+.al-brand{display:flex;align-items:center;gap:14px;margin-bottom:48px;}
+.al-brand-icon{width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.2);}
+.al-brand-icon svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.al-brand-name{font-family:var(--font-d);font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+.al-headline{font-family:var(--font-d);font-size:46px;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:20px;}
+.al-headline span{color:#60a5fa;}
+.al-sub{font-size:17px;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:48px;max-width:380px;}
+.feature-pills{display:flex;flex-direction:column;gap:12px;}
+.fp{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 18px;}
+.fp-icon{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fp-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.fp-title{font-weight:600;font-size:14px;color:#fff;}
+.fp-desc{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px;}
+.al-users{display:flex;align-items:center;gap:12px;margin-top:48px;}
+.avatars{display:flex;}
+.av{width:36px;height:36px;border-radius:50%;border:2px solid var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;margin-left:-10px;}
+.av:first-child{margin-left:0;}
+.al-user-text{font-size:13px;color:rgba(255,255,255,.6);}
+.al-user-text strong{color:#fff;}
+
+.auth-right{width:100%;max-width:520px;display:flex;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg);position:relative;}
+@media(min-width:900px){.auth-right{min-width:460px;width:460px;}}
+.auth-top-bar{position:absolute;top:20px;right:20px;display:flex;align-items:center;gap:10px;}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--input-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);transition:.2s;}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.lang-sel{background:var(--input-bg);border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-size:13px;color:var(--text);font-family:var(--font);cursor:pointer;outline:none;}
+
+.auth-card{width:100%;max-width:400px;}
+.ac-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.ac-logo-icon{width:40px;height:40px;background:var(--brand);border-radius:11px;display:flex;align-items:center;justify-content:center;}
+.ac-logo-icon svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ac-logo-name{font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--brand);letter-spacing:-.3px;}
+
+.auth-tabs{display:flex;background:var(--input-bg);border-radius:12px;padding:4px;margin-bottom:26px;position:relative;}
+.tab-pill{position:absolute;top:4px;bottom:4px;width:calc(50% - 4px);left:4px;background:var(--white);border-radius:9px;box-shadow:0 2px 8px rgba(0,51,102,.1);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.auth-tab{flex:1;padding:11px 8px;background:none;border:none;font-family:var(--font);font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-radius:9px;position:relative;z-index:1;transition:color .2s;}
+.auth-tab.active{color:var(--brand);}
+
+.auth-form{display:flex;flex-direction:column;gap:13px;}
+.input-wrap{position:relative;}
+.auth-input{width:100%;padding:14px 16px;background:var(--input-bg);border:1.5px solid transparent;border-radius:var(--rsm);font-size:15px;font-family:var(--font);color:var(--text);outline:none;transition:.2s;}
+.auth-input:focus{border-color:var(--brand);background:var(--white);}
+.auth-input.input-error{border-color:var(--danger);animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.err-bubble{display:none;position:absolute;top:calc(100% + 7px);left:0;z-index:100;background:var(--white);border:1px solid var(--border);border-radius:9px;padding:10px 14px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.12);width:100%;align-items:center;gap:9px;color:var(--text);}
+.err-bubble::before{content:'';position:absolute;top:-7px;left:17px;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:7px solid var(--border);}
+.err-bubble::after{content:'';position:absolute;top:-6px;left:18px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid var(--white);}
+.err-icon{background:var(--warn);color:#fff;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;font-family:var(--font);}
+.toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;}
+.toggle-pass svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.auth-btn{width:100%;padding:15px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;margin-top:6px;transition:.2s;}
+.auth-btn:hover{background:var(--brand-h);}
+.auth-btn:active{transform:scale(.98);}
+
+/* ── APP ── */
+#app{display:none;min-height:100vh;background:var(--bg);}
+.app-header{background:var(--brand);color:#fff;height:58px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,51,102,.25);}
+.hdr-left{display:flex;align-items:center;gap:10px;}
+.hdr-logo{width:30px;height:30px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.hdr-logo svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hdr-title{font-family:var(--font-d);font-size:18px;font-weight:800;letter-spacing:-.3px;}
+.hdr-user{font-size:12px;color:rgba(255,255,255,.6);margin-left:4px;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.hdr-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:.2s;white-space:nowrap;}
+.hdr-btn:hover{background:rgba(255,255,255,.22);}
+@media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}}
+
+.nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{flex:1;min-width:72px;padding:14px 8px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
+.nav-tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.nav-tab.active{color:var(--brand);border-bottom-color:var(--brand);}
+
+/* toolbar */
+.toolbar{display:flex;gap:8px;padding:14px 20px;flex-wrap:wrap;align-items:center;}
+.tool-btn{padding:9px 16px;border-radius:var(--rsm);border:1.5px solid var(--border);background:var(--white);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px;}
+.tool-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tool-btn:hover{border-color:var(--brand);color:var(--brand);}
+.tool-btn.primary{background:var(--brand);color:#fff;border-color:var(--brand);}
+.tool-btn.primary:hover{background:var(--brand-h);}
+.tool-btn.danger{color:var(--danger);border-color:var(--danger);}
+.tool-btn.danger:hover{background:#fff5f5;}
+
+/* Price missing error */
+.price-err-msg{display:none;color:var(--danger);font-size:12px;font-weight:600;margin-top:5px;margin-bottom:2px;padding:6px 11px;background:#fff0f0;border-radius:7px;border:1px solid #fca5a5;align-items:center;gap:6px;}
+
+/* ── PRODUCT CARDS ── */
+.products-wrap{padding:0 20px 20px;max-width:1300px;margin:0 auto;}
+.products-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));}
+@media(max-width:680px){.products-grid{grid-template-columns:1fr;}.products-wrap{padding:0 14px 20px;}}
+@media(min-width:681px) and (max-width:1000px){.products-grid{grid-template-columns:repeat(2,1fr);}}
+
+.product-card{background:var(--white);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);border:2px solid var(--border);transition:box-shadow .2s,border-color .2s,background .3s;position:relative;}
+.product-card:hover{box-shadow:var(--shadow-lg);}
+.product-card.best{border-color:var(--ok);background:var(--ok-bg);}
+.product-card.tied{border-color:var(--warn);background:#fffbeb;}
+.best-badge,.tied-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);color:#fff;padding:4px 16px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;display:none;white-space:nowrap;font-family:var(--font);}
+.best-badge{background:var(--ok);}
+.tied-badge{background:var(--warn);}
+.product-card.best .best-badge{display:block;}
+.product-card.tied .tied-badge{display:block;}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.card-num{width:30px;height:30px;background:var(--brand-light);color:var(--brand);border-radius:8px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);}
+.card-icon-btn{width:30px;height:30px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:.2s;}
+.card-icon-btn:hover{color:var(--brand);border-color:var(--brand);background:var(--brand-light);}
+.card-icon-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.scan-btn{width:100%;padding:11px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:7px;transition:.2s;}
+.scan-btn:hover{background:var(--brand-h);}
+.scan-btn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.card-label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;margin-top:12px;}
+.price-input{width:100%;padding:12px 14px;border:2px solid var(--brand);border-radius:var(--rsm);background:var(--brand-light);color:var(--text);font-size:22px;font-weight:600;font-family:var(--font-m);outline:none;transition:.2s;}
+.price-input:focus{box-shadow:0 0 0 3px rgba(0,51,102,.12);}
+.field-row{display:flex;gap:8px;}
+.card-input,.card-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);border-radius:var(--rsm);font-size:14px;font-family:var(--font);outline:none;transition:.2s;}
+.card-input:focus,.card-select:focus{border-color:var(--brand);}
+.result-line{margin-top:14px;padding:12px 16px;background:var(--brand-light);border-radius:var(--rsm);font-family:var(--font-m);font-size:16px;font-weight:500;color:var(--brand);text-align:right;min-height:44px;transition:.3s;}
+.product-card.best .result-line{background:var(--ok-bg);color:var(--ok);}
+.product-card.tied .result-line{background:#fffbeb;color:#92400e;}
+
+.compare-wrap{display:flex;justify-content:center;padding:24px 20px 10px;}
+#compareBtn{padding:18px 80px;background:var(--brand);color:#fff;border:none;border-radius:16px;font-family:var(--font-d);font-size:20px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:.2s;box-shadow:0 4px 20px rgba(0,51,102,.25);}
+#compareBtn:hover{background:var(--brand-h);transform:translateY(-1px);}
+@media(max-width:480px){#compareBtn{padding:15px 30px;font-size:16px;width:calc(100% - 28px);}}
+.analysis-wrap{max-width:1000px;margin:16px auto 50px;padding:0 20px;}
+.analysis-row{display:flex;gap:10px;align-items:flex-start;}
+.analysis-row #analysisBox{flex:1;}
+#analysisBox{width:100%;height:130px;border-radius:var(--r);border:1.5px solid var(--border);padding:16px;font-size:14px;font-family:var(--font);color:var(--text);resize:none;background:var(--white);line-height:1.7;}
+.btn-save-analysis{white-space:nowrap;padding:12px 16px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;align-self:flex-start;flex-shrink:0;}
+.btn-save-analysis:hover{background:var(--brand-h);}
+.btn-save-analysis svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+@media(max-width:600px){.analysis-row{flex-direction:column;}.btn-save-analysis{width:100%;justify-content:center;}}
+
+/* Brand dropdown */
+.brand-dropdown{position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--white);border:1.5px solid var(--brand);border-radius:var(--rsm);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;display:none;}
+.brand-dropdown.open{display:block;}
+.brand-opt{padding:10px 14px;font-size:14px;cursor:pointer;color:var(--text);transition:.15s;}
+.brand-opt:hover{background:var(--brand-light);color:var(--brand);}
+
+/* ── ONBOARDING STEPPER ── */
+#onboarding-screen{display:none;min-height:100vh;background:var(--bg);align-items:center;justify-content:center;padding:24px;}
+.onboard-card{background:var(--white);border-radius:20px;padding:36px 32px;max-width:520px;width:100%;box-shadow:var(--shadow-lg);}
+.onboard-step{display:none;}
+.onboard-step.active{display:block;}
+.onboard-progress{display:flex;gap:8px;margin-bottom:28px;}
+.onboard-dot{flex:1;height:4px;border-radius:4px;background:var(--border);transition:.3s;}
+.onboard-dot.done{background:var(--brand);}
+.onboard-title{font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.onboard-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.onboard-options{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;}
+.onboard-chip{padding:10px 18px;border-radius:40px;border:2px solid var(--border);background:var(--input-bg);color:var(--text);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;transition:.2s;}
+.onboard-chip.selected{border-color:var(--brand);background:var(--brand-light);color:var(--brand);}
+.onboard-stepper{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+.stepper-btn{width:40px;height:40px;border-radius:50%;border:2px solid var(--brand);background:none;color:var(--brand);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.stepper-btn:hover{background:var(--brand);color:#fff;}
+.stepper-val{font-family:var(--font-d);font-size:32px;font-weight:800;color:var(--brand);min-width:40px;text-align:center;}
+.onboard-next{width:100%;padding:15px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.2s;}
+.onboard-next:hover{background:var(--brand-h);}
+.onboard-skip{display:block;text-align:center;margin-top:12px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:underline;}
+
+/* Mobile sizing improvements */
+@media(max-width:480px){
+  .product-card{padding:16px;}
+  .price-input{font-size:18px;padding:10px 12px;}
+  .card-input,.card-select{padding:9px 10px;font-size:13px;}
+  .scan-btn{padding:10px;font-size:13px;}
+  .compare-wrap{padding:16px 14px 8px;}
+  .toolbar{padding:10px 14px;gap:6px;}
+  .tool-btn{padding:8px 12px;font-size:12px;}
+  .nav-tab{font-size:12px;padding:12px 6px;}
+  .onboard-card{padding:24px 18px;}
+  .auth-right{padding:20px 16px;}
+  .auth-card{padding:0;}
+}
+
+/* ── HISTORY ── */
+#tab-history{display:none;padding:20px;max-width:900px;margin:0 auto;}
+.tab-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.tab-title{font-family:var(--font-d);font-size:18px;font-weight:700;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state svg{width:44px;height:44px;stroke:var(--border);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:12px;}
+.empty-state p{font-size:15px;line-height:1.6;}
+.history-item{background:var(--white);border-radius:var(--r);border:1.5px solid var(--border);padding:16px 18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;box-shadow:var(--shadow);}
+.h-date{font-size:11px;color:var(--muted);margin-bottom:5px;}
+.h-winner{font-size:15px;font-weight:600;color:var(--ok);margin-bottom:3px;}
+.h-detail{font-size:12px;color:var(--muted);font-family:var(--font-m);}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;transition:.2s;}
+.del-btn:hover{color:var(--danger);}
+.del-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── GROCERY ── */
+#tab-grocery{display:none;padding:0;}
+
+/* sidebar + content layout */
+.grocery-layout{display:flex;min-height:calc(100vh - 120px);}
+.grocery-sidebar{
+  width:220px;flex-shrink:0;
+  background:var(--white);border-right:1px solid var(--border);
+  padding:16px 0;
+  display:flex;flex-direction:column;
+}
+@media(max-width:680px){
+  .grocery-layout{flex-direction:column;}
+  .grocery-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:12px;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;}
+  .sidebar-section-label{display:none;}
+  .grocery-content{padding:16px 14px;}
+}
+.sidebar-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:0 16px;margin-bottom:8px;}
+.list-nav-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;cursor:pointer;
+  font-size:14px;font-weight:500;color:var(--text);
+  border-left:3px solid transparent;
+  transition:.15s;gap:8px;
+}
+.list-nav-item:hover{background:var(--input-bg);}
+.list-nav-item.active{background:var(--brand-light);color:var(--brand);border-left-color:var(--brand);}
+.list-nav-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-nav-count{font-size:11px;background:var(--input-bg);color:var(--muted);padding:2px 7px;border-radius:20px;flex-shrink:0;}
+.list-nav-item.active .list-nav-count{background:var(--brand-light);color:var(--brand);}
+.list-nav-actions{display:none;gap:4px;}
+.list-nav-item:hover .list-nav-actions{display:flex;}
+.list-nav-action{background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;transition:.2s;display:flex;align-items:center;}
+.list-nav-action:hover{color:var(--brand);}
+.list-nav-action.red:hover{color:var(--danger);}
+.list-nav-action svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+.sidebar-add-btn{
+  margin:12px 12px 0;padding:10px;
+  background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);
+  font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s;
+}
+.sidebar-add-btn:hover{background:var(--brand-h);}
+.sidebar-add-btn svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+
+@media(max-width:680px){
+  .list-nav-item{border-left:none;border-radius:20px;padding:7px 14px;border:1.5px solid var(--border);}
+  .list-nav-item.active{border-color:var(--brand);}
+  .list-nav-actions{display:flex;}
+  .sidebar-add-btn{margin:0;width:auto;padding:7px 14px;border-radius:20px;}
+}
+
+.grocery-content{flex:1;padding:20px;max-width:700px;}
+
+/* add item form */
+.grocery-add-form{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:20px;box-shadow:var(--shadow);}
+.gaf-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
+.gaf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+@media(max-width:480px){.gaf-grid{grid-template-columns:1fr;}}
+.gaf-full{grid-column:1/-1;}
+.g-label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.g-input,.g-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);border-radius:var(--rsm);font-size:14px;font-family:var(--font);outline:none;transition:.2s;}
+.g-input:focus,.g-select:focus{border-color:var(--brand);}
+.gadd-btn{width:100%;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
+.gadd-btn:hover{background:var(--brand-h);}
+
+/* grocery item */
+.grocery-item{display:flex;align-items:center;gap:12px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow);transition:.2s;position:relative;}
+.grocery-item.done{opacity:.5;}
+.grocery-item.done .gi-name{text-decoration:line-through;}
+.g-check{width:24px;height:24px;flex-shrink:0;border:2px solid var(--border);border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.g-check.on{background:var(--ok);border-color:var(--ok);}
+.g-check svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;display:none;}
+.g-check.on svg{display:block;}
+.gi-info{flex:1;min-width:0;}
+.gi-name{font-size:15px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gi-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.gi-price{font-family:var(--font-m);font-size:13px;font-weight:500;color:var(--brand);white-space:nowrap;}
+.gi-store{font-size:11px;color:var(--muted);background:var(--input-bg);padding:3px 8px;border-radius:20px;white-space:nowrap;}
+.gi-actions{display:flex;gap:4px;opacity:0;transition:.2s;}
+.grocery-item:hover .gi-actions{opacity:1;}
+@media(max-width:680px){.gi-actions{opacity:1;}}
+
+.grocery-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1.5px solid var(--border);}
+.g-count{font-size:14px;color:var(--muted);}
+
+/* no list selected */
+.no-list-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--muted);text-align:center;}
+.no-list-state svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:16px;}
+
+/* ── PRESETS ── */
+#tab-presets{display:none;padding:20px;max-width:700px;margin:0 auto;}
+.preset-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.preset-name-txt{font-size:16px;font-weight:600;color:var(--text);}
+.preset-meta{font-size:13px;color:var(--muted);margin-top:3px;}
+.preset-btns{display:flex;gap:8px;flex-shrink:0;}
+.btn-load{padding:8px 16px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;}
+.btn-del-p{padding:8px 12px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer;}
+.save-preset-form{background:var(--white);border:2px solid var(--brand);border-radius:var(--r);padding:18px;margin-bottom:20px;display:none;}
+.save-preset-form.open{display:block;}
+.save-preset-form input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:15px;font-family:var(--font);color:var(--text);outline:none;margin-bottom:10px;background:var(--input-bg);}
+.save-row{display:flex;gap:8px;}
+.save-row button{flex:1;padding:10px;border-radius:8px;font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;border:none;}
+.btn-save-ok{background:var(--brand);color:#fff;}
+.btn-save-no{background:var(--input-bg);color:var(--text);}
+
+/* ── HELP ── */
+#tab-help{display:none;padding:20px;max-width:780px;margin:0 auto;}
+.help-section{margin-bottom:32px;}
+.help-h{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--brand);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--brand-light);}
+.help-step{display:flex;gap:14px;margin-bottom:14px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);}
+.help-num{width:32px;height:32px;background:var(--brand);color:#fff;border-radius:9px;font-family:var(--font-d);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.help-step-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.help-step-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+.help-tip{background:var(--brand-light);border-left:3px solid var(--brand);border-radius:0 var(--rsm) var(--rsm) 0;padding:12px 16px;font-size:13px;color:var(--brand);line-height:1.6;margin-bottom:10px;}
+.help-badge{display:inline-flex;align-items:center;gap:5px;background:var(--brand);color:#fff;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;margin-right:6px;}
+/* ── SCANNER ── */
+#scanner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 2000;
+  display: none;
+  overflow: hidden;
+}
+
+.scan-viewport {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(95%, 800px); 
+  height: min(75vh, 500px); 
+  border: 4px solid rgba(255, 255, 255, 0.9); 
+  border-radius: 32px; 
+  z-index: 2002;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.scan-line {
+  position: absolute;
+  width: 96%;
+  height: 4px;
+  left: 2%;
+  background: #ef4444;
+  box-shadow: 0 0 15px 2px #ef4444; 
+  animation: scanMove 2.5s infinite ease-in-out;
+}
+
+@keyframes scanMove {
+  0% { top: 5%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 95%; opacity: 0; }
+}
+
+#reader {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.scan-cancel {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 22px 80px; 
+  background: #fff;
+  border-radius: 50px;
+  border: none;
+  z-index: 2005;
+  cursor: pointer;
+  color: #000;
+  font-weight: 800;
+  font-family: var(--font);
+  font-size: 20px; 
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;z-index:1000;backdrop-filter:blur(2px);}
+.modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);width:min(440px,94vw);padding:28px;border-radius:22px;z-index:1001;display:none;box-shadow:0 20px 60px rgba(0,0,0,.22);color:var(--text);max-height:90vh;overflow-y:auto;}
+.modal-x{position:absolute;top:16px;right:16px;background:var(--input-bg);color:var(--muted);border:none;width:34px;height:34px;border-radius:9px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.modal-title{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--brand);margin-bottom:20px;}
+.modal-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:15px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;margin-bottom:14px;}
+.modal-input:focus{border-color:var(--brand);}
+.modal-btn-row{display:flex;gap:8px;}
+.modal-btn-row button{flex:1;padding:12px;border-radius:var(--rsm);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;border:none;}
+.mbtn-ok{background:var(--brand);color:#fff;}
+.mbtn-cancel{background:var(--input-bg);color:var(--text);}
+.mbtn-danger{background:var(--danger);color:#fff;}
+.confirm-msg{font-size:15px;color:var(--text);margin-bottom:20px;line-height:1.5;}
+
+/* Calculator */
+.calc-display{width:100%;height:56px;background:var(--input-bg);color:var(--text);border-radius:10px;border:1.5px solid var(--border);margin-bottom:16px;text-align:right;padding:0 16px;font-size:28px;font-family:var(--font-m);outline:none;}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.calc-key{height:56px;border:none;border-radius:10px;font-size:18px;font-family:var(--font-m);cursor:pointer;transition:.15s;}
+.ck-num{background:var(--input-bg);color:var(--text);}
+.ck-num:hover{background:var(--border);}
+.ck-op{background:var(--brand);color:#fff;}
+.ck-op:hover{background:var(--brand-h);}
+.ck-span2{grid-column:span 2;}
+
+/* Settings */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.s-label{font-size:14px;color:var(--text);}
+.switch{position:relative;display:inline-block;width:44px;height:24px;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:.3s;border-radius:24px;}
+.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%;}
+input:checked+.slider{background:var(--brand);}
+input:checked+.slider:before{transform:translateX(20px);}
+.s-select{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-family:var(--font);font-size:14px;outline:none;}
+.curr-note{font-size:12px;color:var(--muted);margin-top:6px;padding:8px 12px;background:var(--input-bg);border-radius:8px;}
+
+/* Export */
+.export-pre{background:var(--input-bg);border-radius:10px;padding:14px;margin-bottom:14px;font-family:var(--font-m);font-size:12px;color:var(--text);white-space:pre-wrap;max-height:180px;overflow-y:auto;line-height:1.6;}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--white);color:var(--text);padding:11px 20px;border-radius:40px;box-shadow:0 8px 28px rgba(0,0,0,.15);display:flex;align-items:center;gap:9px;z-index:3000;opacity:0;transition:all .4s cubic-bezier(.175,.885,.32,1.275);border:1px solid var(--border);font-size:14px;font-family:var(--font);pointer-events:none;max-width:90vw;}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto;}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex-shrink:0;}
+#toast.ok .toast-dot{background:var(--ok);}
+
+/* ── PENNY AI ADVISOR ── */
+.ai-wrap{max-width:700px;margin:0 auto 10px;padding:0 20px;}
+.ai-trigger-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 24px;background:linear-gradient(135deg,#1a3d66 0%,#003366 100%);color:#fff;border:none;border-radius:14px;font-family:var(--font-d);font-size:17px;font-weight:700;cursor:pointer;letter-spacing:.3px;box-shadow:0 4px 20px rgba(0,51,102,.3);transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
+.ai-trigger-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 60%);pointer-events:none;}
+.ai-trigger-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,51,102,.4);}
+.ai-trigger-btn:active{transform:translateY(0);}
+.ai-trigger-btn:disabled{opacity:.7;cursor:not-allowed;transform:none;}
+.ai-penny-icon{font-size:20px;}
+body.dark .ai-trigger-btn{background:linear-gradient(135deg,#1a4d80 0%,#0d2a4a 100%);}
+.ai-panel{background:var(--white);border:2px solid var(--brand);border-radius:16px;margin-top:12px;box-shadow:0 8px 32px rgba(0,51,102,.18);overflow:hidden;animation:slideDown .3s cubic-bezier(.4,0,.2,1);}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.ai-panel-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--brand);}
+body.dark .ai-panel-header{background:#1a3d66;}
+.ai-panel-title{font-family:var(--font-d);font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;}
+.ai-penny-badge{background:rgba(255,255,255,.18);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600;letter-spacing:.3px;}
+.ai-panel-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:7px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0;}
+.ai-panel-close:hover{background:rgba(255,255,255,.35);}
+.ai-chat-area{padding:16px 16px 8px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+.ai-msg{display:flex;gap:10px;align-items:flex-start;}
+.ai-msg.user{flex-direction:row-reverse;}
+.ai-avatar{width:32px;height:32px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:700;}
+body.dark .ai-avatar{background:#1a3d66;}
+.ai-msg.user .ai-avatar{background:var(--ok);}
+.ai-bubble{max-width:85%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.75;font-family:var(--font);}
+.ai-msg.penny .ai-bubble{background:var(--brand-light);color:var(--text);border-radius:4px 14px 14px 14px;}
+body.dark .ai-msg.penny .ai-bubble{background:#1a2f45;color:#c8ddf0;}
+.ai-msg.user .ai-bubble{background:var(--brand);color:#fff;border-radius:14px 4px 14px 14px;}
+body.dark .ai-msg.user .ai-bubble{background:#1a3d66;}
+.ai-loading-bubble{display:flex;gap:5px;align-items:center;padding:4px 0;}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:ai-bounce .9s ease-in-out infinite;opacity:.6;}
+body.dark .ai-dot{background:#4d8fcc;}
+.ai-dot:nth-child(2){animation-delay:.2s;}
+.ai-dot:nth-child(3){animation-delay:.4s;}
+@keyframes ai-bounce{0%,80%,100%{transform:translateY(0);opacity:.4;}40%{transform:translateY(-6px);opacity:1;}}
+.ai-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);}
+.ai-chat-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:22px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;transition:.2s;}
+.ai-chat-input:focus{border-color:var(--brand);}
+body.dark .ai-chat-input{background:#162535;color:#eef2ff;border-color:#2a4060;}
+body.dark .ai-chat-input:focus{border-color:#4d8fcc;}
+.ai-chat-send{width:38px;height:38px;border-radius:50%;background:var(--brand);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;align-self:flex-end;}
+.ai-chat-send:hover{background:var(--brand-h);}
+.ai-chat-send:disabled{opacity:.4;cursor:not-allowed;}
+.ai-chat-send svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+body.dark .ai-panel{background:#111f2e;border-color:#4d8fcc;}
+body.dark #ob-zip{background:var(--input-bg);color:var(--text);}
+
+/* Onboarding back button */
+.onboard-back{background:none;border:none;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;padding:0 0 14px;display:flex;align-items:center;gap:5px;transition:.2s;}
+.onboard-back:hover{color:var(--brand);}
+
+/* ── PROFILE TAB ── */
+.profile-section{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px;box-shadow:var(--shadow);}
+.profile-section-title{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;}
+.profile-section-title svg{stroke:var(--brand);flex-shrink:0;}
+body.dark .profile-section{background:#111f2e;border-color:#2a4060;}
+body.dark .profile-section-title{color:#eef2ff;}
+body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
+</style>
+</head>
+<body>
+
+<div id="toast"><div class="toast-dot"></div><span id="toast-txt"></span></div>
+
+<!-- ══ AUTH ══ -->
+<div id="auth-screen">
+  <div class="auth-left">
+    <div class="al-bg"></div><div class="al-grid"></div>
+    <div class="al-content">
+      <div class="al-brand">
+        <div class="al-brand-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+        <div class="al-brand-name">Better Price!</div>
+      </div>
+      <div class="al-headline">Shop smarter.<br>Save <span>every time.</span></div>
+      <div class="al-sub">Scan barcodes, compare unit prices instantly, build grocery lists, and never overpay again.</div>
+      <div class="feature-pills">
+        <div class="fp"><div class="fp-icon"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg></div><div><div class="fp-title">Instant Barcode Scanning</div><div class="fp-desc">Point camera — name and size auto-fill</div></div></div>
+        <div class="fp"><div class="fp-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="fp-title">Unit Price Comparison</div><div class="fp-desc">oz, lb, ml, g, gal — all units supported</div></div></div>
+        <div class="fp"><div class="fp-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div><div><div class="fp-title">Custom Grocery Lists</div><div class="fp-desc">Create, name, and manage your own lists</div></div></div>
+        <div class="fp"><div class="fp-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="fp-title">Comparison History</div><div class="fp-desc">Every comparison saved to your account</div></div></div>
+      </div>
+      <div class="al-users">
+        <div class="avatars">
+          <div class="av" style="background:#1a6b4a">M</div><div class="av" style="background:#b45309">A</div>
+          <div class="av" style="background:#1d4ed8">R</div><div class="av" style="background:#7c3aed">S</div>
+        </div>
+        <div class="al-user-text">Join <strong>smart shoppers</strong> saving every week</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-top-bar">
+      <button class="icon-btn" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+      <select class="lang-sel" id="authLang" onchange="changeLang('auth')">
+        <option value="en">English</option><option value="es">Español</option><option value="pt">Português</option>
+      </select>
+    </div>
+    <div class="auth-card">
+      <div class="ac-logo">
+        <div class="ac-logo-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+        <div class="ac-logo-name" id="txt-auth-title">Better Price!</div>
+      </div>
+      <div class="auth-tabs">
+        <div class="tab-pill" id="tabPill"></div>
+        <button class="auth-tab" id="tab-login" onclick="setMode('login')">Login</button>
+        <button class="auth-tab active" id="tab-signup" onclick="setMode('signup')">Sign Up</button>
+      </div>
+      <div class="auth-form">
+        <div id="nameWrap" style="display:flex;gap:10px;">
+          <div class="input-wrap" style="flex:1">
+            <input class="auth-input" type="text" id="authFirstName" placeholder="First Name">
+            <div class="err-bubble" id="err-firstname"><span class="err-icon">!</span><span class="msg"></span></div>
+          </div>
+          <div class="input-wrap" style="flex:1">
+            <input class="auth-input" type="text" id="authLastName" placeholder="Last Name">
+            <div class="err-bubble" id="err-lastname"><span class="err-icon">!</span><span class="msg"></span></div>
+          </div>
+        </div>
+        <div class="input-wrap">
+          <input class="auth-input" type="email" id="authEmail" placeholder="Email">
+          <div class="err-bubble" id="err-email"><span class="err-icon">!</span><span class="msg"></span></div>
+        </div>
+        <div class="input-wrap">
+          <input class="auth-input" type="password" id="authPass" placeholder="Password" style="padding-right:48px">
+          <button class="toggle-pass" type="button" onclick="togglePass()">
+            <svg viewBox="0 0 24 24" id="eyeIcon"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+          <div class="err-bubble" id="err-pass"><span class="err-icon">!</span><span class="msg"></span></div>
+        </div>
+        <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ONBOARDING ══ -->
+<div id="onboarding-screen">
+  <div class="onboard-card">
+    <div class="onboard-progress">
+      <div class="onboard-dot" id="od-1"></div>
+      <div class="onboard-dot" id="od-2"></div>
+      <div class="onboard-dot" id="od-3"></div>
+    </div>
+    <!-- Step 1: Household size -->
+    <div class="onboard-step active" id="ob-step-1">
+      <div class="onboard-title">Welcome!</div>
+      <div class="onboard-sub">How many people are in your household? This helps us estimate how long products will last when comparing prices.</div>
+      <div class="onboard-stepper">
+        <button class="stepper-btn" onclick="adjustHousehold(-1)">−</button>
+        <div class="stepper-val" id="household-val">2</div>
+        <button class="stepper-btn" onclick="adjustHousehold(1)">+</button>
+        <span style="font-size:14px;color:var(--muted)">people</span>
+      </div>
+      <button class="onboard-next" onclick="obGoStep(2)">Continue &#8594;</button>
+      <span class="onboard-skip" onclick="obSkipStep(1)">Skip for now</span>
+    </div>
+    <!-- Step 2: Preferred stores -->
+    <div class="onboard-step" id="ob-step-2">
+      <button class="onboard-back" onclick="obGoStep(1)">&#8592; Back</button>
+      <div class="onboard-title">Where do you shop?</div>
+      <div class="onboard-sub">Select your usual stores. We'll use this to tailor your comparisons and future recommendations.</div>
+      <div class="onboard-options" id="store-chips">
+        <div class="onboard-chip" onclick="toggleStore(this,'Walmart')">Walmart</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Target')">Target</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Costco')">Costco</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Sams Club')">Sam's Club</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Publix')">Publix</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Kroger')">Kroger</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Aldi')">Aldi</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Lidl')">Lidl</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Whole Foods')">Whole Foods</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Amazon Fresh')">Amazon Fresh</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'BJ\'s')">BJ's</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Dollar General')">Dollar General</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'CVS')">CVS</div>
+        <div class="onboard-chip" onclick="toggleStore(this,'Walgreens')">Walgreens</div>
+      </div>
+      <button class="onboard-next" onclick="obGoStep(3)">Continue &#8594;</button>
+      <span class="onboard-skip" onclick="obSkipStep(2)">Skip for now</span>
+    </div>
+    <!-- Step 3: Zip code -->
+    <div class="onboard-step" id="ob-step-3">
+      <button class="onboard-back" onclick="obGoStep(2)">&#8592; Back</button>
+      <div class="onboard-title">Your location</div>
+      <div class="onboard-sub">Enter your zip code so Penny can find the best deals near you and give location-smart advice.</div>
+      <div style="margin-bottom:24px;">
+        <div style="position:relative;">
+          <div id="ob-zip-err" style="display:none;position:absolute;bottom:calc(100% + 7px);left:0;z-index:100;background:var(--white);border:1px solid var(--border);border-radius:9px;padding:10px 14px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.12);width:100%;align-items:center;gap:9px;color:var(--text);">
+            <span style="background:var(--warn);color:#fff;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;font-family:var(--font);">!</span>
+            <span>Zip code must be exactly 5 digits.</span>
+            <span style="content:'';position:absolute;bottom:-7px;left:17px;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid var(--border);display:block;width:0;height:0;"></span>
+            <span style="content:'';position:absolute;bottom:-6px;left:18px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--white);display:block;width:0;height:0;"></span>
+          </div>
+          <input type="text" id="ob-zip" maxlength="5" inputmode="numeric"
+            style="width:100%;padding:18px 20px;border:2px solid var(--brand);border-radius:var(--rsm);font-size:28px;font-weight:700;font-family:var(--font-m);text-align:center;background:var(--brand-light);color:var(--text);outline:none;letter-spacing:6px;"
+            placeholder="- - - - -" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5);document.getElementById('ob-zip-err').style.display='none';this.style.borderColor='';">
+        </div>
+        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;">US zip codes only &mdash; used for nearby deal estimates by Penny</div>
+      </div>
+      <button class="onboard-next" onclick="tryFinishOnboarding()">Get Started &#8594;</button>
+      <span class="onboard-skip" onclick="obSkipped[3]=true;finishOnboarding()">Skip for now</span>
+    </div>
+  </div>
+</div>
+<div id="app">
+  <header class="app-header">
+    <div class="hdr-left">
+      <div class="hdr-logo"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+      <span class="hdr-title" id="txt-app-title">Better Price!</span>
+      <span class="hdr-user" id="hdr-user-label"></span>
+    </div>
+    <div class="hdr-right">
+      <button class="hdr-btn" onclick="logout()"><span class="lbl" id="txt-logout">Log out</span></button>
+    </div>
+  </header>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="goTab('compare')" id="nt-compare"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Compare</span></button>
+    <button class="nav-tab" onclick="goTab('history')" id="nt-history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></button>
+    <button class="nav-tab" onclick="goTab('grocery')" id="nt-grocery"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg><span>Grocery</span></button>
+    <button class="nav-tab" onclick="goTab('presets')" id="nt-presets"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Presets</span></button>
+    <button class="nav-tab" onclick="goTab('help')" id="nt-help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Help</span></button>
+    <button class="nav-tab" onclick="goTab('profile')" id="nt-profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+  </nav>
+
+  <!-- COMPARE TAB -->
+  <div id="tab-compare">
+    <div class="toolbar">
+      <button class="tool-btn" onclick="openModal('settingsModal')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span id="txt-settings">Settings</span></button>
+      <button class="tool-btn" onclick="openModal('calcModal')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="14"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg><span id="txt-calc">Calculator</span></button>
+      <button class="tool-btn" onclick="openModal('exportModal')"><svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span id="txt-export">Export</span></button>
+      <button class="tool-btn danger" onclick="resetAll()"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.33"/></svg><span id="txt-reset">Reset</span></button>
+    </div>
+    <div class="products-wrap"><div class="products-grid" id="grid"></div></div>
+    <div class="compare-wrap"><button id="compareBtn" onclick="compare()">COMPARE</button></div>
+
+    <!-- PENNY AI ADVISOR -->
+    <div class="ai-wrap" id="aiWrap">
+      <button class="ai-trigger-btn" id="aiTriggerBtn" onclick="startPenny()">
+        <span class="ai-penny-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></span>
+        <span id="aiTriggerLabel">Ask Penny &mdash; AI Advisor</span>
+      </button>
+      <div class="ai-panel" id="aiPanel" style="display:none;">
+        <div class="ai-panel-header">
+          <div class="ai-panel-title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg> Penny <span class="ai-penny-badge">AI Advisor</span></div>
+          <button class="ai-panel-close" onclick="closeAIPanel()">&#10005;</button>
+        </div>
+        <div class="ai-chat-area" id="aiChatArea"></div>
+        <div class="ai-chat-input-row">
+          <input class="ai-chat-input" id="aiChatInput" type="text" placeholder="Ask Penny anything..." onkeydown="if(event.key==='Enter')sendUserMessage()">
+          <button class="ai-chat-send" id="aiSendBtn" onclick="sendUserMessage()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="analysis-wrap"><div class="analysis-row"><textarea id="analysisBox" readonly placeholder="Results will appear here..."></textarea><button class="btn-save-analysis" onclick="saveAnalysisAsPreset()"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save to Preset</button></div></div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="tab-history">
+    <div class="tab-hdr"><div class="tab-title">Comparison History</div>
+      <button class="tool-btn danger" onclick="clearHistory()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Clear All</button>
+    </div>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- GROCERY TAB -->
+  <div id="tab-grocery">
+    <div class="grocery-layout">
+      <div class="grocery-sidebar">
+        <div class="sidebar-section-label">MY LISTS</div>
+        <div id="listNav"></div>
+        <button class="sidebar-add-btn" onclick="promptNewList()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New List
+        </button>
+      </div>
+      <div class="grocery-content" id="groceryContent">
+        <div class="no-list-state">
+          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+          <p>Create a list to get started.<br>Use "New List" on the left.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRESETS TAB -->
+  <div id="tab-presets">
+    <div class="tab-hdr">
+      <div class="tab-title">Saved Presets</div>
+      <button class="tool-btn primary" onclick="toggleSaveForm()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Save Current</button>
+    </div>
+    <div class="save-preset-form" id="savePresetForm">
+      <input type="text" id="presetNameInput" placeholder="Name this preset (e.g. Mayonnaise)">
+      <div class="save-row"><button class="btn-save-ok" onclick="savePreset()">Save</button><button class="btn-save-no" onclick="toggleSaveForm()">Cancel</button></div>
+    </div>
+    <div id="presetList"></div>
+  </div>
+
+  <!-- HELP TAB -->
+  <div id="tab-help">
+    <div class="help-section">
+      <div class="help-h">Getting Started</div>
+      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Scan or Enter a Product</div><div class="help-step-desc">On the Compare tab, tap "Scan Barcode" and point your camera at the barcode. Name and size auto-fill. Or type details manually.</div></div></div>
+      <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Enter the Price</div><div class="help-step-desc">Type the shelf price. Add a discount amount in the Discount field and choose % or flat amount.</div></div></div>
+      <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Set Size and Pack Quantity</div><div class="help-step-desc">Enter size per item and how many are in the pack. For single items, leave Pack Qty at 1.</div></div></div>
+      <div class="help-step"><div class="help-num">4</div><div><div class="help-step-title">Tap COMPARE</div><div class="help-step-desc">The best value card turns green. If two items are exactly equal, both show a TIE badge.</div></div></div>
+    </div>
+    <div class="help-section">
+      <div class="help-h">Features Guide</div>
+      <div class="help-tip"><span class="help-badge">History</span> Every comparison auto-saves to your account. Each email address has its own separate history.</div>
+      <div class="help-tip"><span class="help-badge">Grocery Lists</span> Create custom lists (Weekly Grocery, Party Snacks, etc.). Add items with name, price, store, quantity, and notes. Duplicate items across lists. Tap "Uncheck All" to reset for next trip.</div>
+      <div class="help-tip"><span class="help-badge">Presets</span> Save a Compare setup and reload it any time. Great for items you compare repeatedly.</div>
+      <div class="help-tip"><span class="help-badge">Export</span> After comparing, tap Export to share or copy results.</div>
+      <div class="help-tip"><span class="help-badge">Per-Account Data</span> History, grocery lists, and presets are tied to your email. Logging in with a different email shows that account's data only.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-h">Tips</div>
+      <div class="help-step"><div class="help-num" style="background:var(--ok)">+</div><div><div class="help-step-title">Duplicate a Card</div><div class="help-step-desc">The copy icon on each product card duplicates it into the next empty slot — great for same item, different sizes.</div></div></div>
+      <div class="help-step"><div class="help-num" style="background:var(--ok)">+</div><div><div class="help-step-title">Duplicate Grocery Items</div><div class="help-step-desc">Each grocery item has a duplicate button — copy it to a different list in one tap.</div></div></div>
+      <div class="help-step"><div class="help-num" style="background:var(--ok)">+</div><div><div class="help-step-title">Compare Up to 5 Items</div><div class="help-step-desc">Go to Settings and increase the item count to compare up to 5 products at once.</div></div></div>
+    </div>
+  </div><!-- end #tab-help -->
+
+  <!-- PROFILE TAB — inside #app so tabs work correctly -->
+  <div id="tab-profile" style="display:none;padding:20px;max-width:600px;margin:0 auto;">
+    <div class="tab-hdr" style="margin-bottom:20px;">
+      <div class="tab-title">My Profile</div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="prof-lbl-account">Account Info</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div style="flex:1;">
+          <label class="card-label prof-lbl-firstname" style="display:block;margin-bottom:5px;">First Name</label>
+          <input type="text" id="profile-firstname" class="card-input" placeholder="First name" style="width:100%;">
+        </div>
+        <div style="flex:1;">
+          <label class="card-label prof-lbl-lastname" style="display:block;margin-bottom:5px;">Last Name</label>
+          <input type="text" id="profile-lastname" class="card-input" placeholder="Last name" style="width:100%;">
+        </div>
+      </div>
+      <label class="card-label prof-lbl-email" style="display:block;margin-bottom:5px;">Email</label>
+      <input type="email" id="profile-email" class="card-input" placeholder="Email" style="width:100%;opacity:.65;cursor:not-allowed;" readonly>
+      <div class="prof-lbl-emailnote" style="font-size:11px;color:var(--muted);margin-top:5px;">Email cannot be changed.</div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="prof-lbl-changepass">Change Password</span>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label class="card-label prof-lbl-curpass" style="display:block;margin-bottom:5px;">Current Password</label>
+        <div class="input-wrap">
+          <input type="password" id="profile-current-pass" class="card-input" placeholder="Enter your current password" style="width:100%;padding-right:44px;">
+          <button class="toggle-pass" type="button" onclick="toggleProfilePass('profile-current-pass','eye-cur')">
+            <svg viewBox="0 0 24 24" id="eye-cur"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label class="card-label prof-lbl-newpass" style="display:block;margin-bottom:5px;">New Password</label>
+        <div class="input-wrap">
+          <input type="password" id="profile-new-pass" class="card-input" placeholder="New password (8+ chars)" style="width:100%;padding-right:44px;">
+          <button class="toggle-pass" type="button" onclick="toggleProfilePass('profile-new-pass','eye-new')">
+            <svg viewBox="0 0 24 24" id="eye-new"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div>
+        <label class="card-label prof-lbl-confpass" style="display:block;margin-bottom:5px;">Confirm New Password</label>
+        <div class="input-wrap">
+          <input type="password" id="profile-confirm-pass" class="card-input" placeholder="Repeat new password" style="width:100%;padding-right:44px;">
+          <button class="toggle-pass" type="button" onclick="toggleProfilePass('profile-confirm-pass','eye-conf')">
+            <svg viewBox="0 0 24 24" id="eye-conf"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="profile-pass-err" style="display:none;color:var(--danger);font-size:13px;margin-top:8px;font-weight:500;"></div>
+      <div class="prof-lbl-passnote" style="font-size:11px;color:var(--muted);margin-top:8px;">Leave new &amp; confirm blank to keep your current password.</div>
+    </div>
+
+    <!-- Household size -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="prof-lbl-household">Household Size</span>
+      </div>
+      <div class="onboard-stepper" style="margin-bottom:0;">
+        <button class="stepper-btn" onclick="profileAdjHousehold(-1)">&#8722;</button>
+        <div class="stepper-val" id="profile-household-val">2</div>
+        <button class="stepper-btn" onclick="profileAdjHousehold(1)">+</button>
+        <span style="font-size:14px;color:var(--muted)">people</span>
+      </div>
+    </div>
+
+    <!-- Zip code -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.1 12.4 7.8 13.1a.3.3 0 0 0 .4 0C12.9 22.4 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
+        <span class="prof-lbl-zip">Zip Code</span>
+      </div>
+      <input type="text" id="profile-zip" maxlength="5" minlength="5" inputmode="numeric"
+        style="width:140px;padding:12px 16px;border:2px solid var(--brand);border-radius:var(--rsm);font-size:22px;font-weight:700;font-family:var(--font-m);text-align:center;background:var(--brand-light);color:var(--text);outline:none;letter-spacing:4px;"
+        placeholder="- - - - -" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5)">
+    </div>
+
+    <!-- Preferred stores -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="prof-lbl-stores">My Stores</span>
+      </div>
+      <div class="onboard-options" id="profile-store-chips" style="margin-bottom:0;">
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Walmart')">Walmart</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Target')">Target</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Costco')">Costco</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Sams Club')">Sam's Club</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Publix')">Publix</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Kroger')">Kroger</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Aldi')">Aldi</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Lidl')">Lidl</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Whole Foods')">Whole Foods</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Amazon Fresh')">Amazon Fresh</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'BJs')">BJ's</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Dollar General')">Dollar General</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'CVS')">CVS</div>
+        <div class="onboard-chip" onclick="profileToggleStore(this,'Walgreens')">Walgreens</div>
+      </div>
+    </div>
+
+    <!-- Save button -->
+    <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
+    <div id="profile-saved-msg" class="prof-lbl-saved" style="display:none;text-align:center;margin-top:12px;color:var(--ok);font-size:14px;font-weight:600;">&#10003; Profile saved!</div>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- SCANNER -->
+<div id="scanner-overlay">
+  <div id="reader"></div>
+  <div class="scan-viewport"><div class="scan-line"></div></div>
+  <button class="scan-cancel" onclick="closeScanner()">Cancel</button>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this&&!document.getElementById('confirmModal').style.display.match('block'))closeModals()"></div>
+
+<!-- Calculator -->
+<div class="modal-box" id="calcModal">
+  <button class="modal-x" onclick="closeModals()">x</button>
+  <div class="modal-title">Calculator</div>
+  <input type="text" id="calcDisplay" class="calc-display" readonly value="0">
+  <div class="calc-grid">
+    <button class="calc-key ck-num" onclick="cAdd('7')">7</button><button class="calc-key ck-num" onclick="cAdd('8')">8</button><button class="calc-key ck-num" onclick="cAdd('9')">9</button><button class="calc-key ck-op" onclick="cAdd('/')">÷</button>
+    <button class="calc-key ck-num" onclick="cAdd('4')">4</button><button class="calc-key ck-num" onclick="cAdd('5')">5</button><button class="calc-key ck-num" onclick="cAdd('6')">6</button><button class="calc-key ck-op" onclick="cAdd('*')">×</button>
+    <button class="calc-key ck-num" onclick="cAdd('1')">1</button><button class="calc-key ck-num" onclick="cAdd('2')">2</button><button class="calc-key ck-num" onclick="cAdd('3')">3</button><button class="calc-key ck-op" onclick="cAdd('-')">−</button>
+    <button class="calc-key ck-num" onclick="cAdd('0')">0</button><button class="calc-key ck-num" onclick="cAdd('.')">.</button><button class="calc-key ck-op" onclick="cRes()">=</button><button class="calc-key ck-op" onclick="cAdd('+')">+</button>
+    <button class="calc-key ck-num ck-span2" onclick="cClr()">C</button><button class="calc-key ck-num ck-span2" onclick="cBk()">⌫</button>
+  </div>
+</div>
+
+<!-- Settings -->
+<div class="modal-box" id="settingsModal">
+  <button class="modal-x" onclick="closeModals()">x</button>
+  <div class="modal-title">Settings</div>
+  <div class="setting-row"><span class="s-label">Dark Mode</span><label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label></div>
+  <div class="setting-row"><span class="s-label">Language</span><select class="s-select" id="setLang" onchange="changeLang('settings')"><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option></select></div>
+  <div class="setting-row"><span class="s-label">Number of Items</span><select class="s-select" id="setCount"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
+  <input type="hidden" id="setCurr" value="$">
+  <button class="auth-btn" style="margin-top:20px" onclick="applySettings()">Apply</button>
+</div>
+
+<!-- Export -->
+<div class="modal-box" id="exportModal">
+  <button class="modal-x" onclick="closeModals()">x</button>
+  <div class="modal-title">Export Results</div>
+  <div class="export-pre" id="exportPre">Run a comparison first.</div>
+  <button class="auth-btn" onclick="shareResults()" style="margin-bottom:10px">Share</button>
+  <button class="tool-btn" style="width:100%;justify-content:center" onclick="copyResults()">Copy to Clipboard</button>
+</div>
+
+<!-- New List / Rename List modal -->
+<div class="modal-box" id="listNameModal">
+  <button class="modal-x" onclick="closeModals()">x</button>
+  <div class="modal-title" id="listNameModalTitle">New List</div>
+  <input class="modal-input" type="text" id="listNameInput" placeholder="e.g. Weekly Grocery">
+  <div class="modal-btn-row">
+    <button class="mbtn-ok" onclick="confirmListName()">Save</button>
+    <button class="mbtn-cancel" onclick="closeModals()">Cancel</button>
+  </div>
+</div>
+
+<!-- Duplicate item to list modal -->
+<div class="modal-box" id="dupItemModal">
+  <button class="modal-x" onclick="closeModals()">x</button>
+  <div class="modal-title">Copy to List</div>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Choose a list to copy this item to:</p>
+  <div id="dupListOptions"></div>
+</div>
+
+<!-- Edit Grocery Item Modal -->
+<div class="modal-box" id="editItemModal">
+  <button class="modal-x" onclick="closeModals()">x</button>
+  <div class="modal-title">Edit Item</div>
+  <input type="hidden" id="editItemId">
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+    <div><label class="g-label" style="display:block;margin-bottom:4px">Item Name</label><input class="modal-input" style="margin:0" type="text" id="edit-name" placeholder="e.g. Whole Milk"></div>
+    <div><label class="g-label" style="display:block;margin-bottom:4px">Quantity</label><input class="modal-input" style="margin:0" type="text" id="edit-qty" placeholder="e.g. 2"></div>
+    <div><label class="g-label" style="display:block;margin-bottom:4px">Price</label><input class="modal-input" style="margin:0" type="number" id="edit-price" placeholder="0.00"></div>
+    <div><label class="g-label" style="display:block;margin-bottom:4px">Store</label><input class="modal-input" style="margin:0" type="text" id="edit-store" placeholder="e.g. Walmart"></div>
+    <div><label class="g-label" style="display:block;margin-bottom:4px">Notes</label><input class="modal-input" style="margin:0" type="text" id="edit-notes" placeholder="e.g. organic only"></div>
+  </div>
+  <div class="modal-btn-row">
+    <button class="mbtn-ok" onclick="saveEditItem()">Save</button>
+    <button class="mbtn-cancel" onclick="closeModals()">Cancel</button>
+  </div>
+</div>
+
+<!-- Custom Confirm Modal -->
+<div class="modal-box" id="confirmModal">
+  <div class="modal-title" id="confirmTitle">Are you sure?</div>
+  <div class="confirm-msg" id="confirmMsg"></div>
+  <div class="modal-btn-row">
+    <button class="mbtn-danger" id="confirmOkBtn">Yes, continue</button>
+    <button class="mbtn-cancel" onclick="closeModals()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────
+let items = 2;
+let scanner = null;
+let activeIdx = null;
+let calcVal = "0";
+let authMode = 'signup';
+let lang = localStorage.getItem('bp_lang') || 'en';
+let currRate = 1;
+let currSymbol = '$';
+let lastAnalysis = '';
+
+function saveU(k, v){
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const prefix = session.email ? 'bp_'+session.email+'_' : 'bp_';
+  try { localStorage.setItem(prefix+k, JSON.stringify(v)); } catch(e){ console.error('saveU',e); }
+}
+function loadU(k, def){
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const prefix = session.email ? 'bp_'+session.email+'_' : 'bp_';
+  try {
+    const raw = localStorage.getItem(prefix+k);
+    if(raw !== null) return JSON.parse(raw);
+  } catch(e){ console.error('loadU',e); }
+  return def;
+}
+
+function esc(str){ const d=document.createElement('div'); d.appendChild(document.createTextNode(String(str||''))); return d.innerHTML; }
+
+let compHistory = [];
+let groceryLists = [];
+let groceryItems = [];
+let savedPresets = [];
+let activeListId = null;
+let listNameCallback = null;
+let dupItemId = null;
+
+const CURR_RATES = { '$':1 };
+const UNIT_RATES = { oz:1, lb:16, g:0.035274, kg:35.274, ml:0.033814, l:33.814, gal:128, count:1, ft:1, in:0.083333, yd:3, m:3.28084 };
+
+// ────────────────────────────────────────────────
+// THEME
+// ────────────────────────────────────────────────
+function initTheme(){ applyTheme(localStorage.getItem('bp_theme')==='dark'); }
+function toggleTheme(){ applyTheme(!document.body.classList.contains('dark')); }
+function applyTheme(dark){
+  document.body.classList.toggle('dark', dark);
+  localStorage.setItem('bp_theme', dark?'dark':'light');
+  const ic=document.getElementById('themeIcon'), sw=document.getElementById('themeSwitch');
+  if(ic) ic.innerHTML = dark
+    ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+    : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  if(sw) sw.checked = dark;
+}
+
+// ────────────────────────────────────────────────
+// LANG
+// ────────────────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    login:'Login', signup:'Sign Up', namePh:'Full Name', emailPh:'Email', passPh:'Password',
+    headline:'Shop smarter. Save every time.',
+    sub:'Scan barcodes, compare unit prices instantly, build grocery lists, and never overpay again.',
+    fp1title:'Instant Barcode Scanning', fp1desc:'Point camera — name and size auto-fill',
+    fp2title:'Unit Price Comparison', fp2desc:'oz, lb, ml, g, gal — all units supported',
+    fp3title:'Custom Grocery Lists', fp3desc:'Create, name, and manage your own lists',
+    fp4title:'Comparison History', fp4desc:'Every comparison saved to your account',
+    joinText:'Join {highlight} saving every week',
+    joinHighlight:'smart shoppers',
+    logout:'Log out',
+    compare:'Compare', history:'History', grocery:'Grocery', presets:'Presets', help:'Help',
+    settings:'Settings', calc:'Calculator', exportBtn:'Export', reset:'Reset',
+    compareBtn:'COMPARE',
+    analysisPh:'Results will appear here...',
+    historyTitle:'Comparison History', clearAll:'Clear All',
+    navMyLists:'MY LISTS', newListBtn:'New List',
+    groceryEmpty:'Create a list to get started.\nUse "New List" on the left.',
+    presetsTitle:'Saved Presets', saveCurrent:'Save Current',
+    presetPh:'Name this preset (e.g. Mayonnaise)',
+    presetSave:'Save', presetCancel:'Cancel',
+    settingsTitle:'Settings', darkMode:'Dark Mode', language:'Language',
+    numItems:'Number of Items',
+    applyBtn:'Apply',
+    exportTitle:'Export Results', exportRunFirst:'Run a comparison first.',
+    shareBtn:'Share', copyBtn:'Copy to Clipboard',
+    listNamePh:'e.g. Weekly Grocery', saveBtn:'Save', cancelBtn:'Cancel',
+    copyToList:'Copy to List', chooseList:'Choose a list to copy this item to:',
+    thisListLabel:'this list',
+    editItemTitle:'Edit Item',
+    editNameLabel:'Item Name', editNamePh:'e.g. Whole Milk',
+    editQtyLabel:'Quantity', editQtyPh:'e.g. 2',
+    editPriceLabel:'Price',
+    editStoreLabel:'Store', editStorePh:'e.g. Walmart',
+    editNotesLabel:'Notes', editNotesPh:'e.g. organic only',
+    confirmYes:'Yes, continue',
+    scanBarcode:'Scan Barcode', priceLabel:'Price', discountLabel:'Discount',
+    typeLabel:'Type', sizeLabel:'Size / Item', packLabel:'Pack Qty', nameLabel:'Name',
+    bestValue:'BEST VALUE', tie:'TIE',
+    sizePh:'Size', itemNamePh:'Item Name',
+    addItemTitle:'Add Item to', gNameLabel:'Item Name', gQtyLabel:'Quantity',
+    gPriceLabel:'Price', gStoreLabel:'Store', gNotesLabel:'Notes',
+    gNamePh:'e.g. Whole Milk', gQtyPh:'e.g. 2', gStorePh:'e.g. Walmart', gNotesPh:'e.g. organic only',
+    addBtn:'Add to List', uncheckAll:'Uncheck All',
+    helpGettingStarted:'Getting Started',
+    helpFeaturesGuide:'Features Guide',
+    helpTips:'Tips',
+    hs1title:'Scan or Enter a Product', hs1desc:'On the Compare tab, tap "Scan Barcode" and point your camera at the barcode. Name and size auto-fill. Or type details manually.',
+    hs2title:'Enter the Price', hs2desc:'Type the shelf price. Add a discount amount in the Discount field and choose % or flat amount.',
+    hs3title:'Set Size and Pack Quantity', hs3desc:'Enter size per item and how many are in the pack. For single items, leave Pack Qty at 1.',
+    hs4title:'Tap COMPARE', hs4desc:'The best value card turns green. If two items are exactly equal, both show a TIE badge.',
+    hf1:'Every comparison auto-saves to your account. Each email address has its own separate history.',
+    hf2:'Create custom lists (Weekly Grocery, Party Snacks, etc.). Add items with name, price, store, quantity, and notes. Tap "Uncheck All" to reset for next trip.',
+    hf3:'Save a Compare setup and reload it any time. Great for items you compare repeatedly.',
+    hf4:'After comparing, tap Export to share or copy results.',
+    hf6:'History, grocery lists, and presets are tied to your email. Logging in with a different email shows that account\'s data only.',
+    ht1title:'Duplicate a Card', ht1desc:'The copy icon on each product card duplicates it into the next empty slot — great for same item, different sizes.',
+    ht2title:'Copy Grocery Items', ht2desc:'Each grocery item has a copy button — copy it to any list in one tap.',
+    ht3title:'Compare Up to 5 Items', ht3desc:'Go to Settings and increase the item count to compare up to 5 products at once.',
+    scanCancel:'Cancel',
+    errName:'Please enter your first name.', errLastName:'Please enter your last name.',
+    errEmailReq:'Email is required.',
+    errEmailAt:"Missing an '@' symbol.", errEmailDom:'Missing domain after @.',
+    errEmailExt:'Missing extension (e.g. .com).', errEmailProv:'Missing provider name.',
+    errEmailShort:'Extension too short (e.g. .com).', errGmail:'Did you mean @gmail.com?',
+    errPassLogin:'Please enter your password.',
+    errPassMissing:'Missing: ', errPassAlreadyReg:'This email is already registered. Try logging in.',
+    errNoAccount:'No account found. Try signing up.', errWrongPass:'Incorrect password.',
+    passReqs:['8+ chars','uppercase','lowercase','number','symbol'],
+    toastCopied:'Copied to Item', toastNoSlot:'No empty card available.',
+    toastNoProduct:'Product not found.', toastSizeNA:'Size not detected. Enter manually.',
+    toastCopiedClip:'Copied!', toastCopyFail:'Copy failed.',
+    toastRunFirst:'Run a comparison first.', toastEnterPrice:'Enter at least one price to compare.',
+    toastPresetName:'Enter a preset name first.', toastListName:'Please enter a name.',
+    toastItemName:'Please enter an item name.', toastItemNameEmpty:'Item name cannot be empty.',
+    toastNoLists:'No lists to copy to.',
+    toastSaved:' saved!', toastLoaded:'Loaded', toastDeleted:'List deleted', toastUncheck:'All unchecked',
+    toastRenamed:'Renamed', toastUpdated:'updated', toastAdded:'added',
+    analysisHeader:'Analysis:', analysisPer:'per', analysisTie:'TIE', analysisPerUnit:'per unit', analysisBest:'BEST VALUE',
+    profileTitle:'My Profile',
+    profileAccountInfo:'Account Info', profileFirstName:'First Name', profileLastName:'Last Name',
+    profileEmail:'Email', profileEmailNote:'Email cannot be changed.',
+    profileChangePass:'Change Password', profileCurPass:'Current Password', profileNewPass:'New Password',
+    profileConfPass:'Confirm New Password', profilePassNote:'Leave new & confirm blank to keep your current password.',
+    profileCurPassPh:'Enter your current password', profileNewPassPh:'New password (8+ chars)', profileConfPassPh:'Repeat new password',
+    profileHousehold:'Household Size', profileZip:'Zip Code', profileStores:'My Stores',
+    profileSave:'Save Changes', profileSaved:'Profile saved!',
+    profileZipErr:'Zip code must be exactly 5 digits.',
+    profilePassErr:'Password needs: ', profilePassNoMatch:'New passwords do not match.',
+    profilePassWrong:'Current password is incorrect.',
+    profile:'Profile',
+    firstNamePh:'First Name', lastNamePh:'Last Name',
+    categoryLabel:'Category', categoryPh:'— Select Category —',
+    priceErrMsg:'⚠ Please enter a price.',
+    removeCard:'Remove Card',
+    removeCardConfirm:'Are you sure you want to remove this card? This cannot be undone.',
+    cardRemoved:'Card removed.', cardsRemaining:'cards remaining.', cardRemainingS:'card remaining.',
+    dupLimitMsg:"You've reached the 8-item limit. Remove a card to duplicate.",
+    minCardsMsg:'Minimum 2 cards required.',
+    savePresetSwitch:'Switch to Presets tab — name it and save!',
+  },
+  es: {
+    login:'Iniciar sesión', signup:'Registrarse', namePh:'Nombre completo', emailPh:'Correo electrónico', passPh:'Contraseña',
+    headline:'Compra mejor. Ahorra siempre.',
+    sub:'Escanea códigos, compara precios al instante, crea listas y nunca pagues de más.',
+    fp1title:'Escaneo de código de barras', fp1desc:'Apunta la cámara — nombre y tamaño se llenan solos',
+    fp2title:'Comparación de precio por unidad', fp2desc:'oz, lb, ml, g, gal — todas las unidades',
+    fp3title:'Listas de compras personalizadas', fp3desc:'Crea y administra tus propias listas',
+    fp4title:'Historial de comparaciones', fp4desc:'Cada comparación guardada en tu cuenta',
+    joinText:'Únete a {highlight} que ahorran cada semana',
+    joinHighlight:'compradores inteligentes',
+    logout:'Cerrar sesión',
+    compare:'Comparar', history:'Historial', grocery:'Compras', presets:'Preajustes', help:'Ayuda',
+    settings:'Ajustes', calc:'Calculadora', exportBtn:'Exportar', reset:'Reiniciar',
+    compareBtn:'COMPARAR',
+    analysisPh:'Los resultados aparecerán aquí...',
+    historyTitle:'Historial de comparaciones', clearAll:'Borrar todo',
+    navMyLists:'MIS LISTAS', newListBtn:'Nueva lista',
+    groceryEmpty:'Crea una lista para empezar.\nUsa "Nueva lista" a la izquierda.',
+    presetsTitle:'Preajustes guardados', saveCurrent:'Guardar actual',
+    presetPh:'Nombre del preajuste (p.ej. Mayonesa)',
+    presetSave:'Guardar', presetCancel:'Cancelar',
+    settingsTitle:'Ajustes', darkMode:'Modo oscuro', language:'Idioma',
+    numItems:'Número de productos',
+    applyBtn:'Aplicar',
+    exportTitle:'Exportar resultados', exportRunFirst:'Ejecuta una comparación primero.',
+    shareBtn:'Compartir', copyBtn:'Copiar al portapapeles',
+    listNamePh:'p.ej. Compras semanales', saveBtn:'Guardar', cancelBtn:'Cancelar',
+    copyToList:'Copiar a lista', chooseList:'Elige una lista para copiar este artículo:',
+    thisListLabel:'esta lista',
+    editItemTitle:'Editar artículo',
+    editNameLabel:'Nombre', editNamePh:'p.ej. Leche entera',
+    editQtyLabel:'Cantidad', editQtyPh:'p.ej. 2',
+    editPriceLabel:'Precio',
+    editStoreLabel:'Tienda', editStorePh:'p.ej. Walmart',
+    editNotesLabel:'Notas', editNotesPh:'p.ej. solo orgánico',
+    confirmYes:'Sí, continuar',
+    scanBarcode:'Escanear código', priceLabel:'Precio', discountLabel:'Descuento',
+    typeLabel:'Tipo', sizeLabel:'Tamaño / Unidad', packLabel:'Cant. paquete', nameLabel:'Nombre',
+    bestValue:'MEJOR PRECIO', tie:'EMPATE',
+    sizePh:'Tamaño', itemNamePh:'Nombre del artículo',
+    addItemTitle:'Agregar a', gNameLabel:'Nombre', gQtyLabel:'Cantidad',
+    gPriceLabel:'Precio', gStoreLabel:'Tienda', gNotesLabel:'Notas',
+    gNamePh:'p.ej. Leche entera', gQtyPh:'p.ej. 2', gStorePh:'p.ej. Walmart', gNotesPh:'p.ej. solo orgánico',
+    addBtn:'Agregar a la lista', uncheckAll:'Desmarcar todo',
+    helpGettingStarted:'Primeros pasos', helpFeaturesGuide:'Guía de funciones', helpTips:'Consejos',
+    hs1title:'Escanea o ingresa un producto', hs1desc:'En la pestaña Comparar, toca "Escanear código" y apunta al código de barras.',
+    hs2title:'Ingresa el precio', hs2desc:'Escribe el precio. Agrega un descuento y elige % o monto fijo.',
+    hs3title:'Establece tamaño y cantidad', hs3desc:'Ingresa el tamaño por unidad y cuántas hay en el paquete.',
+    hs4title:'Toca COMPARAR', hs4desc:'La tarjeta de mejor valor se pone verde.',
+    hf1:'Cada comparación se guarda automáticamente.',
+    hf2:'Crea listas personalizadas con nombre, precio, tienda, cantidad y notas.',
+    hf3:'Guarda una configuración de Comparar y cárgala cuando quieras.',
+    hf4:'Después de comparar, toca Exportar para compartir o copiar.',
+    hf6:'El historial, listas y preajustes están vinculados a tu correo.',
+    ht1title:'Duplicar una tarjeta', ht1desc:'El ícono de copia duplica la tarjeta en el siguiente espacio vacío.',
+    ht2title:'Copiar artículos de la lista', ht2desc:'Cada artículo tiene un botón de copia.',
+    ht3title:'Comparar hasta 5 artículos', ht3desc:'Ve a Ajustes y aumenta el número de artículos.',
+    scanCancel:'Cancelar',
+    errName:'Por favor ingresa tu nombre.', errLastName:'Por favor ingresa tu apellido.',
+    errEmailReq:'El correo es obligatorio.',
+    errEmailAt:"Falta el símbolo '@'.", errEmailDom:'Falta el dominio después de @.',
+    errEmailExt:'Falta la extensión (p.ej. .com).', errEmailProv:'Falta el nombre del proveedor.',
+    errEmailShort:'Extensión muy corta (p.ej. .com).', errGmail:'¿Quisiste decir @gmail.com?',
+    errPassLogin:'Por favor ingresa tu contraseña.',
+    errPassMissing:'Falta: ', errPassAlreadyReg:'Este correo ya está registrado.',
+    errNoAccount:'Cuenta no encontrada.', errWrongPass:'Contraseña incorrecta.',
+    passReqs:['8+ caracteres','mayúscula','minúscula','número','símbolo'],
+    toastCopied:'Copiado al artículo', toastNoSlot:'No hay tarjeta vacía.',
+    toastNoProduct:'Producto no encontrado.', toastSizeNA:'Tamaño no detectado.',
+    toastCopiedClip:'¡Copiado!', toastCopyFail:'Error al copiar.',
+    toastRunFirst:'Ejecuta una comparación primero.', toastEnterPrice:'Ingresa al menos un precio.',
+    toastPresetName:'Ingresa un nombre para el preajuste.', toastListName:'Por favor ingresa un nombre.',
+    toastItemName:'Por favor ingresa un nombre.', toastItemNameEmpty:'El nombre no puede estar vacío.',
+    toastNoLists:'No hay listas para copiar.',
+    toastSaved:' guardado!', toastLoaded:'Cargado', toastDeleted:'Lista eliminada', toastUncheck:'Todo desmarcado',
+    toastRenamed:'Renombrado', toastUpdated:'actualizado', toastAdded:'agregado',
+    analysisHeader:'Análisis:', analysisPer:'por', analysisTie:'EMPATE', analysisPerUnit:'por unidad', analysisBest:'MEJOR PRECIO',
+    profileTitle:'Mi perfil',
+    profileAccountInfo:'Información de cuenta', profileFirstName:'Nombre', profileLastName:'Apellido',
+    profileEmail:'Correo', profileEmailNote:'El correo no se puede cambiar.',
+    profileChangePass:'Cambiar contraseña', profileCurPass:'Contraseña actual', profileNewPass:'Nueva contraseña',
+    profileConfPass:'Confirmar nueva contraseña', profilePassNote:'Deja los dos últimos en blanco para mantener tu contraseña.',
+    profileCurPassPh:'Ingresa tu contraseña actual', profileNewPassPh:'Nueva contraseña (8+ caracteres)', profileConfPassPh:'Repite la nueva contraseña',
+    profileHousehold:'Tamaño del hogar', profileZip:'Código postal', profileStores:'Mis tiendas',
+    profileSave:'Guardar cambios', profileSaved:'¡Perfil guardado!',
+    profileZipErr:'El código postal debe tener exactamente 5 dígitos.',
+    profilePassErr:'La contraseña necesita: ', profilePassNoMatch:'Las contraseñas no coinciden.',
+    profilePassWrong:'La contraseña actual es incorrecta.',
+    profile:'Perfil',
+    firstNamePh:'Nombre', lastNamePh:'Apellido',
+    categoryLabel:'Categoría', categoryPh:'— Seleccionar categoría —',
+    priceErrMsg:'⚠ Por favor ingresa un precio.',
+    removeCard:'Eliminar tarjeta',
+    removeCardConfirm:'¿Estás seguro de que quieres eliminar esta tarjeta? Esta acción no se puede deshacer.',
+    cardRemoved:'Tarjeta eliminada.', cardsRemaining:'tarjetas restantes.', cardRemainingS:'tarjeta restante.',
+    dupLimitMsg:'Has alcanzado el límite de 8 artículos. Elimina una tarjeta para duplicar.',
+    minCardsMsg:'Se requieren mínimo 2 tarjetas.',
+    savePresetSwitch:'Ve a la pestaña Preajustes, ponle nombre y guárdalo.',
+  },
+  pt: {
+    login:'Entrar', signup:'Cadastrar', namePh:'Nome completo', emailPh:'E-mail', passPh:'Senha',
+    headline:'Compre melhor. Economize sempre.',
+    sub:'Escaneie códigos, compare preços por unidade, crie listas e nunca pague a mais.',
+    fp1title:'Leitura de código de barras', fp1desc:'Aponte a câmera — nome e tamanho preenchidos',
+    fp2title:'Comparação de preço por unidade', fp2desc:'oz, lb, ml, g, gal — todas as unidades',
+    fp3title:'Listas de compras personalizadas', fp3desc:'Crie e gerencie suas próprias listas',
+    fp4title:'Histórico de comparações', fp4desc:'Cada comparação salva na sua conta',
+    joinText:'Junte-se a {highlight} que economizam toda semana',
+    joinHighlight:'compradores inteligentes',
+    logout:'Sair',
+    compare:'Comparar', history:'Histórico', grocery:'Compras', presets:'Predefinições', help:'Ajuda',
+    settings:'Configurações', calc:'Calculadora', exportBtn:'Exportar', reset:'Redefinir',
+    compareBtn:'COMPARAR',
+    analysisPh:'Os resultados aparecerão aqui...',
+    historyTitle:'Histórico de comparações', clearAll:'Limpar tudo',
+    navMyLists:'MINHAS LISTAS', newListBtn:'Nova lista',
+    groceryEmpty:'Crie uma lista para começar.\nUse "Nova lista" à esquerda.',
+    presetsTitle:'Predefinições salvas', saveCurrent:'Salvar atual',
+    presetPh:'Nome da predefinição (ex. Maionese)',
+    presetSave:'Salvar', presetCancel:'Cancelar',
+    settingsTitle:'Configurações', darkMode:'Modo escuro', language:'Idioma',
+    numItems:'Número de itens',
+    applyBtn:'Aplicar',
+    exportTitle:'Exportar resultados', exportRunFirst:'Execute uma comparação primeiro.',
+    shareBtn:'Compartilhar', copyBtn:'Copiar para área de transferência',
+    listNamePh:'ex. Compras semanais', saveBtn:'Salvar', cancelBtn:'Cancelar',
+    copyToList:'Copiar para lista', chooseList:'Escolha uma lista para copiar este item:',
+    thisListLabel:'esta lista',
+    editItemTitle:'Editar item',
+    editNameLabel:'Nome', editNamePh:'ex. Leite integral',
+    editQtyLabel:'Quantidade', editQtyPh:'ex. 2',
+    editPriceLabel:'Preço',
+    editStoreLabel:'Loja', editStorePh:'ex. Walmart',
+    editNotesLabel:'Observações', editNotesPh:'ex. somente orgânico',
+    confirmYes:'Sim, continuar',
+    scanBarcode:'Escanear código', priceLabel:'Preço', discountLabel:'Desconto',
+    typeLabel:'Tipo', sizeLabel:'Tamanho / Item', packLabel:'Qtd. pacote', nameLabel:'Nome',
+    bestValue:'MELHOR PREÇO', tie:'EMPATE',
+    sizePh:'Tamanho', itemNamePh:'Nome do item',
+    addItemTitle:'Adicionar a', gNameLabel:'Nome', gQtyLabel:'Quantidade',
+    gPriceLabel:'Preço', gStoreLabel:'Loja', gNotesLabel:'Observações',
+    gNamePh:'ex. Leite integral', gQtyPh:'ex. 2', gStorePh:'ex. Walmart', gNotesPh:'ex. somente orgânico',
+    addBtn:'Adicionar à lista', uncheckAll:'Desmarcar tudo',
+    helpGettingStarted:'Primeiros passos', helpFeaturesGuide:'Guia de recursos', helpTips:'Dicas',
+    hs1title:'Escaneie ou insira um produto', hs1desc:'Na aba Comparar, toque em "Escanear código".',
+    hs2title:'Insira o preço', hs2desc:'Digite o preço. Adicione um desconto e escolha % ou valor fixo.',
+    hs3title:'Defina tamanho e quantidade', hs3desc:'Insira o tamanho por item e quantos há no pacote.',
+    hs4title:'Toque em COMPARAR', hs4desc:'O cartão de melhor valor fica verde.',
+    hf1:'Cada comparação é salva automaticamente.',
+    hf2:'Crie listas personalizadas com nome, preço, loja, quantidade e observações.',
+    hf3:'Salve uma configuração de Comparar e recarregue quando quiser.',
+    hf4:'Após comparar, toque em Exportar para compartilhar ou copiar.',
+    hf6:'Histórico, listas e predefinições estão vinculados ao seu e-mail.',
+    ht1title:'Duplicar um cartão', ht1desc:'O ícone de cópia duplica o cartão no próximo espaço vazio.',
+    ht2title:'Copiar itens da lista', ht2desc:'Cada item tem um botão de cópia.',
+    ht3title:'Comparar até 5 itens', ht3desc:'Vá em Configurações e aumente o número de itens.',
+    scanCancel:'Cancelar',
+    errName:'Por favor insira seu nome.', errLastName:'Por favor insira seu sobrenome.',
+    errEmailReq:'E-mail é obrigatório.',
+    errEmailAt:"Falta o símbolo '@'.", errEmailDom:'Falta o domínio após @.',
+    errEmailExt:'Falta a extensão (ex. .com).', errEmailProv:'Falta o nome do provedor.',
+    errEmailShort:'Extensão muito curta (ex. .com).', errGmail:'Você quis dizer @gmail.com?',
+    errPassLogin:'Por favor insira sua senha.',
+    errPassMissing:'Faltando: ', errPassAlreadyReg:'Este e-mail já está cadastrado.',
+    errNoAccount:'Conta não encontrada.', errWrongPass:'Senha incorreta.',
+    passReqs:['8+ caracteres','maiúscula','minúscula','número','símbolo'],
+    toastCopied:'Copiado para item', toastNoSlot:'Nenhum cartão vazio.',
+    toastNoProduct:'Produto não encontrado.', toastSizeNA:'Tamanho não detectado.',
+    toastCopiedClip:'Copiado!', toastCopyFail:'Falha ao copiar.',
+    toastRunFirst:'Execute uma comparação primeiro.', toastEnterPrice:'Insira pelo menos um preço.',
+    toastPresetName:'Insira um nome para a predefinição.', toastListName:'Por favor insira um nome.',
+    toastItemName:'Por favor insira um nome.', toastItemNameEmpty:'O nome não pode estar vazio.',
+    toastNoLists:'Sem listas para copiar.',
+    toastSaved:' salvo!', toastLoaded:'Carregado', toastDeleted:'Lista excluída', toastUncheck:'Tudo desmarcado',
+    toastRenamed:'Renomeado', toastUpdated:'atualizado', toastAdded:'adicionado',
+    analysisHeader:'Análise:', analysisPer:'por', analysisTie:'EMPATE', analysisPerUnit:'por unidade', analysisBest:'MELHOR PREÇO',
+    profileTitle:'Meu perfil',
+    profileAccountInfo:'Informações da conta', profileFirstName:'Nome', profileLastName:'Sobrenome',
+    profileEmail:'E-mail', profileEmailNote:'O e-mail não pode ser alterado.',
+    profileChangePass:'Alterar senha', profileCurPass:'Senha atual', profileNewPass:'Nova senha',
+    profileConfPass:'Confirmar nova senha', profilePassNote:'Deixe os dois últimos em branco para manter sua senha.',
+    profileCurPassPh:'Digite sua senha atual', profileNewPassPh:'Nova senha (8+ caracteres)', profileConfPassPh:'Repita a nova senha',
+    profileHousehold:'Tamanho da família', profileZip:'CEP', profileStores:'Minhas lojas',
+    profileSave:'Salvar alterações', profileSaved:'Perfil salvo!',
+    profileZipErr:'O CEP deve ter exatamente 5 dígitos.',
+    profilePassErr:'A senha precisa de: ', profilePassNoMatch:'As senhas não coincidem.',
+    profilePassWrong:'Senha atual incorreta.',
+    profile:'Perfil',
+    firstNamePh:'Nome', lastNamePh:'Sobrenome',
+    categoryLabel:'Categoria', categoryPh:'— Selecionar categoria —',
+    priceErrMsg:'⚠ Por favor insira um preço.',
+    removeCard:'Remover cartão',
+    removeCardConfirm:'Tem certeza que deseja remover este cartão? Esta ação não pode ser desfeita.',
+    cardRemoved:'Cartão removido.', cardsRemaining:'cartões restantes.', cardRemainingS:'cartão restante.',
+    dupLimitMsg:'Você atingiu o limite de 8 itens. Remova um cartão para duplicar.',
+    minCardsMsg:'Mínimo de 2 cartões necessários.',
+    savePresetSwitch:'Vá para a aba Predefinições, dê um nome e salve.',
+  }
+};
+
+function T(){ return TRANSLATIONS[lang] || TRANSLATIONS.en; }
+
+function applyLang(){
+  const t = T();
+  const setText = (id, v) => { const el=document.getElementById(id); if(el) el.innerText=v; };
+  const setHTML = (id, v) => { const el=document.getElementById(id); if(el) el.innerHTML=v; };
+  const setPh   = (id, v) => { const el=document.getElementById(id); if(el) el.placeholder=v; };
+  const setQ    = (sel, v) => { const el=document.querySelector(sel); if(el) el.innerText=v; };
+
+  setText('tab-login', t.login);
+  setText('tab-signup', t.signup);
+  setPh('authFirstName', t.firstNamePh);
+  setPh('authLastName', t.lastNamePh);
+  setPh('authEmail', t.emailPh);
+  setPh('authPass', t.passPh);
+  const authBtn = document.getElementById('authBtn');
+  if(authBtn) authBtn.innerText = authMode==='login' ? t.login : t.signup;
+
+  const headlineEl = document.querySelector('.al-headline');
+  if(headlineEl){
+    const parts = t.headline.split('. ');
+    if(parts.length >= 2){
+      headlineEl.innerHTML = parts.slice(0,-1).join('. ')+'. <span>'+parts[parts.length-1]+'</span>';
+    } else {
+      headlineEl.innerText = t.headline;
+    }
+  }
+  setQ('.al-sub', t.sub);
+  const fpTitles = document.querySelectorAll('.fp-title');
+  const fpDescs  = document.querySelectorAll('.fp-desc');
+  if(fpTitles[0]) fpTitles[0].innerText=t.fp1title;
+  if(fpTitles[1]) fpTitles[1].innerText=t.fp2title;
+  if(fpTitles[2]) fpTitles[2].innerText=t.fp3title;
+  if(fpTitles[3]) fpTitles[3].innerText=t.fp4title;
+  if(fpDescs[0])  fpDescs[0].innerText=t.fp1desc;
+  if(fpDescs[1])  fpDescs[1].innerText=t.fp2desc;
+  if(fpDescs[2])  fpDescs[2].innerText=t.fp3desc;
+  if(fpDescs[3])  fpDescs[3].innerText=t.fp4desc;
+  const joinEl = document.querySelector('.al-user-text');
+  if(joinEl) joinEl.innerHTML = t.joinText.replace('{highlight}',`<strong>${t.joinHighlight}</strong>`);
+
+  setText('txt-logout', t.logout);
+  [['nt-compare',t.compare],['nt-history',t.history],['nt-grocery',t.grocery],['nt-presets',t.presets],['nt-help',t.help],['nt-profile',t.profile||'Profile']].forEach(([id,v])=>{
+    const el=document.getElementById(id); if(el){ const sp=el.querySelector('span'); if(sp) sp.innerText=v; }
+  });
+
+  setText('txt-settings', t.settings);
+  setText('txt-calc', t.calc);
+  setText('txt-export', t.exportBtn);
+  setText('txt-reset', t.reset);
+  setText('compareBtn', t.compareBtn);
+  setPh('analysisBox', t.analysisPh);
+
+  setQ('#tab-history .tab-title', t.historyTitle);
+  const clearAllBtn = document.querySelector('#tab-history .tool-btn');
+  if(clearAllBtn){ const sp=clearAllBtn.querySelector('svg'); clearAllBtn.innerHTML=(sp?sp.outerHTML:'')+' '+t.clearAll; clearAllBtn.setAttribute('onclick','clearHistory()'); }
+
+  const sbl = document.querySelector('.sidebar-section-label');
+  if(sbl) sbl.innerText = t.navMyLists;
+  const newListBtnEl = document.querySelector('.sidebar-add-btn');
+  if(newListBtnEl){ const svgEl=newListBtnEl.querySelector('svg'); newListBtnEl.innerHTML=(svgEl?svgEl.outerHTML:'')+' '+t.newListBtn; newListBtnEl.setAttribute('onclick','promptNewList()'); }
+
+  setQ('#tab-presets .tab-title', t.presetsTitle);
+  const saveCurrentBtn = document.querySelector('#tab-presets .tool-btn');
+  if(saveCurrentBtn){ const svgEl=saveCurrentBtn.querySelector('svg'); saveCurrentBtn.innerHTML=(svgEl?svgEl.outerHTML:'')+' '+t.saveCurrent; saveCurrentBtn.setAttribute('onclick','toggleSaveForm()'); }
+  setPh('presetNameInput', t.presetPh);
+  const presetSaveBtn = document.querySelector('.btn-save-ok');
+  if(presetSaveBtn) presetSaveBtn.innerText = t.presetSave;
+  const presetCancelBtn = document.querySelector('.btn-save-no');
+  if(presetCancelBtn) presetCancelBtn.innerText = t.presetCancel;
+
+  setQ('#settingsModal .modal-title', t.settingsTitle);
+  const sRows = document.querySelectorAll('#settingsModal .s-label');
+  if(sRows[0]) sRows[0].innerText=t.darkMode;
+  if(sRows[1]) sRows[1].innerText=t.language;
+  if(sRows[2]) sRows[2].innerText=t.numItems;
+  const applyBtnEl = document.querySelector('#settingsModal .auth-btn');
+  if(applyBtnEl) applyBtnEl.innerText = t.applyBtn;
+
+  setQ('#exportModal .modal-title', t.exportTitle);
+  const exportShareBtn = document.querySelector('#exportModal .auth-btn');
+  if(exportShareBtn) exportShareBtn.innerText = t.shareBtn;
+  const exportCopyBtn = document.querySelector('#exportModal .tool-btn');
+  if(exportCopyBtn){ exportCopyBtn.innerHTML=t.copyBtn; exportCopyBtn.setAttribute('onclick','copyResults()'); }
+  const exportPre = document.getElementById('exportPre');
+  if(exportPre && (exportPre.innerText==='' || exportPre.innerText===TRANSLATIONS.en.exportRunFirst || exportPre.innerText===TRANSLATIONS.es.exportRunFirst || exportPre.innerText===TRANSLATIONS.pt.exportRunFirst)) exportPre.innerText=t.exportRunFirst;
+
+  setPh('listNameInput', t.listNamePh);
+  const lnSave=document.querySelector('#listNameModal .mbtn-ok');
+  if(lnSave) lnSave.innerText=t.saveBtn;
+  const lnCancel=document.querySelector('#listNameModal .mbtn-cancel');
+  if(lnCancel) lnCancel.innerText=t.cancelBtn;
+
+  setQ('#dupItemModal .modal-title', t.copyToList);
+  const dupDesc=document.querySelector('#dupItemModal p');
+  if(dupDesc) dupDesc.innerText=t.chooseList;
+
+  setQ('#editItemModal .modal-title', t.editItemTitle);
+  const editLabels = document.querySelectorAll('#editItemModal .g-label');
+  if(editLabels[0]) editLabels[0].innerText=t.editNameLabel;
+  if(editLabels[1]) editLabels[1].innerText=t.editQtyLabel;
+  if(editLabels[2]) editLabels[2].innerText=t.editPriceLabel;
+  if(editLabels[3]) editLabels[3].innerText=t.editStoreLabel;
+  if(editLabels[4]) editLabels[4].innerText=t.editNotesLabel;
+  setPh('edit-name', t.editNamePh);
+  setPh('edit-qty', t.editQtyPh);
+  setPh('edit-store', t.editStorePh);
+  setPh('edit-notes', t.editNotesPh);
+  const editSave=document.querySelector('#editItemModal .mbtn-ok');
+  if(editSave) editSave.innerText=t.saveBtn;
+  const editCancel=document.querySelector('#editItemModal .mbtn-cancel');
+  if(editCancel) editCancel.innerText=t.cancelBtn;
+
+  setText('confirmOkBtn', t.confirmYes);
+  const confirmCancel=document.querySelector('#confirmModal .mbtn-cancel');
+  if(confirmCancel) confirmCancel.innerText=t.cancelBtn;
+
+  const scanCancelBtn=document.querySelector('.scan-cancel');
+  if(scanCancelBtn) scanCancelBtn.innerText=t.scanCancel;
+
+  const helpSections = document.querySelectorAll('.help-h');
+  if(helpSections[0]) helpSections[0].innerText=t.helpGettingStarted;
+  if(helpSections[1]) helpSections[1].innerText=t.helpFeaturesGuide;
+  if(helpSections[2]) helpSections[2].innerText=t.helpTips;
+  const hStepTitles = document.querySelectorAll('#tab-help .help-step-title');
+  const hStepDescs  = document.querySelectorAll('#tab-help .help-step-desc');
+  [[0,t.hs1title,t.hs1desc],[1,t.hs2title,t.hs2desc],[2,t.hs3title,t.hs3desc],[3,t.hs4title,t.hs4desc],[4,t.ht1title,t.ht1desc],[5,t.ht2title,t.ht2desc],[6,t.ht3title,t.ht3desc]].forEach(([i,title,desc])=>{
+    if(hStepTitles[i]) hStepTitles[i].innerText=title;
+    if(hStepDescs[i])  hStepDescs[i].innerText=desc;
+  });
+  const helpBadges = document.querySelectorAll('.help-badge');
+  const helpTips   = document.querySelectorAll('.help-tip');
+  const badgeKeys  = [t.history, t.grocery, t.presets, t.exportBtn, lang==='en'?'Per-Account Data':lang==='es'?'Datos por cuenta':'Dados por conta'];
+  const tipTexts   = [t.hf1, t.hf2, t.hf3, t.hf4, t.hf6];
+  helpBadges.forEach((b,i)=>{ if(badgeKeys[i]) b.innerText=badgeKeys[i]; });
+  helpTips.forEach((tip,i)=>{ if(tipTexts[i]){ const badge=tip.querySelector('.help-badge'); tip.innerHTML=(badge?badge.outerHTML:'')+' '+tipTexts[i]; } });
+
+  const savedCards=[]; for(let i=0;i<items;i++) savedCards.push(getCard(i));
+  updateGrid();
+  savedCards.forEach((d,i)=>{ if(i<items) setCard(i,d); });
+  if(activeListId) renderGroceryContent();
+  renderPresets();
+}
+
+function changeLang(src){
+  lang = document.getElementById(src==='auth'?'authLang':'setLang').value;
+  document.getElementById('authLang').value = lang;
+  document.getElementById('setLang').value = lang;
+  localStorage.setItem('bp_lang', lang);
+  applyLang();
+}
+
+function changeProfileLang(){
+  lang = document.getElementById('profileLang').value;
+  document.getElementById('authLang').value = lang;
+  document.getElementById('setLang').value = lang;
+  localStorage.setItem('bp_lang', lang);
+  applyLang();
+  // Re-sync after applyLang in case it overwrites the dropdown
+  const pl = document.getElementById('profileLang');
+  if(pl) pl.value = lang;
+}
+
+// ────────────────────────────────────────────────
+// AUTH
+// ────────────────────────────────────────────────
+function setMode(mode){
+  authMode = mode;
+  const pill = document.getElementById('tabPill');
+  document.querySelectorAll('.auth-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`tab-${mode}`).classList.add('active');
+  clearErrs();
+  if(mode==='login'){
+    pill.style.transform='translateX(0)';
+    document.getElementById('authBtn').innerText=T().login;
+    document.getElementById('nameWrap').style.display='none';
+  } else {
+    pill.style.transform='translateX(100%)';
+    document.getElementById('authBtn').innerText=T().signup;
+    document.getElementById('nameWrap').style.display='flex';
+  }
+}
+function clearErrs(){
+  document.querySelectorAll('.err-bubble').forEach(b=>b.style.display='none');
+  document.querySelectorAll('.auth-input').forEach(i=>i.classList.remove('input-error'));
+}
+function showErr(field, msg){
+  clearErrs();
+  const inputMap = { firstname:'authFirstName', lastname:'authLastName', email:'authEmail', pass:'authPass' };
+  const bubbleMap = { firstname:'err-firstname', lastname:'err-lastname', email:'err-email', pass:'err-pass' };
+  const inp = document.getElementById(inputMap[field]);
+  const bub = document.getElementById(bubbleMap[field]);
+  if(inp && bub){ inp.classList.add('input-error'); bub.querySelector('.msg').innerText=msg; bub.style.display='flex'; }
+}
+document.addEventListener('click', e=>{
+  if(e.target && e.target.id!=='authBtn') clearErrs();
+});
+
+async function handleAuth(){
+  const t=T();
+  const firstName=(document.getElementById('authFirstName')?.value||'').trim();
+  const lastName=(document.getElementById('authLastName')?.value||'').trim();
+  const name=(firstName+' '+lastName).trim();
+  const email=document.getElementById('authEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('authPass').value;
+  if(authMode==='signup'&&!firstName) return showErr('firstname', t.errName||'Please enter your first name.');
+  if(authMode==='signup'&&!lastName) return showErr('lastname', t.errLastName||'Please enter your last name.');
+  if(!email){ return showErr('email',t.errEmailReq); }
+  else if(!email.includes('@')){ return showErr('email',t.errEmailAt); }
+  else {
+    const parts=email.split('@');
+    const domain=parts[1]||'';
+    if(!domain) return showErr('email',t.errEmailDom);
+    if(!domain.includes('.')) return showErr('email',t.errEmailExt);
+    const dParts=domain.split('.');
+    const provider=dParts[0];
+    const ext=dParts[dParts.length-1];
+    if(!provider) return showErr('email',t.errEmailProv);
+    if(!ext||ext.length<2) return showErr('email',t.errEmailShort);
+    if(provider==='gmail'&&ext==='co') return showErr('email',t.errGmail);
+  }
+  if(authMode==='signup'){
+    const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
+    if(!pass||!hLen||!hU||!hL||!hN||!hS){
+      const miss=[];
+      if(!hLen)miss.push(t.passReqs[0]);if(!hU)miss.push(t.passReqs[1]);
+      if(!hL)miss.push(t.passReqs[2]);if(!hN)miss.push(t.passReqs[3]);if(!hS)miss.push(t.passReqs[4]);
+      return showErr('pass',t.errPassMissing+miss.join(', ')+'.');
+    }
+    const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
+    if(accounts[email]) return showErr('email', t.errPassAlreadyReg);
+    accounts[email] = { name, firstName, lastName, passHash: btoa(pass) };
+    localStorage.setItem('bp_accounts', JSON.stringify(accounts));
+    localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
+    showApp(true);
+  } else {
+    if(!pass) return showErr('pass',t.errPassLogin);
+    const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
+    if(!accounts[email]) return showErr('email', t.errNoAccount);
+    if(accounts[email].passHash !== btoa(pass)) return showErr('pass', t.errWrongPass);
+    const name = accounts[email].name || email;
+    const firstName = accounts[email].firstName || '';
+    const lastName  = accounts[email].lastName  || '';
+    localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
+    showApp();
+  }
+}
+
+function togglePass(){
+  const p=document.getElementById('authPass');
+  p.type=p.type==='password'?'text':'password';
+  document.getElementById('eyeIcon').innerHTML = p.type==='text'
+    ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+    : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+}
+
+function toggleProfilePass(inputId, iconId){
+  const p = document.getElementById(inputId);
+  if(!p) return;
+  p.type = p.type === 'password' ? 'text' : 'password';
+  const icon = document.getElementById(iconId);
+  if(icon) icon.innerHTML = p.type === 'text'
+    ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+    : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+}
+
+function loadUserData(){
+  compHistory  = loadU('history', []);
+  groceryLists = loadU('glists', []);
+  groceryItems = loadU('gitems', []);
+  savedPresets = loadU('presets', []);
+}
+
+function logout(){
+  localStorage.removeItem('bp_session');
+  location.reload();
+}
+
+function showApp(isNewUser=false){
+  document.getElementById('auth-screen').style.display='none';
+  if(isNewUser){
+    obGoStep(1);
+    document.getElementById('onboarding-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+    return;
+  }
+  document.getElementById('app').style.display='block';
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
+  loadUserData();
+  ['history','grocery','presets','help','profile'].forEach(n=>{
+    const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
+  });
+  document.getElementById('tab-compare').style.display='block';
+  updateGrid(); renderHistory(); renderListNav(); renderPresets();
+  if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
+  applyLang();
+}
+
+// ────────────────────────────────────────────────
+// TABS
+// ────────────────────────────────────────────────
+function goTab(name){
+  ['compare','history','grocery','presets','help','profile'].forEach(n=>{
+    const el=document.getElementById(`tab-${n}`);
+    if(n===name){ el.style.display = 'block'; } else { el.style.display='none'; }
+    document.getElementById(`nt-${n}`)?.classList.toggle('active', n===name);
+  });
+  if(name==='profile') renderProfileTab();
+  if(name==='grocery'){ renderListNav(); renderGroceryContent(); }
+}
+
+function handleCurrChange(){}
+
+// ────────────────────────────────────────────────
+// BRAND / CATEGORY DATA
+// ────────────────────────────────────────────────
+const BRAND_DATA = {
+  toilet_paper:['Charmin','Cottonelle','Scott','Angel Soft','Bounty (TP)','Kirkland','Member\'s Mark','Seventh Generation','Up & Up','Great Value'],
+  paper_towels:['Bounty','Viva','Brawny','Scott','Sparkle','Kirkland','Up & Up','Great Value','Seventh Generation'],
+  laundry:['Tide','Gain','Persil','All','Arm & Hammer','Xtra','Kirkland','OxiClean','Woolite','Dreft'],
+  dish_soap:['Dawn','Palmolive','Joy','Ajax','Method','Seventh Generation','Up & Up','Great Value','Mrs. Meyer\'s'],
+  shampoo:['Head & Shoulders','Pantene','TRESemmé','Suave','Herbal Essences','Dove','OGX','L\'Oréal','Garnier','Aveeno'],
+  conditioner:['Pantene','TRESemmé','Suave','Herbal Essences','Dove','OGX','L\'Oréal','Garnier','Aveeno'],
+  body_wash:['Dove','Olay','Suave','Softsoap','Irish Spring','Old Spice','Caress','Ivory','Method'],
+  toothpaste:['Colgate','Crest','Sensodyne','Arm & Hammer','Tom\'s of Maine','Aquafresh','Pepsodent','Up & Up'],
+  deodorant:['Dove','Degree','Secret','Old Spice','Speed Stick','Suave','Axe','Ban','Native','Mitchum'],
+  trash_bags:['Glad','Hefty','Kirkland','Great Value','Member\'s Mark','Up & Up','Drawstring Plus','Reli'],
+  milk:['Whole Milk','2% Milk','Skim Milk','Organic Valley','Horizon Organic','Fairlife','Lactaid','Store Brand','Oat Milk','Almond Milk'],
+  eggs:['Great Value','Happy Egg','Vital Farms','Kirkland','Pete & Gerry\'s','Eggland\'s Best','Store Brand','Free Range'],
+  bread:['Wonder','Nature\'s Own','Dave\'s Killer Bread','Pepperidge Farm','Arnold','Sara Lee','Oroweat','Store Brand','Martin\'s','Brownberry'],
+  butter:['Land O\'Lakes','Kerrygold','Challenge','Store Brand','Organic Valley','Lurpak','Tillamook','Country Crock'],
+  cooking_oil:['Wesson','Mazola','Crisco','Kirkland','Great Value','Spectrum','La Tourangelle','Smart Balance'],
+  cereal:['Cheerios','Frosted Flakes','Honey Bunches of Oats','Raisin Bran','Lucky Charms','Froot Loops','Kashi','Granola','Great Grains','Store Brand'],
+  coffee:['Folgers','Maxwell House','Starbucks','Dunkin\'','Green Mountain','Kirkland','Peet\'s','Eight O\'Clock','Death Wish','Community Coffee'],
+  water:['Dasani','Aquafina','Poland Spring','Fiji','Kirkland','Great Value','Evian','Deer Park','Smartwater','Zephyrhills'],
+  soda:['Coca-Cola','Pepsi','Dr Pepper','Sprite','Mountain Dew','7UP','RC Cola','Store Brand','Canada Dry','Fanta'],
+  juice:['Tropicana','Minute Maid','Simply','Dole','Ocean Spray','Florida\'s Natural','Naked','Bolthouse','Store Brand'],
+  chips:['Lay\'s','Doritos','Pringles','Cheetos','Ruffles','Tostitos','Fritos','Cape Cod','Kettle Brand','Store Brand'],
+  frozen_pizza:['DiGiorno','Red Baron','Tombstone','Jack\'s','California Pizza Kitchen','Newman\'s Own','Amy\'s','Freschetta','Store Brand'],
+  yogurt:['Chobani','Fage','Oikos','Yoplait','Stonyfield','Siggi\'s','Dannon','Noosa','Store Brand','Two Good'],
+  cheese:['Kraft','Sargento','Tillamook','Cabot','Boar\'s Head','Store Brand','Organic Valley','Borden','Velveeta'],
+  diapers:['Pampers','Huggies','Luvs','Kirkland','Up & Up','Parent\'s Choice','Honest','Hello Bello','Andy Pandy'],
+  baby_formula:['Similac','Enfamil','Gerber','Earth\'s Best','Store Brand','Bobbie','Happy Baby','Kirkland'],
+  pet_food:['Purina','Hill\'s','Royal Canin','Blue Buffalo','Iams','Pedigree','Fancy Feast','Meow Mix','Friskies','Kirkland'],
+};
+
+let obHousehold = 2;
+let obStores = [];
+let obSkipped = { 1: false, 2: false, 3: false };
+
+function adjustHousehold(d){ obHousehold=Math.max(1,Math.min(12,obHousehold+d)); document.getElementById('household-val').innerText=obHousehold; }
+function toggleStore(el,name){ el.classList.toggle('selected'); const idx=obStores.indexOf(name); if(idx>=0) obStores.splice(idx,1); else obStores.push(name); }
+function obGoStep(step){
+  // Mark the step we're leaving as skipped (if coming from a skip button)
+  // We detect skip by checking if the caller is the skip span vs the continue button
+  // Instead, we track it by passing the source step
+  [1,2,3].forEach(n=>{ const el=document.getElementById('ob-step-'+n); if(el) el.classList.remove('active'); });
+  [1,2,3].forEach(n=>{ const dot=document.getElementById('od-'+n); if(dot) dot.classList.toggle('done', n < step); });
+  const next=document.getElementById('ob-step-'+step); if(next) next.classList.add('active');
+}
+function obSkipStep(fromStep){
+  obSkipped[fromStep] = true;
+  obGoStep(fromStep + 1);
+}
+function tryFinishOnboarding(){
+  const zipVal = (document.getElementById('ob-zip')?.value || '').trim();
+  if(zipVal && zipVal.length !== 5){
+    const errEl = document.getElementById('ob-zip-err');
+    if(errEl) errEl.style.display = 'flex';
+    const zipInput = document.getElementById('ob-zip');
+    if(zipInput){ zipInput.style.borderColor = 'var(--danger)'; }
+    return;
+  }
+  finishOnboarding();
+}
+
+function finishOnboarding(){
+  if(!obSkipped[1]) saveU('household', obHousehold);
+  if(!obSkipped[2]) saveU('preferred_stores', obStores);
+  const zipVal=(document.getElementById('ob-zip')?.value||'').trim();
+  if(!obSkipped[3] && zipVal.length === 5) saveU('zip', zipVal);
+  document.getElementById('onboarding-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
+  loadUserData();
+  ['history','grocery','presets','help','profile'].forEach(n=>{
+    const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
+  });
+  document.getElementById('tab-compare').style.display='block';
+  updateGrid(); renderHistory(); renderListNav(); renderPresets();
+  if(groceryLists.length){activeListId=groceryLists[0].id; renderGroceryContent();}
+  applyLang();
+}
+
+function updateBrandDropdown(idx){
+  document.getElementById(`n-${idx}`).value='';
+  const bd=document.getElementById(`bd-${idx}`); if(bd) bd.classList.remove('open');
+}
+function onNameInput(idx){
+  const cat=document.getElementById(`cat-${idx}`)?.value;
+  const val=document.getElementById(`n-${idx}`).value.trim().toLowerCase();
+  const bd=document.getElementById(`bd-${idx}`);
+  if(!bd) return;
+  const brands = cat && BRAND_DATA[cat] ? BRAND_DATA[cat] : Object.values(BRAND_DATA).flat();
+  const filtered = val ? brands.filter(b=>b.toLowerCase().includes(val)) : (cat ? brands : []);
+  if(!filtered.length){ bd.classList.remove('open'); return; }
+  bd.innerHTML=filtered.slice(0,8).map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
+  bd.classList.add('open');
+}
+function selectBrand(idx, name){
+  document.getElementById(`n-${idx}`).value=name;
+  document.getElementById(`bd-${idx}`).classList.remove('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.brand-dropdown')&&!e.target.matches(`[id^="n-"]`)) document.querySelectorAll('.brand-dropdown').forEach(b=>b.classList.remove('open'));
+});
+
+function deleteCard(idx){
+  const t=T();
+  if(items <= 2){ showToast(t.minCardsMsg||'Minimum 2 cards required.'); return; }
+  const cardName = document.getElementById(`n-${idx}`)?.value.trim() || `Card ${idx+1}`;
+  showConfirm(
+    t.removeCard||'Remove Card',
+    (t.removeCardConfirm||'Are you sure you want to remove this card? This cannot be undone.').replace('{name}', cardName),
+    ()=>{
+      const saved=[]; for(let i=0;i<items;i++) saved.push(getCard(i));
+      const savedCats=[]; for(let i=0;i<items;i++) savedCats.push(document.getElementById(`cat-${i}`)?.value||'');
+      saved.splice(idx, 1);
+      savedCats.splice(idx, 1);
+      items--;
+      document.getElementById('setCount').value=items;
+      updateGrid();
+      saved.forEach((card,i)=>{ setCard(i,card); const catEl=document.getElementById(`cat-${i}`); if(catEl) catEl.value=savedCats[i]; });
+      const remaining = items>1 ? (t.cardsRemaining||'cards remaining.') : (t.cardRemainingS||'card remaining.');
+      showToast(`${t.cardRemoved||'Card removed.'} ${items} ${remaining}`,'ok');
+    }
+  );
+}
+
+function saveAnalysisAsPreset(){
+  if(!lastAnalysis){ showToast(T().toastRunFirst); return; }
+  document.getElementById('presetNameInput').value='';
+  goTab('presets');
+  toggleSaveForm();
+  showToast(T().savePresetSwitch||'Switch to Presets tab — name it and save!','ok');
+}
+
+function updateGrid(){
+  items=parseInt(document.getElementById('setCount').value);
+  const cur=document.getElementById('setCurr').value;
+  const t=T();
+  const grid=document.getElementById('grid');
+  let html='';
+  for(let i=0;i<items;i++){
+    html+=`
+    <div class="product-card" id="card-${i}">
+      <div class="best-badge">${t.bestValue}</div><div class="tied-badge">${t.tie}</div>
+      <div class="card-header">
+        <div class="card-num">${i+1}</div>
+        <div style="display:flex;gap:6px">
+          <button class="card-icon-btn" title="Duplicate" onclick="dupCard(${i})"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          <button class="card-icon-btn" title="Delete card" style="color:var(--danger);border-color:var(--danger)" onclick="deleteCard(${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        </div>
+      </div>
+      <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
+      <label class="card-label">${t.priceLabel}</label>
+      <input type="number" class="price-input" id="p-${i}" placeholder="0.00" oninput="clearPriceErr(${i})">
+      <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
+      <div class="field-row" style="margin-top:10px">
+        <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" class="card-input" id="dv-${i}" value="0"></div>
+        <div style="flex:1"><label class="card-label">${t.typeLabel}</label><select class="card-select" id="dt-${i}"><option value="p">%</option><option value="f">${cur}</option></select></div>
+      </div>
+      <label class="card-label">${t.sizeLabel}</label>
+      <div class="field-row">
+        <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}">
+        <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
+          <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
+        </select>
+      </div>
+      <label class="card-label">${t.packLabel}</label>
+      <input type="number" class="card-input" id="q-${i}" value="1" style="margin-top:4px;margin-bottom:10px">
+      <label class="card-label">${t.categoryLabel||'Category'}</label>
+      <select class="card-select" id="cat-${i}" onchange="updateBrandDropdown(${i})" style="margin-bottom:8px">
+        <option value="">${t.categoryPh||'— Select Category —'}</option>
+        <option value="toilet_paper">Toilet Paper</option>
+        <option value="paper_towels">Paper Towels</option>
+        <option value="laundry">Laundry Detergent</option>
+        <option value="dish_soap">Dish Soap</option>
+        <option value="shampoo">Shampoo</option>
+        <option value="conditioner">Conditioner</option>
+        <option value="body_wash">Body Wash</option>
+        <option value="toothpaste">Toothpaste</option>
+        <option value="deodorant">Deodorant</option>
+        <option value="trash_bags">Trash Bags</option>
+        <option value="milk">Milk</option>
+        <option value="eggs">Eggs</option>
+        <option value="bread">Bread</option>
+        <option value="butter">Butter</option>
+        <option value="cooking_oil">Cooking Oil</option>
+        <option value="cereal">Cereal</option>
+        <option value="coffee">Coffee</option>
+        <option value="water">Bottled Water</option>
+        <option value="soda">Soda</option>
+        <option value="juice">Juice</option>
+        <option value="chips">Chips / Snacks</option>
+        <option value="frozen_pizza">Frozen Pizza</option>
+        <option value="yogurt">Yogurt</option>
+        <option value="cheese">Cheese</option>
+        <option value="diapers">Diapers</option>
+        <option value="baby_formula">Baby Formula</option>
+        <option value="pet_food">Pet Food</option>
+      </select>
+      <label class="card-label">${t.nameLabel}</label>
+      <div style="position:relative">
+        <input type="text" class="card-input" id="n-${i}" placeholder="${t.itemNamePh}" oninput="onNameInput(${i})" autocomplete="off">
+        <div class="brand-dropdown" id="bd-${i}"></div>
+      </div>
+      <div class="result-line" id="res-${i}"></div>
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+function getCard(i){ return {p:document.getElementById(`p-${i}`)?.value||'',dv:document.getElementById(`dv-${i}`)?.value||'0',dt:document.getElementById(`dt-${i}`)?.value||'p',s:document.getElementById(`s-${i}`)?.value||'',u:document.getElementById(`u-${i}`)?.value||'oz',q:document.getElementById(`q-${i}`)?.value||'1',n:document.getElementById(`n-${i}`)?.value||''}; }
+function setCard(i,d){ ['p','dv','dt','s','u','q','n'].forEach(k=>{ const el=document.getElementById(`${k}-${i}`); if(el)el.value=d[k]!=null?d[k]:''; }); }
+
+function dupCard(idx){
+  const t=T();
+  if(items >= 8){ showToast(t.dupLimitMsg||"You've reached the 8-item limit. Remove a card to duplicate."); return; }
+  const d=getCard(idx);
+  const srcCat=document.getElementById(`cat-${idx}`)?.value||'';
+  const saved=[]; for(let i=0;i<items;i++) saved.push(getCard(i));
+  const savedCats=[]; for(let i=0;i<items;i++) savedCats.push(document.getElementById(`cat-${i}`)?.value||'');
+  items++;
+  document.getElementById('setCount').value=items;
+  updateGrid();
+  saved.forEach((card,i)=>{ setCard(i,card); const catEl=document.getElementById(`cat-${i}`); if(catEl) catEl.value=savedCats[i]; });
+  setCard(items-1, d);
+  const newCat=document.getElementById(`cat-${items-1}`); if(newCat) newCat.value=srcCat;
+  if(d.n) onNameInput(items-1);
+  showToast(`Card ${idx+1} → Card ${items}`,'ok');
+}
+
+function clearPriceErr(idx){
+  const pEl=document.getElementById(`p-${idx}`); if(pEl) pEl.style.borderColor='';
+  const errEl=document.getElementById(`price-err-${idx}`); if(errEl) errEl.style.display='none';
+}
+function autoUnit(i){ const u=document.getElementById(`u-${i}`),s=document.getElementById(`s-${i}`); if(u.value==='count'&&!s.value)s.value='1'; }
+
+function applySettings(){
+  const saved=[]; for(let i=0;i<items;i++)saved.push(getCard(i));
+  items=parseInt(document.getElementById('setCount').value);
+  updateGrid();
+  saved.forEach((d,i)=>{ if(i<items)setCard(i,d); });
+  applyLang();
+  closeModals();
+}
+
+// ────────────────────────────────────────────────
+// COMPARE
+// ────────────────────────────────────────────────
+function compare(){
+  const cur=document.getElementById('setCurr').value;
+  const t=T();
+  let best=Infinity, results=[];
+  let log=`${t.analysisHeader}\n`;
+  let hasError=false;
+
+  for(let i=0;i<items;i++){
+    clearPriceErr(i);
+    document.getElementById(`card-${i}`).classList.remove('best','tied');
+  }
+
+  for(let i=0;i<items;i++){
+    const pRaw=document.getElementById(`p-${i}`).value.trim();
+    const nRaw=document.getElementById(`n-${i}`).value.trim();
+    const sRaw=document.getElementById(`s-${i}`).value.trim();
+    let p=parseFloat(pRaw);
+    let s=parseFloat(sRaw);
+    let q=parseFloat(document.getElementById(`q-${i}`).value)||1;
+    let u=document.getElementById(`u-${i}`).value;
+    let dv=parseFloat(document.getElementById(`dv-${i}`).value)||0;
+    if(dv<0)dv=0;
+    let dt=document.getElementById(`dt-${i}`).value;
+    let n=nRaw||`Item ${i+1}`;
+
+    const cardHasData = nRaw || sRaw;
+    if(cardHasData && (pRaw===''||isNaN(p)||p<=0)){
+      const pEl=document.getElementById(`p-${i}`);
+      if(pEl){pEl.style.borderColor='var(--danger)'; pEl.style.boxShadow='0 0 0 3px rgba(239,68,68,.15)';}
+      const errEl=document.getElementById(`price-err-${i}`);
+      if(errEl) errEl.style.display='block';
+      hasError=true;
+      continue;
+    }
+    if(isNaN(s)||s===0) s=u==='count'?1:NaN;
+    if(!isNaN(p)&&p>0&&!isNaN(s)&&s>0){
+      const net=Math.max(0,(dt==='p'?p*(1-Math.min(dv,100)/100):p-dv))/currRate;
+      const total=s*q*UNIT_RATES[u];
+      const up=net/total;
+      const baseUnit=(['oz','lb','g','kg'].includes(u))?'oz':(['ml','l','gal'].includes(u))?'fl oz':(['ft','in','yd','m'].includes(u))?'ft':u;
+      document.getElementById(`res-${i}`).innerText=`${cur}${up.toFixed(4)} / ${baseUnit}`;
+      log+=`${n}: ${cur}${up.toFixed(4)} ${t.analysisPer} ${baseUnit}.\n`;
+      results.push({i,n,up});
+      if(up<best)best=up;
+    } else {
+      document.getElementById(`res-${i}`).innerText='';
+    }
+  }
+
+  if(hasError){ showToast('Please enter a price on all filled cards.'); return; }
+  if(!results.length){ showToast(t.toastEnterPrice); return; }
+
+  const winners=results.filter(r=>Math.abs(r.up-best)<0.0001);
+  if(winners.length>1){
+    winners.forEach(w=>document.getElementById(`card-${w.i}`).classList.add('tied'));
+    const names=winners.map(w=>w.n).join(' & ');
+    log+=`\n${t.analysisTie}: ${names} (${cur}${best.toFixed(4)} ${t.analysisPerUnit})`;
+    const entry={date:new Date().toLocaleString(),winner:`${t.analysisTie}: ${names}`,winnerPrice:`${cur}${best.toFixed(4)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(4)}`).join(' | ')};
+    compHistory.unshift(entry); if(compHistory.length>50)compHistory.pop();
+    saveU('history',compHistory); renderHistory();
+  } else {
+    const w=winners[0];
+    document.getElementById(`card-${w.i}`).classList.add('best');
+    log+=`\n${t.analysisBest}: ${w.n}`;
+    const entry={date:new Date().toLocaleString(),winner:w.n,winnerPrice:`${cur}${w.up.toFixed(4)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(4)}`).join(' | ')};
+    compHistory.unshift(entry); if(compHistory.length>50)compHistory.pop();
+    saveU('history',compHistory); renderHistory();
+  }
+  lastAnalysis=log;
+  document.getElementById('analysisBox').value=log;
+  const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=log;
+}
+
+function resetAll(){ const t=T(); showConfirm(lang==='en'?'Reset Compare':lang==='es'?'Reiniciar comparación':'Redefinir comparação', lang==='en'?'Clear all items and results?':lang==='es'?'¿Borrar todos los artículos y resultados?':'Limpar todos os itens e resultados?', ()=>{ updateGrid(); document.getElementById('analysisBox').value=''; lastAnalysis=''; const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=T().exportRunFirst; }); }
+
+// ────────────────────────────────────────────────
+// HISTORY
+// ────────────────────────────────────────────────
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  const t=T();
+  const emptyMsg = lang==='en'?'No history yet.<br>Run a comparison to see results here.':lang==='es'?'Sin historial aún.<br>Ejecuta una comparación para ver resultados.':'Sem histórico ainda.<br>Execute uma comparação para ver resultados.';
+  if(!compHistory.length){ el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>${emptyMsg}</p></div>`; return; }
+  el.innerHTML=compHistory.map((h,i)=>`<div class="history-item"><div style="flex:1"><div class="h-date">${esc(h.date)}</div><div class="h-winner">${esc(h.winner)} — ${esc(h.winnerPrice)}</div><div class="h-detail">${esc(h.items)}</div></div><button class="del-btn" onclick="delHistory(${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div>`).join('');
+}
+function delHistory(i){ showConfirm(lang==='en'?'Delete Entry':lang==='es'?'Eliminar entrada':'Excluir entrada', lang==='en'?'Remove this comparison from history?':lang==='es'?'¿Eliminar esta comparación del historial?':'Remover esta comparação do histórico?', ()=>{ compHistory.splice(i,1); saveU('history',compHistory); renderHistory(); }); }
+function clearHistory(){ showConfirm(lang==='en'?'Clear All History':lang==='es'?'Borrar todo el historial':'Limpar todo o histórico', lang==='en'?'Delete all comparison history? This cannot be undone.':lang==='es'?'¿Eliminar todo el historial? No se puede deshacer.':'Excluir todo o histórico? Isso não pode ser desfeito.', ()=>{ compHistory=[]; saveU('history',compHistory); renderHistory(); }); }
+
+// ────────────────────────────────────────────────
+// GROCERY — LISTS
+// ────────────────────────────────────────────────
+function renderListNav(){
+  const nav=document.getElementById('listNav');
+  const t=T();
+  const noListsMsg = lang==='en'?'No lists yet.':lang==='es'?'Sin listas aún.':'Sem listas ainda.';
+  if(!groceryLists.length){ nav.innerHTML=`<div style="padding:12px 16px;font-size:13px;color:var(--muted)">${noListsMsg}</div>`; return; }
+  nav.innerHTML=groceryLists.map(list=>{
+    const count=groceryItems.filter(gi=>gi.listId===list.id).length;
+    return `<div class="list-nav-item ${activeListId===list.id?'active':''}" onclick="selectList(${list.id})">
+      <span class="list-nav-name">${esc(list.name)}</span>
+      <span class="list-nav-count">${count}</span>
+      <div class="list-nav-actions">
+        <button class="list-nav-action" title="Rename" onclick="event.stopPropagation();promptRenameList(${list.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="list-nav-action red" title="Delete" onclick="event.stopPropagation();deleteList(${list.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectList(id){ activeListId=id; renderListNav(); renderGroceryContent(); }
+
+function promptNewList(){
+  const t=T();
+  document.getElementById('listNameModalTitle').innerText=t.newListBtn;
+  document.getElementById('listNameInput').value='';
+  listNameCallback = (name) => {
+    const list={id:Date.now(),name};
+    groceryLists.push(list); saveU('glists',groceryLists);
+    activeListId=list.id; renderListNav(); renderGroceryContent();
+    showToast(`"${name}" ${t.toastAdded}`,'ok');
+  };
+  openModal('listNameModal');
+  setTimeout(()=>document.getElementById('listNameInput').focus(),100);
+}
+
+function promptRenameList(id){
+  const t=T();
+  const list=groceryLists.find(l=>l.id===id); if(!list)return;
+  document.getElementById('listNameModalTitle').innerText=lang==='en'?'Rename List':lang==='es'?'Renombrar lista':'Renomear lista';
+  document.getElementById('listNameInput').value=list.name;
+  listNameCallback = (name) => { list.name=name; saveU('glists',groceryLists); renderListNav(); renderGroceryContent(); showToast(t.toastRenamed,'ok'); };
+  openModal('listNameModal');
+  setTimeout(()=>document.getElementById('listNameInput').focus(),100);
+}
+
+function confirmListName(){
+  const t=T();
+  const name=document.getElementById('listNameInput').value.trim();
+  if(!name){ showToast(t.toastListName); return; }
+  const cb=listNameCallback; listNameCallback=null;
+  closeModals();
+  if(cb) cb(name);
+}
+
+function deleteList(id){
+  const t=T();
+  showConfirm(lang==='en'?'Delete List':lang==='es'?'Eliminar lista':'Excluir lista',
+    lang==='en'?'Delete this list and all its items?':lang==='es'?'¿Eliminar esta lista y todos sus artículos?':'Excluir esta lista e todos os seus itens?', ()=>{
+    groceryLists=groceryLists.filter(l=>l.id!==id);
+    groceryItems=groceryItems.filter(gi=>gi.listId!==id);
+    saveU('glists',groceryLists); saveU('gitems',groceryItems);
+    if(activeListId===id) activeListId=groceryLists[0]?.id||null;
+    renderListNav(); renderGroceryContent();
+    showToast(t.toastDeleted);
+  });
+}
+
+// ────────────────────────────────────────────────
+// GROCERY — ITEMS
+// ────────────────────────────────────────────────
+function renderGroceryContent(){
+  const el=document.getElementById('groceryContent');
+  if(!activeListId||!groceryLists.find(l=>l.id===activeListId)){
+    const t=T(); const lines=t.groceryEmpty.split('\n');
+    el.innerHTML=`<div class="no-list-state"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg><p>${lines[0]}<br>${lines[1]||''}</p></div>`; return;
+  }
+  const listName=groceryLists.find(l=>l.id===activeListId).name;
+  const listItems=groceryItems.filter(gi=>gi.listId===activeListId);
+  const done=listItems.filter(i=>i.done).length;
+  const t=T();
+  const emptyListMsg = lang==='en'?'No items in this list yet.':lang==='es'?'Esta lista está vacía.':'Esta lista está vazia.';
+  const doneWord = lang==='en'?'done':lang==='es'?'listo':'feito';
+  const qtyWord = lang==='en'?'Qty':lang==='es'?'Cant':'Qtd';
+  el.innerHTML=`
+    <div class="grocery-add-form">
+      <div class="gaf-title">${t.addItemTitle} "${esc(listName)}"</div>
+      <div class="gaf-grid">
+        <div><label class="g-label">${t.gNameLabel}</label><input class="g-input" type="text" id="g-name" placeholder="${t.gNamePh}"></div>
+        <div><label class="g-label">${t.gQtyLabel}</label><input class="g-input" type="text" id="g-qty" placeholder="${t.gQtyPh}"></div>
+        <div><label class="g-label">${t.gPriceLabel}</label><input class="g-input" type="number" id="g-price" placeholder="0.00"></div>
+        <div><label class="g-label">${t.gStoreLabel}</label><input class="g-input" type="text" id="g-store" placeholder="${t.gStorePh}"></div>
+        <div class="gaf-full"><label class="g-label">${t.gNotesLabel}</label><input class="g-input" type="text" id="g-notes" placeholder="${t.gNotesPh}"></div>
+      </div>
+      <button class="gadd-btn" onclick="addGroceryItem()">${t.addBtn}</button>
+    </div>
+    <div id="groceryItemsList">
+    ${listItems.length===0
+      ? `<div class="empty-state"><p>${emptyListMsg}</p></div>`
+      : listItems.map(item=>`
+        <div class="grocery-item ${item.done?'done':''}">
+          <div class="g-check ${item.done?'on':''}" onclick="toggleDone(${item.id})"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="gi-info">
+            <div class="gi-name">${esc(item.name)}</div>
+            <div class="gi-meta">${qtyWord}: ${esc(item.qty)}${item.store?' · '+esc(item.store):''}${item.notes?' · '+esc(item.notes):''}</div>
+          </div>
+          ${item.price?`<span class="gi-price">${currSymbol}${parseFloat(item.price).toFixed(2)}</span>`:''}
+          <div class="gi-actions">
+            <button class="card-icon-btn" title="Edit item" onclick="promptEditItem(${item.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="card-icon-btn" title="Copy to list" onclick="promptDupItem(${item.id})"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            <button class="card-icon-btn" title="Delete" onclick="delGroceryItem(${item.id})" style="color:var(--danger)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>`).join('')
+    }
+    </div>
+    <div class="grocery-bottom">
+      <span class="g-count">${done}/${listItems.length} ${doneWord}</span>
+      <button class="tool-btn" onclick="uncheckAll()"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>${t.uncheckAll}</button>
+    </div>`;
+}
+
+function addGroceryItem(){
+  const t=T();
+  const name=document.getElementById('g-name').value.trim();
+  if(!name){ showToast(t.toastItemName); return; }
+  const item={id:Date.now(),listId:activeListId,name,qty:document.getElementById('g-qty').value||'1',price:document.getElementById('g-price').value,store:document.getElementById('g-store').value.trim(),notes:document.getElementById('g-notes').value.trim(),done:false};
+  groceryItems.push(item); saveU('gitems',groceryItems);
+  ['g-name','g-qty','g-price','g-store','g-notes'].forEach(id=>{ const e=document.getElementById(id); if(e)e.value=''; });
+  renderListNav(); renderGroceryContent();
+  showToast(`"${name}" ${t.toastAdded}`,'ok');
+  setTimeout(()=>{ const nf=document.getElementById('g-name'); if(nf)nf.focus(); },100);
+}
+function toggleDone(id){ const i=groceryItems.find(x=>x.id===id); if(i){i.done=!i.done;saveU('gitems',groceryItems);renderListNav();renderGroceryContent();} }
+function delGroceryItem(id){ const t=T(); showConfirm(lang==='en'?'Delete Item':lang==='es'?'Eliminar artículo':'Excluir item', lang==='en'?'Remove this item from the list?':lang==='es'?'¿Eliminar este artículo de la lista?':'Remover este item da lista?', ()=>{ groceryItems=groceryItems.filter(i=>i.id!==id); saveU('gitems',groceryItems); renderListNav(); renderGroceryContent(); }); }
+function uncheckAll(){ const t=T(); showConfirm(t.uncheckAll, lang==='en'?'Remove all checkmarks from this list?':lang==='es'?'¿Quitar todas las marcas de esta lista?':'Remover todas as marcações desta lista?', ()=>{ groceryItems.filter(i=>i.listId===activeListId).forEach(i=>i.done=false); saveU('gitems',groceryItems); renderGroceryContent(); showToast(t.toastUncheck,'ok'); }); }
+
+function promptDupItem(id){
+  const t=T();
+  dupItemId=id;
+  if(!groceryLists.length){ showToast(t.toastNoLists); return; }
+  const el=document.getElementById('dupListOptions');
+  el.innerHTML=groceryLists.map(l=>{
+    const isCurrent = l.id===activeListId;
+    return `<button class="auth-btn" style="margin-bottom:8px;padding:12px;${isCurrent?'opacity:.75':''}" onclick="doDupItem(${l.id})">${l.name}${isCurrent?` (${t.thisListLabel})`:''}</button>`;
+  }).join('');
+  openModal('dupItemModal');
+}
+
+function promptEditItem(id){
+  const item=groceryItems.find(i=>i.id===id); if(!item)return;
+  document.getElementById('editItemId').value=id;
+  document.getElementById('edit-name').value=item.name||'';
+  document.getElementById('edit-qty').value=item.qty||'';
+  document.getElementById('edit-price').value=item.price||'';
+  document.getElementById('edit-store').value=item.store||'';
+  document.getElementById('edit-notes').value=item.notes||'';
+  openModal('editItemModal');
+  setTimeout(()=>document.getElementById('edit-name').focus(),100);
+}
+
+function saveEditItem(){
+  const id=parseInt(document.getElementById('editItemId').value);
+  const item=groceryItems.find(i=>i.id===id); if(!item)return;
+  const name=document.getElementById('edit-name').value.trim();
+  if(!name){ showToast(T().toastItemNameEmpty); return; }
+  item.name=name;
+  item.qty=document.getElementById('edit-qty').value||'1';
+  item.price=document.getElementById('edit-price').value;
+  item.store=document.getElementById('edit-store').value.trim();
+  item.notes=document.getElementById('edit-notes').value.trim();
+  saveU('gitems',groceryItems);
+  closeModals();
+  renderListNav(); renderGroceryContent();
+  showToast(`"${name}" ${T().toastUpdated}`,'ok');
+}
+function doDupItem(toListId){
+  const orig=groceryItems.find(i=>i.id===dupItemId); if(!orig)return;
+  const copy={...orig,id:Date.now(),listId:toListId,done:false};
+  groceryItems.push(copy); saveU('gitems',groceryItems);
+  closeModals(); renderListNav();
+  if(toListId===activeListId) renderGroceryContent();
+  const destName=groceryLists.find(l=>l.id===toListId)?.name||'list';
+  const t=T();
+  showToast(`${lang==='en'?'Copied to':lang==='es'?'Copiado a':'Copiado para'} "${destName}"`,'ok');
+}
+
+// ────────────────────────────────────────────────
+// PRESETS
+// ────────────────────────────────────────────────
+function toggleSaveForm(){ const f=document.getElementById('savePresetForm'); f.classList.toggle('open'); if(f.classList.contains('open')) document.getElementById('presetNameInput').focus(); }
+function savePreset(){
+  const t=T();
+  const name=document.getElementById('presetNameInput').value.trim();
+  if(!name){showToast(t.toastPresetName);return;}
+  const data=[]; for(let i=0;i<items;i++)data.push(getCard(i));
+  savedPresets.unshift({name,data,count:items,date:new Date().toLocaleDateString(),id:Date.now()});
+  saveU('presets',savedPresets);
+  document.getElementById('presetNameInput').value='';
+  toggleSaveForm(); renderPresets(); showToast(`"${name}" ${t.toastSaved}`,'ok');
+}
+function loadPreset(id){
+  const t=T();
+  const p=savedPresets.find(x=>x.id===id); if(!p)return;
+  document.getElementById('setCount').value=p.count; items=p.count; updateGrid();
+  p.data.forEach((d,i)=>{ if(i<items)setCard(i,d); });
+  for(let i=0;i<items;i++){ const r=document.getElementById(`res-${i}`); if(r) r.innerText=''; document.getElementById(`card-${i}`)?.classList.remove('best','tied'); }
+  document.getElementById('analysisBox').value=''; lastAnalysis='';
+  const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=t.exportRunFirst;
+  goTab('compare'); showToast(`${t.toastLoaded} "${p.name}"`,'ok');
+}
+function delPreset(id){ showConfirm(lang==='en'?'Delete Preset':lang==='es'?'Eliminar preajuste':'Excluir predefinição', lang==='en'?'Delete this saved preset?':lang==='es'?'¿Eliminar este preajuste guardado?':'Excluir esta predefinição salva?', ()=>{ savedPresets=savedPresets.filter(p=>p.id!==id); saveU('presets',savedPresets); renderPresets(); }); }
+function renderPresets(){
+  const el=document.getElementById('presetList');
+  const t=T();
+  const itemsWord = lang==='en'?'items':lang==='es'?'artículos':'itens';
+  const emptyMsg = lang==='en'?`No presets yet.<br>Fill out the Compare tab and tap "${t.saveCurrent}".`:lang==='es'?`Sin preajustes aún.<br>Completa la pestaña Comparar y toca "${t.saveCurrent}".`:`Sem predefinições ainda.<br>Preencha a aba Comparar e toque em "${t.saveCurrent}".`;
+  const loadWord = lang==='en'?'Load':lang==='es'?'Cargar':'Carregar';
+  const deleteWord = lang==='en'?'Delete':lang==='es'?'Eliminar':'Excluir';
+  if(!savedPresets.length){ el.innerHTML=`<div class="empty-state"><p>${emptyMsg}</p></div>`; return; }
+  el.innerHTML=savedPresets.map(p=>`<div class="preset-card"><div><div class="preset-name-txt">${esc(p.name)}</div><div class="preset-meta">${p.count} ${itemsWord} · ${p.date}</div></div><div class="preset-btns"><button class="btn-load" onclick="loadPreset(${p.id})">${loadWord}</button><button class="btn-del-p" onclick="delPreset(${p.id})">${deleteWord}</button></div></div>`).join('');
+}
+
+// ────────────────────────────────────────────────
+// EXPORT
+// ────────────────────────────────────────────────
+function shareResults(){ const t=T(); const text=lastAnalysis||document.getElementById('analysisBox').value; if(!text.trim()){ showToast(t.toastRunFirst); return; } if(navigator.share)navigator.share({title:'Better Price! Results',text}); else copyResults(); }
+function copyResults(){ const t=T(); navigator.clipboard.writeText(lastAnalysis||document.getElementById('analysisBox').value).then(()=>showToast(t.toastCopiedClip,'ok')).catch(()=>showToast(t.toastCopyFail)); }
+
+// ────────────────────────────────────────────────
+// SCANNER
+// ────────────────────────────────────────────────
+async function startScan(idx){
+  activeIdx=idx; document.getElementById('scanner-overlay').style.display='block';
+  if(scanner){try{await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}
+  const fmts=[Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.RSS_14];
+  scanner=new Html5Qrcode("reader",{formatsToSupport:fmts});
+  let scanHandled=false;
+  try{
+    const devs=await Html5Qrcode.getCameras();
+    if(devs?.length){ const cam=devs.find(d=>/back|rear|environment/i.test(d.label))||devs[0]; await scanner.start(cam.id,{fps:10,aspectRatio:1.0},txt=>{ if(scanHandled)return; scanHandled=true; closeScanner();fetchProduct(txt,idx);}); }
+    else{showToast('No camera found.');closeScanner();}
+  }catch(e){showToast('Camera permission denied.');closeScanner();}
+}
+async function closeScanner(){ document.getElementById('scanner-overlay').style.display='none'; if(scanner){try{await scanner.stop();await scanner.clear();}catch(e){}scanner=null;} }
+async function fetchProduct(code,idx){
+  const t=T();
+  let name='', sizeStr='';
+
+  try{
+    const r=await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${code}`);
+    const d=await r.json();
+    if(d.code==='OK'&&d.items&&d.items.length){
+      const item=d.items[0];
+      name=(item.title||'').trim();
+      sizeStr=item.size||item.weight||item.dimension||'';
+      if(!sizeStr) sizeStr=name;
+    }
+  }catch(e){}
+
+  if(!name){
+    const openFactsDBs = [
+      'https://world.openfoodfacts.org',
+      'https://world.openbeautyfacts.org',
+      'https://world.openproductsfacts.org',
+      'https://world.openpetfoodfacts.org'
+    ];
+    for(const db of openFactsDBs){
+      try{
+        const r=await fetch(`${db}/api/v0/product/${code}.json`);
+        const d=await r.json();
+        if(d.status===1){
+          name=(d.product.product_name||'').trim();
+          sizeStr=d.product.quantity||d.product.product_quantity||name;
+          break;
+        }
+      }catch(e){}
+    }
+  }
+
+  if(name){
+    if(navigator.vibrate)navigator.vibrate(200);
+    document.getElementById(`n-${idx}`).value=name;
+    const res=parseSize(sizeStr)||parseSize(name);
+    if(res){document.getElementById(`s-${idx}`).value=res.size;document.getElementById(`u-${idx}`).value=res.unit;autoUnit(idx);}
+    else showToast(t.toastSizeNA);
+    setTimeout(()=>{const pf=document.getElementById(`p-${idx}`);if(pf){pf.focus();pf.select();}},400);
+  } else showToast(t.toastNoProduct);
+}
+
+function parseSize(text){
+  if(!text)return null; text=String(text).toLowerCase().replace(/,/g,'');
+  const m={
+    'fluid ounce':'oz','fl oz':'oz','floz':'oz','oz':'oz','ounce':'oz','ounces':'oz',
+    'ml':'ml','milliliter':'ml','milliliters':'ml','millilitre':'ml',
+    'liter':'l','liters':'l','litre':'l','litres':'l',
+    'gal':'gal','gallon':'gal','gallons':'gal',
+    'gram':'g','grams':'g',
+    'kg':'kg','kilogram':'kg','kilograms':'kg',
+    'lb':'lb','lbs':'lb','pound':'lb','pounds':'lb',
+    'count':'count','ct':'count','pack':'count','pk':'count',
+    'pcs':'count','pc':'count','pieces':'count','piece':'count',
+    'sheets':'count','sheet':'count','rolls':'count','roll':'count',
+    'bars':'count','bar':'count','tabs':'count','tablets':'count','tablet':'count',
+    'capsules':'count','capsule':'count','caps':'count',
+    'eggs':'count','egg':'count',
+    'cookies':'count','slices':'count','shells':'count',
+    'pencils':'count','pencil':'count','pens':'count','pen':'count',
+    'wipes':'count','wipe':'count','pads':'count','pad':'count',
+    'bags':'count','bag':'count','bottles':'count','bottle':'count',
+    'cans':'count','can':'count','boxes':'count','box':'count',
+    'pairs':'count','pair':'count','sets':'count','set':'count',
+    'units':'count','unit':'count',
+    'ft':'ft','feet':'ft','foot':'ft',
+    'in':'in','inch':'in','inches':'in',
+    'yd':'yd','yard':'yd','yards':'yd',
+    'meter':'m','meters':'m','metre':'m','metres':'m',
+  };
+  const singleCharUnits = { 'l':'l', 'g':'g', 'm':'m' };
+  const keys=Object.keys(m).sort((a,b)=>b.length-a.length);
+  for(const k of keys){
+    const r=text.match(new RegExp(`(\\d+(\\.\\d+)?)\\s*\\b${k}\\b`,'i'));
+    if(r)return{size:r[1],unit:m[k]};
+  }
+  for(const [k,u] of Object.entries(singleCharUnits)){
+    const r=text.match(new RegExp(`(\\d+(\\.\\d+)?)\\s*${k}(?=\\s|$)`,'i'));
+    if(r)return{size:r[1],unit:u};
+  }
+  return null;
+}
+
+// ────────────────────────────────────────────────
+// TOAST / MODALS / CALC
+// ────────────────────────────────────────────────
+let _toastTimer=null, _toastDismiss=null;
+function showToast(msg,type='warn'){
+  const t=document.getElementById('toast'); document.getElementById('toast-txt').innerText=msg;
+  t.className=`show ${type==='ok'?'ok':''}`;
+  if(_toastTimer){clearTimeout(_toastTimer);_toastTimer=null;}
+  if(_toastDismiss){document.removeEventListener('click',_toastDismiss);_toastDismiss=null;}
+  const dismiss=()=>{t.classList.remove('show');document.removeEventListener('click',dismiss);_toastDismiss=null;_toastTimer=null;};
+  _toastDismiss=dismiss;
+  setTimeout(()=>document.addEventListener('click',dismiss),300);
+  _toastTimer=setTimeout(dismiss,5000);
+}
+function openModal(id){
+  document.getElementById('modalOverlay').style.display='block';
+  document.getElementById(id).style.display='block';
+  if(id==='exportModal') document.getElementById('exportPre').innerText=lastAnalysis||T().exportRunFirst;
+}
+function closeModals(){ document.getElementById('modalOverlay').style.display='none'; document.querySelectorAll('.modal-box').forEach(m=>m.style.display='none'); listNameCallback=null; dupItemId=null; }
+function showConfirm(title, msg, onOk){
+  document.getElementById('confirmTitle').innerText=title;
+  document.getElementById('confirmMsg').innerText=msg;
+  document.getElementById('confirmOkBtn').onclick=()=>{ closeModals(); onOk(); };
+  document.getElementById('modalOverlay').style.display='block';
+  document.getElementById('confirmModal').style.display='block';
+}
+
+function cAdd(v){
+  if(calcVal==='Error')calcVal='0';
+  calcVal=(calcVal==='0'&&v!=='.')?v:calcVal+v;
+  document.getElementById('calcDisplay').value=calcVal;
+}
+function cClr(){calcVal='0';document.getElementById('calcDisplay').value='0';}
+function cBk(){if(calcVal==='Error'){calcVal='0';}else{calcVal=calcVal.length>1?calcVal.slice(0,-1):'0';}document.getElementById('calcDisplay').value=calcVal;}
+function cRes(){
+  try{
+    const expr = calcVal.trim();
+    if(!expr || !/\d$|\)$/.test(expr)){calcVal='0';document.getElementById('calcDisplay').value='0';return;}
+    if(!/^[0-9+\-*/.() ]+$/.test(expr)){calcVal='Error';document.getElementById('calcDisplay').value='Error';setTimeout(cClr,1000);return;}
+    let r=Function('"use strict";return ('+expr+')')();
+    if(!isFinite(r)||isNaN(r)){calcVal='Error';document.getElementById('calcDisplay').value='Error';setTimeout(cClr,1000);return;}
+    calcVal=parseFloat(r.toFixed(10)).toString();
+    document.getElementById('calcDisplay').value=calcVal;
+  }catch(e){calcVal='Error';document.getElementById('calcDisplay').value='Error';setTimeout(cClr,1000);}
+}
+
+
+// ────────────────────────────────────────────────
+// PROFILE TAB
+// ────────────────────────────────────────────────
+let profileHousehold = 2;
+let profileStores = [];
+
+function profileAdjHousehold(d){
+  profileHousehold = Math.max(1, Math.min(12, profileHousehold + d));
+  document.getElementById('profile-household-val').innerText = profileHousehold;
+}
+
+function profileToggleStore(el, name){
+  el.classList.toggle('selected');
+  const idx = profileStores.indexOf(name);
+  if(idx >= 0) profileStores.splice(idx, 1);
+  else profileStores.push(name);
+}
+
+function renderProfileTab(){
+  const t = T();
+
+  // ── Apply translated labels ──
+  const setTxt = (id, v) => { const el=document.getElementById(id); if(el) el.innerText=v; };
+  const setPh  = (id, v) => { const el=document.getElementById(id); if(el) el.placeholder=v; };
+  const setQ   = (sel, v) => { const el=document.querySelector(sel); if(el) el.innerText=v; };
+
+  setQ('#tab-profile .tab-title', t.profileTitle||'My Profile');
+  setQ('#tab-profile .prof-lbl-account',    t.profileAccountInfo||'Account Info');
+  setQ('#tab-profile .prof-lbl-firstname',  t.profileFirstName||'First Name');
+  setQ('#tab-profile .prof-lbl-lastname',   t.profileLastName||'Last Name');
+  setQ('#tab-profile .prof-lbl-email',      t.profileEmail||'Email');
+  setQ('#tab-profile .prof-lbl-emailnote',  t.profileEmailNote||'Email cannot be changed.');
+  setQ('#tab-profile .prof-lbl-changepass', t.profileChangePass||'Change Password');
+  setQ('#tab-profile .prof-lbl-curpass',    t.profileCurPass||'Current Password');
+  setQ('#tab-profile .prof-lbl-newpass',    t.profileNewPass||'New Password');
+  setQ('#tab-profile .prof-lbl-confpass',   t.profileConfPass||'Confirm New Password');
+  setQ('#tab-profile .prof-lbl-passnote',   t.profilePassNote||'Leave new & confirm blank to keep your current password.');
+  setQ('#tab-profile .prof-lbl-household',  t.profileHousehold||'Household Size');
+  setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
+  setQ('#tab-profile .prof-lbl-stores',     t.profileStores||'My Stores');
+  setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
+  setPh('profile-firstname',   t.profileFirstName||'First Name');
+  setPh('profile-lastname',    t.profileLastName||'Last Name');
+  setPh('profile-current-pass',t.profileCurPassPh||'Enter your current password');
+  setPh('profile-new-pass',    t.profileNewPassPh||'New password (8+ chars)');
+  setPh('profile-confirm-pass',t.profileConfPassPh||'Repeat new password');
+  // Load current saved values
+  profileHousehold = loadU('household', 2);
+  profileStores    = loadU('preferred_stores', []);
+  const zip        = loadU('zip', '');
+
+  // Load session for name / email
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
+  const email = session.email || '';
+  const acct = accounts[email] || {};
+
+  // Populate name fields
+  const firstEl = document.getElementById('profile-firstname');
+  const lastEl  = document.getElementById('profile-lastname');
+  const emailEl = document.getElementById('profile-email');
+  if(firstEl) firstEl.value = acct.firstName || session.firstName || '';
+  if(lastEl)  lastEl.value  = acct.lastName  || session.lastName  || '';
+  if(emailEl) emailEl.value = email;
+
+  // Auto-fill current password from stored hash — user already proved they know it by logging in
+  const curPassEl = document.getElementById('profile-current-pass');
+  if(curPassEl && acct.passHash){ try{ curPassEl.value = atob(acct.passHash); }catch(e){ curPassEl.value=''; } }
+  // Clear new/confirm fields only
+  ['profile-new-pass','profile-confirm-pass'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value=''; el.type='password'; } });
+  // Reset all eye icons to hidden state
+  ['eye-cur','eye-new','eye-conf'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  });
+  // Also reset current pass field to password type
+  if(curPassEl) curPassEl.type='password';
+  const passErr = document.getElementById('profile-pass-err');
+  if(passErr) passErr.style.display='none';
+
+  // Update household stepper
+  const hhEl = document.getElementById('profile-household-val');
+  if(hhEl) hhEl.innerText = profileHousehold;
+
+  // Update zip
+  const zipEl = document.getElementById('profile-zip');
+  if(zipEl) zipEl.value = zip;
+
+  // Update store chips
+  const chips = document.querySelectorAll('#profile-store-chips .onboard-chip');
+  chips.forEach(chip => {
+    const storeName = chip.getAttribute('onclick').match(/'([^']+)'\)$/)?.[1] || '';
+    chip.classList.toggle('selected', profileStores.includes(storeName));
+  });
+
+  // Hide saved msg
+  const msg = document.getElementById('profile-saved-msg');
+  if(msg) msg.style.display = 'none';
+
+  // Sync language dropdown
+  const profileLangEl = document.getElementById('profileLang');
+  if(profileLangEl) profileLangEl.value = lang;
+}
+
+function confirmSaveProfile(){
+  const t = T();
+  showConfirm(t.profileSave||'Save Changes', lang==='es'?'¿Estás seguro de que quieres guardar los cambios?':lang==='pt'?'Tem certeza que deseja salvar as alterações?':'Are you sure you want to save your changes?', saveProfile);
+}
+
+function saveProfile(){
+  const t = T();
+  const session  = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
+  const email    = session.email || '';
+
+  const firstEl = document.getElementById('profile-firstname');
+  const lastEl  = document.getElementById('profile-lastname');
+  const firstName = (firstEl?.value||'').trim();
+  const lastName  = (lastEl?.value||'').trim();
+
+  // ── ZIP validation (independent of password) ──
+  const zipEl  = document.getElementById('profile-zip');
+  const zipVal = (zipEl?.value||'').trim();
+  if(zipVal && zipVal.length !== 5){
+    showToast(t.profileZipErr||'Zip code must be exactly 5 digits.'); return;
+  }
+
+  // ── Password change (only if new pass fields are touched) ──
+  const curPassEl  = document.getElementById('profile-current-pass');
+  const newPassEl  = document.getElementById('profile-new-pass');
+  const confPassEl = document.getElementById('profile-confirm-pass');
+  const passErrEl  = document.getElementById('profile-pass-err');
+  const newPass  = (newPassEl?.value  || '');
+  const confPass = (confPassEl?.value || '');
+
+  const showPassErr = (m) => {
+    if(passErrEl){ passErrEl.innerText = m; passErrEl.style.display = 'block'; }
+  };
+  if(passErrEl) passErrEl.style.display = 'none';
+
+  // Only validate/change password if the user typed something in new or confirm
+  if(newPass || confPass){
+    const acct = accounts[email];
+    if(!acct){ showPassErr('Account not found.'); return; }
+
+    // Verify current password matches stored
+    const curPass = curPassEl?.value || '';
+    if(acct.passHash !== btoa(curPass)){ showPassErr(t.profilePassWrong||'Current password is incorrect.'); return; }
+
+    // Enforce same strength rules as signup
+    const hLen = newPass.length >= 8;
+    const hU   = /[A-Z]/.test(newPass);
+    const hL   = /[a-z]/.test(newPass);
+    const hN   = /\d/.test(newPass);
+    const hS   = /[\W_]/.test(newPass);
+    if(!hLen || !hU || !hL || !hN || !hS){
+      const t = T();
+      const miss = [];
+      if(!hLen) miss.push(t.passReqs[0]);
+      if(!hU)   miss.push(t.passReqs[1]);
+      if(!hL)   miss.push(t.passReqs[2]);
+      if(!hN)   miss.push(t.passReqs[3]);
+      if(!hS)   miss.push(t.passReqs[4]);
+      showPassErr((t.profilePassErr||'Password needs: ') + miss.join(', ') + '.'); return;
+    }
+    if(newPass !== confPass){ showPassErr(t.profilePassNoMatch||'New passwords do not match.'); return; }
+
+    // Save new password
+    accounts[email].passHash = btoa(newPass);
+
+    // Update current password field to reflect the new password immediately
+    if(curPassEl) curPassEl.value = newPass;
+    // Clear new/confirm fields
+    if(newPassEl)  newPassEl.value  = '';
+    if(confPassEl) confPassEl.value = '';
+    // Reset their eye icons back to hidden
+    ['eye-new','eye-conf'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    });
+    if(newPassEl)  newPassEl.type  = 'password';
+    if(confPassEl) confPassEl.type = 'password';
+  }
+
+  // ── Save name ──
+  if(email && accounts[email]){
+    accounts[email].firstName = firstName;
+    accounts[email].lastName  = lastName;
+    accounts[email].name = [firstName, lastName].filter(Boolean).join(' ') || accounts[email].name;
+    localStorage.setItem('bp_accounts', JSON.stringify(accounts));
+  }
+  const newName = [firstName, lastName].filter(Boolean).join(' ') || session.name || '';
+  localStorage.setItem('bp_session', JSON.stringify({...session, firstName, lastName, name: newName}));
+  const hdrLabel = document.getElementById('hdr-user-label');
+  if(hdrLabel) hdrLabel.innerText = newName;
+
+  // ── Save everything else ──
+  saveU('household', profileHousehold);
+  saveU('preferred_stores', profileStores);
+  saveU('zip', zipVal);
+
+  // Show saved confirmation
+  const msg = document.getElementById('profile-saved-msg');
+  if(msg){ msg.innerText = '✓ '+(t.profileSaved||'Profile saved!'); msg.style.display = 'block'; setTimeout(()=>{ msg.style.display='none'; }, 2500); }
+  showToast(t.profileSaved||'Profile saved!', 'ok');
+}
+
+// ────────────────────────────────────────────────
+// PENNY API PROXY WRAPPER
+// Works around CORS restrictions when hosted on any domain.
+// Uses a CORS proxy so Penny works on Netlify, GoDaddy, etc.
+// ────────────────────────────────────────────────
+async function anthropicFetch(fetchOptions){
+  const { signal, ...opts } = fetchOptions;
+  const body = JSON.parse(opts.body);
+
+  const groqBody = {
+    model: 'llama3-70b-8192',
+    max_tokens: body.max_tokens || 1000,
+    messages: body.system
+      ? [{ role: 'system', content: body.system }, ...body.messages]
+      : body.messages
+  };
+
+  // Call Netlify serverless function — avoids CORS
+  const r = await fetch('/.netlify/functions/penny', {
+    method: 'POST',
+    signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(groqBody)
+  });
+
+  const data = await r.json();
+  if (!r.ok) throw new Error(data?.error || 'HTTP ' + r.status);
+  const text = data.text || '';
+  return { ok: true, json: async () => ({ content: [{ type: 'text', text }] }) };
+}
+
+// ────────────────────────────────────────────────
+// PENNY AI ADVISOR
+// ────────────────────────────────────────────────
+let pennyAbortCtrl = null;
+let pennyChatHist  = [];
+let pennyBusy      = false;
+
+const PL = {
+  en:{ ph:'Ask Penny anything...', stop:'Stop', btn:'Ask Penny — AI Advisor' },
+  es:{ ph:'Preguntale algo a Penny...', stop:'Detener', btn:'Pregunta a Penny — Asesora IA' },
+  pt:{ ph:'Pergunte algo a Penny...', stop:'Parar', btn:'Pergunte a Penny — Consultora IA' },
+};
+function pl(){ return PL[lang]||PL.en; }
+
+function closeAIPanel(){
+  if(pennyAbortCtrl){ pennyAbortCtrl.abort(); pennyAbortCtrl=null; }
+  pennyBusy=false;
+  const panel=document.getElementById('aiPanel');
+  if(panel) panel.style.display='none';
+  resetPennyBtn();
+}
+
+function resetPennyBtn(){
+  const btn=document.getElementById('aiTriggerBtn');
+  const lbl=document.getElementById('aiTriggerLabel');
+  if(btn){ btn.disabled=false; btn.onclick=startPenny; }
+  if(lbl) lbl.textContent=pl().btn;
+}
+
+function addMsg(role, text, loading){
+  const area=document.getElementById('aiChatArea');
+  const wrap=document.createElement('div');
+  wrap.className='ai-msg '+(role==='user'?'user':'penny');
+  if(loading) wrap.id='penny-loading-msg';
+  const av=document.createElement('div');
+  av.className='ai-avatar';
+  if(role==='user'){
+    const s=JSON.parse(localStorage.getItem('bp_session')||'{}');
+    av.textContent=((s.firstName||s.name||'?')[0]).toUpperCase();
+  } else {
+    av.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg>';
+    av.style.display='flex';
+    av.style.alignItems='center';
+    av.style.justifyContent='center';
+  }
+  const bub=document.createElement('div');
+  bub.className='ai-bubble';
+  if(loading){
+    bub.innerHTML='<div class="ai-loading-bubble"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>';
+  } else {
+    bub.style.whiteSpace='pre-wrap';
+    bub.textContent=text;
+  }
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
+  area.appendChild(wrap);
+  area.scrollTop=area.scrollHeight;
+  return bub;
+}
+
+function rmLoading(){
+  const el=document.getElementById('penny-loading-msg');
+  if(el) el.remove();
+}
+
+// Safe word-by-word reveal — works for any language including Spanish, Portuguese
+function revealWords(bub, fullText, cb){
+  // Split on spaces but keep them attached
+  const words=fullText.split(' ');
+  let i=0;
+  bub.textContent='';
+  const iv=setInterval(()=>{
+    const panel=document.getElementById('aiPanel');
+    const panelOpen=panel&&panel.style.display!=='none';
+    if(!pennyBusy||!panelOpen){
+      clearInterval(iv);
+      bub.textContent=fullText;
+      if(cb) cb();
+      return;
+    }
+    if(i<words.length){
+      bub.textContent=words.slice(0,i+1).join(' ');
+      i+=2;
+      const a=document.getElementById('aiChatArea');
+      if(a) a.scrollTop=a.scrollHeight;
+    } else {
+      bub.textContent=fullText;
+      clearInterval(iv);
+      if(cb) cb();
+    }
+  },28);
+}
+
+function buildSys(){
+  const hh=loadU('household',2);
+  const stores=loadU('preferred_stores',[]);
+  const zip=loadU('zip','');
+  const ln=lang==='es'?'Spanish':lang==='pt'?'Portuguese':'English';
+  const cards=[];
+  for(let i=0;i<items;i++){
+    const p=parseFloat(document.getElementById('p-'+i)?.value)||0;
+    const s=parseFloat(document.getElementById('s-'+i)?.value)||0;
+    const u=document.getElementById('u-'+i)?.value||'oz';
+    const q=parseFloat(document.getElementById('q-'+i)?.value)||1;
+    const n=document.getElementById('n-'+i)?.value||'';
+    const cat=document.getElementById('cat-'+i)?.value||'';
+    const dv=parseFloat(document.getElementById('dv-'+i)?.value)||0;
+    const dt=document.getElementById('dt-'+i)?.value||'p';
+    if(n||p) cards.push({i:i+1,name:n||'Item '+(i+1),price:p,size:s,unit:u,packQty:q,disc:dv,dt,cat});
+  }
+  const lines=cards.map(c=>{
+    const cons=c.cat?CONSUMPTION_DATA[c.cat]:null;
+    if(cons){
+      const tpd=cons.perPersonPerDay*hh;
+      const tu=c.size*c.packQty*(UNIT_RATES[c.unit]||1);
+      const days=tu>0?(tu/(cons.perPersonPerDay*hh)).toFixed(1):'?';
+      const net=c.dt==='p'?c.price*(1-Math.min(c.disc,100)/100):c.price-c.disc;
+      const cpd=tu>0&&tpd>0?((net/tu)*tpd).toFixed(3):'?';
+      return 'Card '+c.i+': "'+c.name+'" $'+c.price.toFixed(2)+' | '+c.size+c.unit+'x'+c.packQty+' | ~'+days+' days | $'+cpd+'/day | '+cons.usageDesc;
+    }
+    return 'Card '+c.i+': "'+c.name+'" $'+c.price.toFixed(2)+' | '+c.size+c.unit+'x'+c.packQty;
+  }).join('\n');
+
+  return 'You are Penny, a friendly AI shopping advisor. Warm, conversational, like a smart friend who knows grocery prices really well. ALWAYS respond in '+ln+'.\n\nHousehold: '+hh+' person'+(hh>1?'s':'')+' | Stores: '+(stores.length?stores.join(', '):'not set')+' | Zip: '+(zip||'not set')+'\n\nProducts:\n'+lines+'\n\nInitial analysis: pick best value for THIS household using days-it-lasts + cost-per-day (not just unit price). How long each lasts. Estimated prices at their stores (note estimates). One clear action. Max 220 words, flowing paragraphs, no bullet lists, casual friendly tone.\nFollow-ups: concise, helpful, stay in '+ln+'.';
+}
+
+async function startPenny(){
+  document.getElementById('aiPanel').style.display='block';
+  document.getElementById('aiChatArea').innerHTML='';
+  pennyChatHist=[];
+  pennyBusy=true;
+  const p=pl();
+  document.getElementById('aiChatInput').placeholder=p.ph;
+  const btn=document.getElementById('aiTriggerBtn');
+  btn.onclick=closeAIPanel;
+  document.getElementById('aiTriggerLabel').textContent=p.stop;
+  addMsg('penny','',true);
+  pennyAbortCtrl=new AbortController();
+  const firstMsg=lang==='es'?'Analiza estos productos para mi hogar.':lang==='pt'?'Analise estes produtos para o meu lar.':'Analyze these products for my household.';
+  try{
+    const res=await anthropicFetch({
+      method:'POST',signal:pennyAbortCtrl.signal,
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSys(),messages:[{role:'user',content:firstMsg}]})
+    });
+    const data=await res.json();
+    const txt=data.content?.[0]?.text||(lang==='es'?'Lo siento, error. Intenta de nuevo.':lang==='pt'?'Erro. Tente novamente.':'Something went wrong. Try again!');
+    rmLoading();
+    const bub=addMsg('penny','');
+    revealWords(bub,txt,()=>{ pennyBusy=false; resetPennyBtn(); });
+    pennyChatHist=[{role:'user',content:firstMsg},{role:'assistant',content:txt}];
+  } catch(e){
+    rmLoading();
+    if(e.name!=='AbortError') addMsg('penny',lang==='es'?'No pude conectarme.':lang==='pt'?'Nao consegui conectar.':'Could not connect. Check internet!');
+    pennyBusy=false;
+    resetPennyBtn();
+  }
+}
+
+async function sendUserMessage(){
+  const inp=document.getElementById('aiChatInput');
+  const msg=inp.value.trim();
+  if(!msg||pennyBusy) return;
+  inp.value='';
+  addMsg('user',msg);
+  pennyChatHist.push({role:'user',content:msg});
+  pennyBusy=true;
+  document.getElementById('aiSendBtn').disabled=true;
+  addMsg('penny','',true);
+  pennyAbortCtrl=new AbortController();
+  try{
+    const res=await anthropicFetch({
+      method:'POST',signal:pennyAbortCtrl.signal,
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:buildSys(),messages:pennyChatHist})
+    });
+    const data=await res.json();
+    const txt=data.content?.[0]?.text||(lang==='es'?'Error. Intenta de nuevo.':lang==='pt'?'Erro. Tente novamente.':'Error. Try again!');
+    rmLoading();
+    const bub=addMsg('penny','');
+    revealWords(bub,txt,null);
+    pennyChatHist.push({role:'assistant',content:txt});
+  } catch(e){
+    rmLoading();
+    if(e.name!=='AbortError') addMsg('penny','Error connecting.');
+  }
+  pennyBusy=false;
+  document.getElementById('aiSendBtn').disabled=false;
+}
+
+// ────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if(e.target.type==='number' && ['e','E','+','-'].includes(e.key)) e.preventDefault();
+});
+
+window.onload=()=>{
+  initTheme();
+  document.getElementById('authLang').value=lang;
+  document.getElementById('setLang').value=lang;
+  currSymbol = '$';
+  currRate = 1;
+  setMode('signup');
+  applyLang();
+  const session = localStorage.getItem('bp_session');
+  if(session){
+    showApp();
+  } else {
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+  }
+};
+</script>
+</body>
+</html>
