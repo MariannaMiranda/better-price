@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Better Price! v5</title>
+<title>Better Price!
+</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -3016,7 +3017,7 @@ async function startPenny(){
     const res=await anthropicFetch({
       method:'POST',signal:pennyAbortCtrl.signal,
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSys(),messages:[{role:'user',content:firstMsg}]})
+      body:JSON.stringify({model:'llama3-70b-8192',max_tokens:1000,messages:[{role:'system',content:buildSys()},{role:'user',content:firstMsg}]})
     });
     const data=await res.json();
     const txt=data.content?.[0]?.text||(lang==='es'?'Lo siento, error. Intenta de nuevo.':lang==='pt'?'Erro. Tente novamente.':'Something went wrong. Try again!');
@@ -3047,7 +3048,7 @@ async function sendUserMessage(){
     const res=await anthropicFetch({
       method:'POST',signal:pennyAbortCtrl.signal,
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:buildSys(),messages:pennyChatHist})
+      body:JSON.stringify({model:'llama3-70b-8192',max_tokens:800,messages:[{role:'system',content:buildSys()},...pennyChatHist]})
     });
     const data=await res.json();
     const txt=data.content?.[0]?.text||(lang==='es'?'Error. Intenta de nuevo.':lang==='pt'?'Erro. Tente novamente.':'Error. Try again!');
