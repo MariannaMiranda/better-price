@@ -2852,11 +2852,20 @@ async function anthropicFetch(fetchOptions){
   const { signal, ...opts } = fetchOptions;
   const body = JSON.parse(opts.body);
 
+  // Convert Claude format to Groq format
   const groqBody = {
-    model: 'llama3-70b-8192',
+    model: 'llama-3.1-70b-versatile',  // Updated Groq model
     max_tokens: body.max_tokens || 1000,
     messages: body.messages
   };
+
+  // If there's a system message, add it as the first message
+  if (body.system) {
+    groqBody.messages = [
+      { role: 'system', content: body.system },
+      ...body.messages
+    ];
+  }
 
   // Call Netlify serverless function — avoids CORS
   const r = await fetch('/.netlify/functions/penny', {
