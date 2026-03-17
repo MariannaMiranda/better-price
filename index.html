@@ -2855,9 +2855,7 @@ async function anthropicFetch(fetchOptions){
   const groqBody = {
     model: 'llama3-70b-8192',
     max_tokens: body.max_tokens || 1000,
-    messages: body.system
-      ? [{ role: 'system', content: body.system }, ...body.messages]
-      : body.messages
+    messages: body.messages
   };
 
   // Call Netlify serverless function — avoids CORS
@@ -3017,7 +3015,7 @@ async function startPenny(){
     const res=await anthropicFetch({
       method:'POST',signal:pennyAbortCtrl.signal,
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'llama3-70b-8192',max_tokens:1000,messages:[{role:'system',content:buildSys()},{role:'user',content:firstMsg}]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSys(),messages:[{role:'user',content:firstMsg}]})
     });
     const data=await res.json();
     const txt=data.content?.[0]?.text||(lang==='es'?'Lo siento, error. Intenta de nuevo.':lang==='pt'?'Erro. Tente novamente.':'Something went wrong. Try again!');
@@ -3048,7 +3046,7 @@ async function sendUserMessage(){
     const res=await anthropicFetch({
       method:'POST',signal:pennyAbortCtrl.signal,
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'llama3-70b-8192',max_tokens:800,messages:[{role:'system',content:buildSys()},...pennyChatHist]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:buildSys(),messages:pennyChatHist})
     });
     const data=await res.json();
     const txt=data.content?.[0]?.text||(lang==='es'?'Error. Intenta de nuevo.':lang==='pt'?'Erro. Tente novamente.':'Error. Try again!');
