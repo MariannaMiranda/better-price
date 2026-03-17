@@ -2867,8 +2867,8 @@ async function anthropicFetch(fetchOptions){
     ];
   }
 
-  // Call Netlify serverless function — avoids CORS
-  const r = await fetch('/.netlify/functions/penny', {
+  
+  const r = await fetch('/api/penny', {
     method: 'POST',
     signal,
     headers: { 'Content-Type': 'application/json' },
