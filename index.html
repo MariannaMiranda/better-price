@@ -1200,9 +1200,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             <button class="penny-attach-btn" onclick="pennyChooseCamera()" title="Take a photo">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </button>
-            <!-- Hidden inputs -->
-            <input type="file" id="pennyFileInput" accept="image/*,.pdf" style="display:none;" onchange="pennyHandleFile(this)">
-            <input type="file" id="pennyCameraInput" accept="image/*" style="display:none;" onchange="pennyHandleFile(this)">
             <textarea class="penny-textarea" id="pennyInput" placeholder="Ask Penny anything..." rows="1"
               oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();pennySend();}"></textarea>
@@ -3666,17 +3663,18 @@ async function pennySend(){
   document.getElementById('pennySendBtn').disabled = true;
   pennyAddTyping();
 
-  // Build messages for API
+  // Build messages for API — map stored 'penny' role back to 'assistant' for the API
   const apiMessages = (pennyActiveSession.messages.slice(0, -1)).map(m => {
+    const apiRole = m.role === 'penny' ? 'assistant' : 'user';
     if(m.image){
       const base64 = m.image.split(',')[1] || m.image;
       const mime = m.image.startsWith('data:') ? m.image.split(';')[0].split(':')[1] : 'image/jpeg';
-      return { role: m.role, content: [
+      return { role: apiRole, content: [
         { type: 'image', source: { type: 'base64', media_type: mime, data: base64 }},
         { type: 'text', text: m.content || '' }
       ]};
     }
-    return { role: m.role, content: m.content };
+    return { role: apiRole, content: m.content };
   });
 
   // Add current message
@@ -3750,20 +3748,27 @@ function pennyInjectCompare(){
 }
 
 function pennyChooseFile(){
-  document.getElementById('pennyFileInput').click();
+  // Fresh input each time so browser reliably opens the picker
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,.pdf';
+  input.style.display = 'none';
+  input.onchange = () => { pennyHandleFile(input); document.body.removeChild(input); };
+  document.body.appendChild(input);
+  input.click();
 }
 
 function pennyChooseCamera(){
-  const camInput = document.getElementById('pennyCameraInput');
-  // On touch devices (phones/tablets), add capture attribute to open camera directly
-  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  if(isTouch){
-    camInput.setAttribute('capture', 'environment');
-  } else {
-    // On desktop: just open file picker (no capture, allows any image file)
-    camInput.removeAttribute('capture');
-  }
-  camInput.click();
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  // Only set capture on touch devices so mobile opens camera, desktop opens file picker
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if(isTouch) input.setAttribute('capture', 'environment');
+  input.onchange = () => { pennyHandleFile(input); document.body.removeChild(input); };
+  document.body.appendChild(input);
+  input.click();
 }
 
 // Generate a short meaningful chat title from the first exchange using AI
