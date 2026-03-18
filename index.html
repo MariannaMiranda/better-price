@@ -1525,26 +1525,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
 
     <!-- Language & Appearance -->
-    <div class="profile-section">
-      <div class="profile-section-title">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="prof-lbl-appearance">Language &amp; Appearance</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span class="prof-lbl-langLabel" style="font-size:14px;color:var(--text);">Language</span>
-          <select class="s-select" id="profileLang" onchange="changeProfileLang()" style="min-width:140px;">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="pt">Português</option>
-          </select>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span class="prof-lbl-darkModeLabel" style="font-size:14px;color:var(--text);">Dark Mode</span>
-          <label class="switch"><input type="checkbox" id="profileThemeSwitch" onchange="toggleTheme()"><span class="slider"></span></label>
-        </div>
-      </div>
-    </div>
 
     <!-- Save button -->
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
