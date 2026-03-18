@@ -420,8 +420,17 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .btn-save-analysis svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 @media(max-width:600px){.analysis-row{flex-direction:column;}.btn-save-analysis{width:100%;justify-content:center;}}
 
+/* ── CASCADING CATEGORY DROPDOWNS ── */
+.cat-picker{margin-bottom:10px;display:flex;flex-direction:column;gap:6px;}
+.cat-sel{width:100%;padding:10px 12px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);border-radius:var(--rsm);font-size:14px;font-family:var(--font);outline:none;transition:border-color .2s;appearance:auto;}
+.cat-sel:focus{border-color:var(--brand);}
+.cat-sel:disabled{opacity:.45;cursor:not-allowed;}
+.cat-sel-wrap{position:relative;}
+.cat-sel-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;display:block;}
+body.dark .cat-sel{background:#162535;border-color:#2a4060;color:#eef2ff;}
+body.dark .cat-sel:focus{border-color:#4d8fcc;}
+
 /* Brand dropdown */
-.brand-dropdown{position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--white);border:1.5px solid var(--brand);border-radius:var(--rsm);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;display:none;}
 .brand-dropdown.open{display:block;}
 .brand-opt{padding:10px 14px;font-size:14px;cursor:pointer;color:var(--text);transition:.15s;}
 .brand-opt:hover{background:var(--brand-light);color:var(--brand);}
@@ -2314,8 +2323,16 @@ function goTab(name){
     pennySidebarOpen = window.innerWidth >= 600;
     const sb = document.getElementById('pennySidebar');
     if(sb) sb.classList.toggle('collapsed', !pennySidebarOpen);
+    // Reload from storage to pick up any changes, re-sync active reference
+    loadPennySessions();
+    // If no active session but sessions exist, load the most recent
+    if(!pennyActiveSession && pennySessions.length){
+      pennyActiveSession = pennySessions[pennySessions.length - 1];
+    }
     renderPennySessions();
     renderPennyMessages();
+    const titleEl = document.getElementById('pennyChatTitle');
+    if(titleEl) titleEl.textContent = pennyActiveSession?.title || 'Penny';
   }
 }
 
@@ -2325,32 +2342,91 @@ function handleCurrChange(){}
 // BRAND / CATEGORY DATA
 // ────────────────────────────────────────────────
 const BRAND_DATA = {
-  toilet_paper:['Charmin','Cottonelle','Scott','Angel Soft','Bounty (TP)','Kirkland','Member\'s Mark','Seventh Generation','Up & Up','Great Value'],
-  paper_towels:['Bounty','Viva','Brawny','Scott','Sparkle','Kirkland','Up & Up','Great Value','Seventh Generation'],
-  laundry:['Tide','Gain','Persil','All','Arm & Hammer','Xtra','Kirkland','OxiClean','Woolite','Dreft'],
-  dish_soap:['Dawn','Palmolive','Joy','Ajax','Method','Seventh Generation','Up & Up','Great Value','Mrs. Meyer\'s'],
+  // Meats & Protein
+  chicken:['Tyson','Perdue','Kirkland','Foster Farms','Bell & Evans','Store Brand','Just Bare','Smart Chicken'],
+  beef:['Laura\'s Lean','Angus','Kirkland','Store Brand','Nature\'s Reserve','Great Value','Certified Angus Beef'],
+  pork:['Smithfield','Hormel','Kirkland','Store Brand','Oscar Mayer','Farmland','Great Value'],
+  seafood:['Gorton\'s','Bumble Bee','StarKist','Kirkland','Wild Planet','Great Value','Trident'],
+  eggs:['Great Value','Happy Egg','Vital Farms','Kirkland','Pete & Gerry\'s','Eggland\'s Best','Store Brand','Free Range'],
+  deli_meat:['Oscar Mayer','Boar\'s Head','Hillshire Farm','Kirkland','Land O\'Frost','Applegate','Store Brand'],
+  turkey:['Butterball','Jennie-O','Kirkland','Store Brand','Honeysuckle White','Shady Brook'],
+  lamb:['Store Brand','American Lamb','New Zealand Lamb','Kirkland'],
+  // Fruits
+  banana:['Chiquita','Dole','Store Brand','Organic'],
+  apple:['Honeycrisp','Gala','Fuji','Granny Smith','Pink Lady','Store Brand','Organic'],
+  berries:['Driscoll\'s','Store Brand','Organic','Sunrise','Natural Delights'],
+  grapes:['Store Brand','Organic','Stemilt','Sun World'],
+  orange:['Sunkist','Store Brand','Organic','Florida\'s Natural','Cuties'],
+  avocado:['Organic','Store Brand','Hass','Ready Pac'],
+  fresh_fruit:['Store Brand','Organic','Dole','Fresh'],
+  // Vegetables
+  leafy_greens:['Organic Girl','Taylor Farms','Dole','Store Brand','Earthbound Farm','Fresh Express'],
+  tomatoes:['Store Brand','Organic','Beefsteak','Roma','Cherry','Campari'],
+  onion_garlic:['Store Brand','Organic','Christopher Ranch','Spice World'],
+  peppers:['Store Brand','Organic','Fresh'],
+  potatoes:['Store Brand','Organic','Idaho','Russet','Yukon Gold'],
+  frozen_veg:['Birds Eye','Green Giant','Kirkland','Store Brand','Cascadian Farm','Great Value'],
+  canned_veg:['Del Monte','Green Giant','Store Brand','Great Value','Libby\'s','Heinz'],
+  fresh_veg:['Store Brand','Organic','Fresh'],
+  // Dairy
+  milk:['Whole Milk','2% Milk','Skim Milk','Organic Valley','Horizon Organic','Fairlife','Lactaid','Store Brand','Oat Milk','Almond Milk'],
+  butter:['Land O\'Lakes','Kerrygold','Challenge','Store Brand','Organic Valley','Lurpak','Tillamook','Country Crock'],
+  shredded_cheese:['Kraft','Sargento','Tillamook','Store Brand','Organic Valley','Great Value'],
+  block_cheese:['Cabot','Tillamook','Kraft','Kirkland','Store Brand','Organic Valley','Boar\'s Head'],
+  cream_cheese:['Philadelphia','Store Brand','Nancy\'s','Kite Hill','Great Value'],
+  sliced_cheese:['Kraft','Sargento','Boar\'s Head','Store Brand','Land O\'Lakes','Great Value'],
+  cheese:['Kraft','Sargento','Tillamook','Cabot','Boar\'s Head','Store Brand','Organic Valley','Borden','Velveeta'],
+  yogurt:['Chobani','Fage','Oikos','Yoplait','Stonyfield','Siggi\'s','Dannon','Noosa','Store Brand','Two Good'],
+  sour_cream:['Daisy','Knudsen','Store Brand','Tillamook','Breakstone\'s','Great Value'],
+  // Pantry
+  bread:['Wonder','Nature\'s Own','Dave\'s Killer Bread','Pepperidge Farm','Arnold','Sara Lee','Oroweat','Store Brand','Martin\'s','Brownberry'],
+  tortillas:['Mission','Old El Paso','La Banderita','Guerrero','Store Brand','Siete'],
+  rolls:['King\'s Hawaiian','Pepperidge Farm','Store Brand','Sara Lee','Martin\'s'],
+  rice:['Mahatma','Uncle Ben\'s','Lundberg','Kirkland','Store Brand','Minute','Jasmine','Basmati'],
+  pasta:['Barilla','Ronzoni','De Cecco','Kirkland','Store Brand','Banza','Great Value'],
+  cereal:['Cheerios','Frosted Flakes','Honey Bunches of Oats','Raisin Bran','Lucky Charms','Froot Loops','Kashi','Granola','Great Grains','Store Brand'],
+  canned_beans:['Bush\'s','Goya','Store Brand','Great Value','365','Eden'],
+  canned_soup:['Campbell\'s','Progresso','Pacific Foods','Store Brand','Great Value','Amy\'s'],
+  canned_tomatoes:['Hunt\'s','Muir Glen','Del Monte','Store Brand','Cento','San Marzano'],
+  canned_fish:['StarKist','Bumble Bee','Wild Planet','Kirkland','Store Brand','Safe Catch'],
+  chips:['Lay\'s','Doritos','Pringles','Cheetos','Ruffles','Tostitos','Fritos','Cape Cod','Kettle Brand','Store Brand'],
+  cooking_oil:['Wesson','Mazola','Crisco','Kirkland','Great Value','Spectrum','La Tourangelle','Smart Balance'],
+  condiments:['Heinz','Hellmann\'s','French\'s','Kraft','Hidden Valley','Store Brand','Sir Kensington\'s','Primal Kitchen'],
+  frozen_pizza:['DiGiorno','Red Baron','Tombstone','Jack\'s','California Pizza Kitchen','Newman\'s Own','Amy\'s','Freschetta','Store Brand'],
+  frozen_meals:['Lean Cuisine','Stouffer\'s','Amy\'s','Saffron Road','Healthy Choice','Bird\'s Eye','Kirkland','Store Brand'],
+  // Beverages
+  coffee:['Folgers','Maxwell House','Starbucks','Dunkin\'','Green Mountain','Kirkland','Peet\'s','Eight O\'Clock','Death Wish','Community Coffee'],
+  tea:['Lipton','Bigelow','Celestial Seasonings','Tazo','Twinings','Store Brand','Yogi','Stash'],
+  water:['Dasani','Aquafina','Poland Spring','Fiji','Kirkland','Great Value','Evian','Deer Park','Smartwater','Zephyrhills'],
+  soda:['Coca-Cola','Pepsi','Dr Pepper','Sprite','Mountain Dew','7UP','RC Cola','Store Brand','Canada Dry','Fanta'],
+  juice:['Tropicana','Minute Maid','Simply','Dole','Ocean Spray','Florida\'s Natural','Naked','Bolthouse','Store Brand'],
+  energy_drinks:['Red Bull','Monster','Celsius','Bang','Reign','Rockstar','5-hour Energy','Store Brand'],
+  sports_drinks:['Gatorade','Powerade','BodyArmor','Prime','Liquid I.V.','Store Brand'],
+  // Hygiene
   shampoo:['Head & Shoulders','Pantene','TRESemmé','Suave','Herbal Essences','Dove','OGX','L\'Oréal','Garnier','Aveeno'],
   conditioner:['Pantene','TRESemmé','Suave','Herbal Essences','Dove','OGX','L\'Oréal','Garnier','Aveeno'],
   body_wash:['Dove','Olay','Suave','Softsoap','Irish Spring','Old Spice','Caress','Ivory','Method'],
   toothpaste:['Colgate','Crest','Sensodyne','Arm & Hammer','Tom\'s of Maine','Aquafresh','Pepsodent','Up & Up'],
   deodorant:['Dove','Degree','Secret','Old Spice','Speed Stick','Suave','Axe','Ban','Native','Mitchum'],
+  razor:['Gillette','Schick','BIC','Harry\'s','Venus','Dollar Shave Club','Wilkinson','Store Brand'],
+  feminine_care:['Always','Tampax','Kotex','Playtex','Seventh Generation','U by Kotex','Store Brand'],
+  lotion:['Lubriderm','Aveeno','CeraVe','Neutrogena','Jergens','Vaseline','Gold Bond','Store Brand'],
+  // Household
+  toilet_paper:['Charmin','Cottonelle','Scott','Angel Soft','Bounty (TP)','Kirkland','Member\'s Mark','Seventh Generation','Up & Up','Great Value'],
+  paper_towels:['Bounty','Viva','Brawny','Scott','Sparkle','Kirkland','Up & Up','Great Value','Seventh Generation'],
+  laundry:['Tide','Gain','Persil','All','Arm & Hammer','Xtra','Kirkland','OxiClean','Woolite','Dreft'],
+  dish_soap:['Dawn','Palmolive','Joy','Ajax','Method','Seventh Generation','Up & Up','Great Value','Mrs. Meyer\'s'],
   trash_bags:['Glad','Hefty','Kirkland','Great Value','Member\'s Mark','Up & Up','Drawstring Plus','Reli'],
-  milk:['Whole Milk','2% Milk','Skim Milk','Organic Valley','Horizon Organic','Fairlife','Lactaid','Store Brand','Oat Milk','Almond Milk'],
-  eggs:['Great Value','Happy Egg','Vital Farms','Kirkland','Pete & Gerry\'s','Eggland\'s Best','Store Brand','Free Range'],
-  bread:['Wonder','Nature\'s Own','Dave\'s Killer Bread','Pepperidge Farm','Arnold','Sara Lee','Oroweat','Store Brand','Martin\'s','Brownberry'],
-  butter:['Land O\'Lakes','Kerrygold','Challenge','Store Brand','Organic Valley','Lurpak','Tillamook','Country Crock'],
-  cooking_oil:['Wesson','Mazola','Crisco','Kirkland','Great Value','Spectrum','La Tourangelle','Smart Balance'],
-  cereal:['Cheerios','Frosted Flakes','Honey Bunches of Oats','Raisin Bran','Lucky Charms','Froot Loops','Kashi','Granola','Great Grains','Store Brand'],
-  coffee:['Folgers','Maxwell House','Starbucks','Dunkin\'','Green Mountain','Kirkland','Peet\'s','Eight O\'Clock','Death Wish','Community Coffee'],
-  water:['Dasani','Aquafina','Poland Spring','Fiji','Kirkland','Great Value','Evian','Deer Park','Smartwater','Zephyrhills'],
-  soda:['Coca-Cola','Pepsi','Dr Pepper','Sprite','Mountain Dew','7UP','RC Cola','Store Brand','Canada Dry','Fanta'],
-  juice:['Tropicana','Minute Maid','Simply','Dole','Ocean Spray','Florida\'s Natural','Naked','Bolthouse','Store Brand'],
-  chips:['Lay\'s','Doritos','Pringles','Cheetos','Ruffles','Tostitos','Fritos','Cape Cod','Kettle Brand','Store Brand'],
-  frozen_pizza:['DiGiorno','Red Baron','Tombstone','Jack\'s','California Pizza Kitchen','Newman\'s Own','Amy\'s','Freschetta','Store Brand'],
-  yogurt:['Chobani','Fage','Oikos','Yoplait','Stonyfield','Siggi\'s','Dannon','Noosa','Store Brand','Two Good'],
-  cheese:['Kraft','Sargento','Tillamook','Cabot','Boar\'s Head','Store Brand','Organic Valley','Borden','Velveeta'],
+  cleaning:['Lysol','Clorox','Method','Mr. Clean','Pine-Sol','Seventh Generation','Store Brand','Mrs. Meyer\'s'],
+  bags_wrap:['Ziploc','Hefty','Reynolds','Kirkland','Store Brand','Glad','Press\'n Seal'],
+  // Baby & Pet
   diapers:['Pampers','Huggies','Luvs','Kirkland','Up & Up','Parent\'s Choice','Honest','Hello Bello','Andy Pandy'],
   baby_formula:['Similac','Enfamil','Gerber','Earth\'s Best','Store Brand','Bobbie','Happy Baby','Kirkland'],
+  baby_food:['Gerber','Beech-Nut','Happy Baby','Earth\'s Best','Plum Organics','Store Brand','Once Upon a Farm'],
+  dog_food:['Purina','Blue Buffalo','Hill\'s Science Diet','Royal Canin','Iams','Pedigree','Kirkland','Taste of the Wild'],
+  cat_food:['Purina','Fancy Feast','Friskies','Hill\'s Science Diet','Royal Canin','Blue Buffalo','Meow Mix','Kirkland'],
+  pet_treats:['Milk-Bone','Beggin\'','Greenies','Zuke\'s','Store Brand','Blue Buffalo','Purina'],
+  pet_supplies:['Store Brand','Kirkland','Amazon Basics'],
   pet_food:['Purina','Hill\'s','Royal Canin','Blue Buffalo','Iams','Pedigree','Fancy Feast','Meow Mix','Friskies','Kirkland'],
 };
 
@@ -2462,21 +2538,245 @@ function updateBrandDropdown(idx){
   const bd=document.getElementById(`bd-${idx}`); if(bd) bd.classList.remove('open');
 }
 
-// When a category is selected, clear name and immediately open the brand dropdown
-// showing all brands for that category so the user can tap right away
+// When a category is selected via the drill-down picker, open the brand dropdown
 function onCatChange(idx){
-  const cat = document.getElementById(`cat-${idx}`)?.value;
-  const nameEl = document.getElementById(`n-${idx}`);
-  const bd = document.getElementById(`bd-${idx}`);
+  const cat = document.getElementById('cat-' + idx)?.value;
+  const nameEl = document.getElementById('n-' + idx);
+  const bd = document.getElementById('bd-' + idx);
   if(!nameEl || !bd) return;
   nameEl.value = '';
-  if(!cat){ bd.classList.remove('open'); return; }
+  bd.classList.remove('open');
+  if(!cat) return;
   const brands = BRAND_DATA[cat] || [];
-  if(!brands.length){ bd.classList.remove('open'); return; }
-  bd.innerHTML = brands.map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
-  bd.classList.add('open');
-  // Auto-focus name input so user can scroll through or type
+  if(brands.length){
+    bd.innerHTML = brands.map(b =>
+      '<div class="brand-opt" onmousedown="selectBrand(' + idx + ',\'' + b.replace(/'/g,"\\'") + '\')">' + b + '</div>'
+    ).join('');
+    bd.classList.add('open');
+  }
   setTimeout(() => nameEl.focus(), 50);
+}
+
+// ────────────────────────────────────────────────
+// DRILL-DOWN CATEGORY PICKER
+// ────────────────────────────────────────────────
+const CAT_TREE = [
+  { label:'Meats & Protein', children:[
+    { label:'Chicken', key:'chicken' },
+    { label:'Beef / Ground Beef', key:'beef' },
+    { label:'Pork', key:'pork' },
+    { label:'Seafood / Fish', key:'seafood' },
+    { label:'Eggs', key:'eggs' },
+    { label:'Deli Meat', key:'deli_meat' },
+    { label:'Turkey', key:'turkey' },
+    { label:'Lamb', key:'lamb' },
+  ]},
+  { label:'Fruits', children:[
+    { label:'Bananas', key:'banana' },
+    { label:'Apples', key:'apple' },
+    { label:'Berries', key:'berries' },
+    { label:'Grapes', key:'grapes' },
+    { label:'Oranges', key:'orange' },
+    { label:'Avocados', key:'avocado' },
+    { label:'Other Fresh Fruit', key:'fresh_fruit' },
+  ]},
+  { label:'Vegetables', children:[
+    { label:'Leafy Greens', key:'leafy_greens' },
+    { label:'Tomatoes', key:'tomatoes' },
+    { label:'Onions / Garlic', key:'onion_garlic' },
+    { label:'Peppers', key:'peppers' },
+    { label:'Potatoes', key:'potatoes' },
+    { label:'Frozen Vegetables', key:'frozen_veg' },
+    { label:'Canned Vegetables', key:'canned_veg' },
+    { label:'Other Fresh Veg', key:'fresh_veg' },
+  ]},
+  { label:'Dairy & Refrigerated', children:[
+    { label:'Milk', key:'milk' },
+    { label:'Butter', key:'butter' },
+    { label:'Cheese', children:[
+      { label:'Shredded Cheese', key:'shredded_cheese' },
+      { label:'Block Cheese', key:'block_cheese' },
+      { label:'Cream Cheese', key:'cream_cheese' },
+      { label:'Sliced Cheese', key:'sliced_cheese' },
+    ]},
+    { label:'Yogurt', key:'yogurt' },
+    { label:'Eggs', key:'eggs' },
+    { label:'Sour Cream / Dips', key:'sour_cream' },
+  ]},
+  { label:'Pantry & Dry Goods', children:[
+    { label:'Bread & Bakery', children:[
+      { label:'Sandwich Bread', key:'bread' },
+      { label:'Tortillas', key:'tortillas' },
+      { label:'Rolls / Buns', key:'rolls' },
+    ]},
+    { label:'Rice & Grains', key:'rice' },
+    { label:'Pasta & Noodles', key:'pasta' },
+    { label:'Cereal', key:'cereal' },
+    { label:'Canned Goods', children:[
+      { label:'Canned Beans', key:'canned_beans' },
+      { label:'Canned Soup', key:'canned_soup' },
+      { label:'Canned Tomatoes', key:'canned_tomatoes' },
+      { label:'Canned Fish', key:'canned_fish' },
+    ]},
+    { label:'Snacks & Chips', key:'chips' },
+    { label:'Cooking Oil', key:'cooking_oil' },
+    { label:'Condiments & Sauces', key:'condiments' },
+    { label:'Frozen Pizza', key:'frozen_pizza' },
+    { label:'Frozen Meals', key:'frozen_meals' },
+  ]},
+  { label:'Beverages', children:[
+    { label:'Coffee', key:'coffee' },
+    { label:'Tea', key:'tea' },
+    { label:'Bottled Water', key:'water' },
+    { label:'Soda / Soft Drinks', key:'soda' },
+    { label:'Juice', key:'juice' },
+    { label:'Energy Drinks', key:'energy_drinks' },
+    { label:'Sports Drinks', key:'sports_drinks' },
+  ]},
+  { label:'Hygiene & Personal Care', children:[
+    { label:'Hair Care', children:[
+      { label:'Shampoo', key:'shampoo' },
+      { label:'Conditioner', key:'conditioner' },
+    ]},
+    { label:'Body Wash / Soap', key:'body_wash' },
+    { label:'Toothpaste', key:'toothpaste' },
+    { label:'Deodorant', key:'deodorant' },
+    { label:'Razors / Shaving', key:'razor' },
+    { label:'Feminine Care', key:'feminine_care' },
+    { label:'Lotion / Skincare', key:'lotion' },
+  ]},
+  { label:'Household Supplies', children:[
+    { label:'Toilet Paper', key:'toilet_paper' },
+    { label:'Paper Towels', key:'paper_towels' },
+    { label:'Laundry Detergent', key:'laundry' },
+    { label:'Dish Soap', key:'dish_soap' },
+    { label:'Trash Bags', key:'trash_bags' },
+    { label:'Cleaning Products', key:'cleaning' },
+    { label:'Bags / Wrap / Foil', key:'bags_wrap' },
+  ]},
+  { label:'Baby & Pet', children:[
+    { label:'Baby', children:[
+      { label:'Diapers', key:'diapers' },
+      { label:'Baby Formula', key:'baby_formula' },
+      { label:'Baby Food', key:'baby_food' },
+    ]},
+    { label:'Pet', children:[
+      { label:'Pet Food (Dog)', key:'dog_food' },
+      { label:'Pet Food (Cat)', key:'cat_food' },
+      { label:'Pet Treats', key:'pet_treats' },
+      { label:'Pet Supplies', key:'pet_supplies' },
+    ]},
+  ]},
+];
+
+// State: path per card index
+const catPickerState = {};
+
+function catPickerInit(idx){
+  const l1 = document.getElementById('cp-l1-' + idx);
+  const l2 = document.getElementById('cp-l2-' + idx);
+  const l3 = document.getElementById('cp-l3-' + idx);
+  if(!l1) return;
+
+  // Populate level 1 with top-level categories
+  l1.innerHTML = '<option value="">— Select Category —</option>' +
+    CAT_TREE.map((n, i) => '<option value="' + i + '">' + n.label + '</option>').join('');
+
+  // Reset all
+  if(l2){ l2.innerHTML = '<option value="">— Select Sub-category —</option>'; l2.style.display = 'none'; }
+  if(l3){ l3.innerHTML = '<option value="">— Select Item Type —</option>'; l3.style.display = 'none'; }
+  const catEl = document.getElementById('cat-' + idx);
+  if(catEl) catEl.value = '';
+}
+
+function catL1Change(idx){
+  const l1 = document.getElementById('cp-l1-' + idx);
+  const l2 = document.getElementById('cp-l2-' + idx);
+  const l3 = document.getElementById('cp-l3-' + idx);
+  const catEl = document.getElementById('cat-' + idx);
+  if(!l1 || !l2) return;
+
+  // Reset downstream
+  l3.style.display = 'none';
+  l3.innerHTML = '<option value="">— Select Item Type —</option>';
+  catEl.value = '';
+  catPickerClearName(idx);
+
+  const ni = parseInt(l1.value);
+  if(isNaN(ni) || l1.value === ''){ l2.style.display = 'none'; l2.innerHTML = '<option value="">— Select Sub-category —</option>'; return; }
+
+  const node = CAT_TREE[ni];
+  if(!node) return;
+
+  if(node.children){
+    // Has sub-categories — populate L2
+    l2.innerHTML = '<option value="">— Select Sub-category —</option>' +
+      node.children.map((c, ci) => '<option value="' + ci + '">' + c.label + '</option>').join('');
+    l2.style.display = 'block';
+  } else {
+    // Leaf at L1 (shouldn't happen in current tree but handle gracefully)
+    l2.style.display = 'none';
+    catEl.value = node.key || '';
+    onCatChange(idx);
+  }
+}
+
+function catL2Change(idx){
+  const l1 = document.getElementById('cp-l1-' + idx);
+  const l2 = document.getElementById('cp-l2-' + idx);
+  const l3 = document.getElementById('cp-l3-' + idx);
+  const catEl = document.getElementById('cat-' + idx);
+  if(!l1 || !l2 || !l3) return;
+
+  catEl.value = '';
+  catPickerClearName(idx);
+  l3.style.display = 'none';
+  l3.innerHTML = '<option value="">— Select Item Type —</option>';
+
+  const ni1 = parseInt(l1.value);
+  const ni2 = parseInt(l2.value);
+  if(isNaN(ni1) || isNaN(ni2) || l2.value === '') return;
+
+  const node = CAT_TREE[ni1]?.children?.[ni2];
+  if(!node) return;
+
+  if(node.children){
+    // Has a 3rd level
+    l3.innerHTML = '<option value="">— Select Item Type —</option>' +
+      node.children.map((c, ci) => '<option value="' + ci + '">' + c.label + '</option>').join('');
+    l3.style.display = 'block';
+  } else {
+    // Leaf at L2
+    catEl.value = node.key || '';
+    onCatChange(idx);
+  }
+}
+
+function catL3Change(idx){
+  const l1 = document.getElementById('cp-l1-' + idx);
+  const l2 = document.getElementById('cp-l2-' + idx);
+  const l3 = document.getElementById('cp-l3-' + idx);
+  const catEl = document.getElementById('cat-' + idx);
+  if(!l1 || !l2 || !l3) return;
+
+  catPickerClearName(idx);
+  const ni1 = parseInt(l1.value);
+  const ni2 = parseInt(l2.value);
+  const ni3 = parseInt(l3.value);
+  if(isNaN(ni1) || isNaN(ni2) || isNaN(ni3) || l3.value === '') return;
+
+  const node = CAT_TREE[ni1]?.children?.[ni2]?.children?.[ni3];
+  if(!node) return;
+
+  catEl.value = node.key || '';
+  onCatChange(idx);
+}
+
+function catPickerClearName(idx){
+  const nameEl = document.getElementById('n-' + idx);
+  const bd = document.getElementById('bd-' + idx);
+  if(nameEl) nameEl.value = '';
+  if(bd) bd.classList.remove('open');
 }
 
 function createStarterGroceryList(){
@@ -2484,7 +2784,7 @@ function createStarterGroceryList(){
   if(existing.length > 0) return; // only for brand new users
   const lid = 'list_starter_' + Date.now();
   const list = { id: lid, name: 'My Weekly Essentials' };
-  const items = [
+  const starterItems = [
     {id:'s1',listId:lid,name:'Eggs',qty:1,price:'',store:'',notes:'1 dozen',checked:false},
     {id:'s2',listId:lid,name:'Milk',qty:1,price:'',store:'',notes:'1 gallon',checked:false},
     {id:'s3',listId:lid,name:'Bread',qty:1,price:'',store:'',notes:'',checked:false},
@@ -2511,17 +2811,18 @@ function createStarterGroceryList(){
     {id:'s24',listId:lid,name:'Paper Towels',qty:1,price:'',store:'',notes:'',checked:false},
   ];
   saveU('glists', [list]);
-  saveU('gitems', items);
+  saveU('gitems', starterItems);
 }
 function onNameInput(idx){
   const cat=document.getElementById(`cat-${idx}`)?.value;
   const val=document.getElementById(`n-${idx}`).value.trim().toLowerCase();
   const bd=document.getElementById(`bd-${idx}`);
   if(!bd) return;
-  const brands = cat && BRAND_DATA[cat] ? BRAND_DATA[cat] : Object.values(BRAND_DATA).flat();
-  const filtered = val ? brands.filter(b=>b.toLowerCase().includes(val)) : (cat ? brands : []);
+  // Only show brands for the selected category — never dump all brands
+  const brands = cat && BRAND_DATA[cat] ? BRAND_DATA[cat] : [];
+  const filtered = val ? brands.filter(b=>b.toLowerCase().includes(val)) : brands;
   if(!filtered.length){ bd.classList.remove('open'); return; }
-  bd.innerHTML=filtered.slice(0,8).map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
+  bd.innerHTML=filtered.slice(0,10).map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
   bd.classList.add('open');
 }
 function selectBrand(idx, name){
@@ -2547,7 +2848,7 @@ function deleteCard(idx){
       items--;
       document.getElementById('setCount').value=items;
       updateGrid();
-      saved.forEach((card,i)=>{ setCard(i,card); const catEl=document.getElementById(`cat-${i}`); if(catEl) catEl.value=savedCats[i]; });
+      saved.forEach((card,i)=>{ setCard(i,card); const catEl=document.getElementById(`cat-${i}`); if(catEl) catEl.value=savedCats[i]; catPickerInit(i); });
       const remaining = items>1 ? (t.cardsRemaining||'cards remaining.') : (t.cardRemainingS||'card remaining.');
       showToast(`${t.cardRemoved||'Card removed.'} ${items} ${remaining}`,'ok');
     }
@@ -2597,63 +2898,18 @@ function updateGrid(){
       <label class="card-label">${t.packLabel}</label>
       <input type="number" class="card-input" id="q-${i}" value="1" style="margin-top:4px;margin-bottom:10px">
       <label class="card-label">${t.categoryLabel||'Category'}</label>
-      <select class="card-select" id="cat-${i}" onchange="onCatChange(${i})" style="margin-bottom:8px">
-        <option value="">${t.categoryPh||'— Select Category —'}</option>
-        <optgroup label="Meats &amp; Protein">
-          <option value="chicken">Chicken</option>
-          <option value="beef">Beef / Ground Beef</option>
-          <option value="pork">Pork</option>
-          <option value="seafood">Seafood / Fish</option>
-          <option value="eggs">Eggs</option>
-          <option value="deli_meat">Deli Meat</option>
-        </optgroup>
-        <optgroup label="Fruits &amp; Vegetables">
-          <option value="fresh_fruit">Fresh Fruit</option>
-          <option value="fresh_veg">Fresh Vegetables</option>
-          <option value="frozen_veg">Frozen Vegetables</option>
-          <option value="canned_veg">Canned Vegetables</option>
-        </optgroup>
-        <optgroup label="Dairy &amp; Refrigerated">
-          <option value="milk">Milk</option>
-          <option value="butter">Butter</option>
-          <option value="cheese">Cheese</option>
-          <option value="yogurt">Yogurt</option>
-          <option value="cream_cheese">Cream Cheese</option>
-        </optgroup>
-        <optgroup label="Pantry &amp; Dry Goods">
-          <option value="bread">Bread</option>
-          <option value="cereal">Cereal</option>
-          <option value="cooking_oil">Cooking Oil</option>
-          <option value="pasta">Pasta / Noodles</option>
-          <option value="chips">Chips / Snacks</option>
-          <option value="frozen_pizza">Frozen Pizza</option>
-        </optgroup>
-        <optgroup label="Beverages">
-          <option value="coffee">Coffee</option>
-          <option value="water">Bottled Water</option>
-          <option value="soda">Soda</option>
-          <option value="juice">Juice</option>
-        </optgroup>
-        <optgroup label="Hygiene &amp; Personal Care">
-          <option value="shampoo">Shampoo</option>
-          <option value="conditioner">Conditioner</option>
-          <option value="body_wash">Body Wash</option>
-          <option value="toothpaste">Toothpaste</option>
-          <option value="deodorant">Deodorant</option>
-        </optgroup>
-        <optgroup label="Household Supplies">
-          <option value="toilet_paper">Toilet Paper</option>
-          <option value="paper_towels">Paper Towels</option>
-          <option value="laundry">Laundry Detergent</option>
-          <option value="dish_soap">Dish Soap</option>
-          <option value="trash_bags">Trash Bags</option>
-        </optgroup>
-        <optgroup label="Baby &amp; Pet">
-          <option value="diapers">Diapers</option>
-          <option value="baby_formula">Baby Formula</option>
-          <option value="pet_food">Pet Food</option>
-        </optgroup>
-      </select>
+      <div class="cat-picker" id="cp-${i}">
+        <select class="cat-sel" id="cp-l1-${i}" onchange="catL1Change(${i})">
+          <option value="">— Select Category —</option>
+        </select>
+        <select class="cat-sel" id="cp-l2-${i}" onchange="catL2Change(${i})" style="display:none;">
+          <option value="">— Select Sub-category —</option>
+        </select>
+        <select class="cat-sel" id="cp-l3-${i}" onchange="catL3Change(${i})" style="display:none;">
+          <option value="">— Select Item Type —</option>
+        </select>
+      </div>
+      <input type="hidden" id="cat-${i}" value="">
       <label class="card-label">${t.nameLabel}</label>
       <div style="position:relative">
         <input type="text" class="card-input" id="n-${i}" placeholder="${t.itemNamePh}" oninput="onNameInput(${i})" autocomplete="off">
@@ -2663,6 +2919,8 @@ function updateGrid(){
     </div>`;
   }
   grid.innerHTML=html;
+  // Init drill-down pickers for all cards
+  for(let i=0;i<items;i++) catPickerInit(i);
 }
 
 function getCard(i){ return {p:document.getElementById(`p-${i}`)?.value||'',dv:document.getElementById(`dv-${i}`)?.value||'0',dt:document.getElementById(`dt-${i}`)?.value||'p',s:document.getElementById(`s-${i}`)?.value||'',u:document.getElementById(`u-${i}`)?.value||'oz',q:document.getElementById(`q-${i}`)?.value||'1',n:document.getElementById(`n-${i}`)?.value||''}; }
@@ -2678,9 +2936,9 @@ function dupCard(idx){
   items++;
   document.getElementById('setCount').value=items;
   updateGrid();
-  saved.forEach((card,i)=>{ setCard(i,card); const catEl=document.getElementById(`cat-${i}`); if(catEl) catEl.value=savedCats[i]; });
+  saved.forEach((card,i)=>{ setCard(i,card); const catEl=document.getElementById(`cat-${i}`); if(catEl) catEl.value=savedCats[i]; catPickerInit(i); });
   setCard(items-1, d);
-  const newCat=document.getElementById(`cat-${items-1}`); if(newCat) newCat.value=srcCat;
+  const newCat=document.getElementById(`cat-${items-1}`); if(newCat) newCat.value=srcCat; catPickerInit(items-1);
   if(d.n) onNameInput(items-1);
   showToast(`Card ${idx+1} → Card ${items}`,'ok');
 }
@@ -3520,9 +3778,13 @@ let pennySidebarOpen = window.innerWidth >= 600;
 
 function loadPennySessions(){
   pennySessions = loadU('penny_sessions', []);
+  // Re-sync pennyActiveSession reference to point into the new array
+  if(pennyActiveSession){
+    const found = pennySessions.find(s => s.id === pennyActiveSession.id);
+    if(found) pennyActiveSession = found;
+  }
 }
 function savePennySessions(){
-  // Keep max 30 sessions
   if(pennySessions.length > 30) pennySessions = pennySessions.slice(-30);
   saveU('penny_sessions', pennySessions);
 }
@@ -3569,7 +3831,8 @@ function togglePennySidebar(){
 }
 
 function renderPennySessions(){
-  loadPennySessions();
+  // Do NOT call loadPennySessions here — it would break the live pennyActiveSession reference.
+  // pennySessions is kept in sync via savePennySessions() on every write.
   const list = document.getElementById('pennySessionList');
   if(!list) return;
   if(!pennySessions.length){
@@ -3617,17 +3880,15 @@ function pennyAddMessage(role, text, imageDataUrl){
   const msg = { role, content: text };
   if(imageDataUrl) msg.image = imageDataUrl;
   pennyActiveSession.messages.push(msg);
-  // Set a temp title from first user message so sidebar shows something immediately
-  if(role === 'user' && pennyActiveSession.messages.filter(m=>m.role==='user').length === 1){
-    pennyActiveSession.title = text.slice(0, 40) + (text.length > 40 ? '...' : '');
+  // Temp title from first user message — shows immediately in sidebar
+  if(role === 'user' && pennyActiveSession.messages.filter(m => m.role === 'user').length === 1){
+    const tempTitle = text.slice(0, 45) + (text.length > 45 ? '...' : '');
+    pennyActiveSession.title = tempTitle;
     const titleEl = document.getElementById('pennyChatTitle');
-    if(titleEl) titleEl.textContent = pennyActiveSession.title;
-  }
-  // After first assistant reply, generate a proper AI title
-  if(role === 'assistant' && pennyActiveSession.messages.filter(m=>m.role==='assistant').length === 1){
-    pennyGenerateTitle(pennyActiveSession);
+    if(titleEl) titleEl.textContent = tempTitle;
   }
   savePennySessions();
+  renderPennySessions();
   renderPennyMessages();
 }
 
@@ -3726,12 +3987,11 @@ async function pennySend(){
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
     const txt = pennyExecuteAddList(rawTxt);
     pennyRemoveTyping();
+    // Save assistant message — pennyAddMessage handles save + render
     pennyAddMessage('penny', txt);
-    // Generate a meaningful title from the first exchange (non-blocking)
-    const userMsgCount = pennyActiveSession.messages.filter(m=>m.role==='user').length;
-    if(userMsgCount === 1){
-      pennySuggestTitle(pennyActiveSession, text || 'image', txt);
-    }
+    // After first exchange: generate a proper AI title (replaces the temp truncated one)
+    const userMsgCount = pennyActiveSession.messages.filter(m => m.role === 'user').length;
+    if(userMsgCount === 1) pennyGenerateTitle(pennyActiveSession);
   } catch(e) {
     pennyRemoveTyping();
     console.error('Penny error:', e);
@@ -3864,30 +4124,6 @@ function takePhoto(){
 }
 
 // Generate a short meaningful chat title from the first exchange using AI
-async function pennySuggestTitle(session, userMsg, assistantMsg){
-  // Truly fire-and-forget — never throws, never interferes with main chat flow
-  try {
-    const res = await anthropicFetch({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 15,
-        system: 'Reply with ONLY a 2-4 word topic title. No punctuation. No quotes. Nothing else.',
-        messages: [{ role: 'user', content: `Topic: "${userMsg.slice(0,80)}"` }]
-      })
-    });
-    const data = await res.json();
-    const title = (data.content?.[0]?.text || '').trim().replace(/['".,!?]/g,'');
-    if(title && title.length > 2 && title.length < 50 && session === pennyActiveSession){
-      session.title = title;
-      savePennySessions();
-      renderPennySessions();
-      const titleEl = document.getElementById('pennyChatTitle');
-      if(titleEl) titleEl.textContent = title;
-    }
-  } catch(e){ /* silent — temp title stays */ }
-}
 
 function pennyHandleFile(input){
   const file = input.files[0];
@@ -4007,12 +4243,43 @@ CLEARCHECKED:{"list":"List Name"}
 Move items from one list to another:
 MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
 
-Rules:
-- Always execute immediately — never just describe what you would do.
-- Use the active list "${activeListName}" when no list is specified.
-- Keep your text reply warm, brief, and friendly. Let the action do the work.
-- Never show command tags in your visible response.
-- 150 words max for text. Write in flowing sentences, no bullet points.`;
+ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover.
+
+Commands (append at end of reply, multiple allowed):
+
+Add items to existing list:
+ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+
+Remove items by name (partial match ok):
+REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
+
+Create a new list (optionally pre-filled):
+CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
+
+Delete an entire list:
+DELETELIST:{"name":"List Name"}
+
+Rename a list:
+RENAMELIST:{"from":"Old Name","to":"New Name"}
+
+Clear all checked-off items from a list:
+CLEARCHECKED:{"list":"List Name"}
+
+Move items from one list to another:
+MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
+
+CONVERSATION RULES — follow these exactly:
+
+1. CREATING A NEW LIST: Never auto-create a list without asking for a name first. If the user wants a new list, ask: what would you like to name it? Then once they reply with a name, create it with CREATELIST. Exception: if the user explicitly says the name in their message (e.g. "make a list called Party"), create it immediately.
+
+2. ADDING ITEMS: Before adding items to a new list, ask if they want any extra notes per item (store preference, brand, size) or if they want you to recommend quantities based on their household size. Keep this quick — one friendly sentence. Then add immediately after they respond (or if they say "just add them" skip the question and add right away).
+
+3. EXISTING LISTS: When adding to an existing list by name, just do it — no need to ask.
+
+4. RECOMMENDATIONS: Always offer a brief helpful tip after completing an action (e.g. best store for those items, bulk buying suggestion, estimated cost).
+
+5. Keep replies warm, brief, conversational. 150 words max. No bullet points. No command tags visible.
+- Use the active list "${activeListName}" when no list name is specified and the user wants to add to an existing list.`;
 }
 
 // ── Penny Account Action Engine ──
