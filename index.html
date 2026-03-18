@@ -3737,22 +3737,16 @@ async function anthropicFetch(fetchOptions){
   const { signal, ...opts } = fetchOptions;
   const body = JSON.parse(opts.body);
 
-  // Convert Claude format to Groq format
+  // Always route through /api/penny — it handles both text and vision (Groq free tier)
+  // For text: uses llama-3.3-70b. For images: uses llama-4-scout (vision capable, also free).
   const groqBody = {
-    model: 'llama-3.1-70b-versatile',  // Updated Groq model
+    model: body.model || 'llama-3.3-70b-versatile',
     max_tokens: body.max_tokens || 1000,
-    messages: body.messages
+    messages: body.system
+      ? [{ role: 'system', content: body.system }, ...body.messages]
+      : body.messages
   };
 
-  // If there's a system message, add it as the first message
-  if (body.system) {
-    groqBody.messages = [
-      { role: 'system', content: body.system },
-      ...body.messages
-    ];
-  }
-
-  
   const r = await fetch('/api/penny', {
     method: 'POST',
     signal,
@@ -3951,30 +3945,31 @@ async function pennySend(){
   document.getElementById('pennySendBtn').disabled = true;
   pennyAddTyping();
 
-  // Build messages for API — map stored 'penny' role back to 'assistant' for the API
-  // Groq requires strict alternation: user, assistant, user, assistant...
-  // Filter to only text messages (no images in history for Groq compatibility)
+  // Build messages for API
   const historyMsgs = pennyActiveSession.messages.slice(0, -1);
   const apiMessages = [];
   let lastRole = null;
+
+  // Build history (text only — images in history not supported by Groq text models)
   for(const m of historyMsgs){
     const apiRole = m.role === 'penny' ? 'assistant' : 'user';
-    // Skip consecutive same-role messages (merge or skip to keep alternation)
     if(apiRole === lastRole) continue;
-    // Skip image messages in history (Groq doesn't support vision)
     if(m.image) continue;
-    const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
-    if(!content || !content.trim()) continue;
+    const content = typeof m.content === 'string' ? m.content : '';
+    if(!content.trim()) continue;
     apiMessages.push({ role: apiRole, content });
     lastRole = apiRole;
   }
 
-  // Add current user message — always as plain text for Groq compatibility
-  // Images are shown in the UI but described in text for the API
-  const currentContent = imageDataUrl
-    ? (text ? `[User sent an image] ${text}` : '[User sent an image — please ask them to describe it or what they want to know]')
-    : text;
-  apiMessages.push({ role: 'user', content: currentContent });
+  // Add current message — use image_url format for Groq vision model
+  if(imageDataUrl){
+    apiMessages.push({ role: 'user', content: [
+      { type: 'image_url', image_url: { url: imageDataUrl } },
+      { type: 'text', text: text || 'What do you see? How can this help with my grocery shopping or price comparison?' }
+    ]});
+  } else {
+    apiMessages.push({ role: 'user', content: text });
+  }
 
   pennyAbortCtrl = new AbortController();
   try {
