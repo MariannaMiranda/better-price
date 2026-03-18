@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <title>Better Price!
 </title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -477,10 +477,20 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
   .compare-wrap{padding:16px 14px 8px;}
   .toolbar{padding:10px 14px;gap:6px;}
   .tool-btn{padding:8px 12px;font-size:12px;}
-  .nav-tab{font-size:12px;padding:12px 6px;}
+  .nav-tab{font-size:11px;padding:10px 4px;min-width:52px;}
+  .nav-tab svg{width:13px;height:13px;}
   .onboard-card{padding:24px 18px;}
   .auth-right{padding:20px 16px;}
   .auth-card{padding:0;}
+  /* Profile tab mobile */
+  #tab-profile{padding:12px;}
+  .profile-section{padding:14px;}
+  .profile-section-title{font-size:14px;margin-bottom:12px;}
+  /* Better touch targets */
+  .stepper-btn{width:44px;height:44px;font-size:22px;}
+  .onboard-chip,.freq-chip{padding:10px 14px;font-size:14px;}
+  /* Grocery mobile */
+  .grocery-item{padding:12px 14px;}
 }
 
 /* ── HISTORY ── */
@@ -738,7 +748,7 @@ input:checked+.slider:before{transform:translateX(20px);}
 
 /* ── PENNY FULL TAB ── */
 #tab-penny{flex-direction:column;overflow:hidden;}
-.penny-layout{display:flex;flex:1;height:calc(100vh - 116px);overflow:hidden;}
+.penny-layout{display:flex;flex:1;height:calc(100dvh - 116px);height:calc(100vh - 116px);overflow:hidden;}
 .penny-sidebar{width:220px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .25s;}
 .penny-sidebar.collapsed{width:0;overflow:hidden;}
 .penny-sidebar-top{display:flex;align-items:center;justify-content:space-between;padding:14px 12px 10px;flex-shrink:0;}
@@ -799,9 +809,17 @@ input:checked+.slider:before{transform:translateX(20px);}
 .penny-send-btn:disabled{opacity:.4;cursor:not-allowed;}
 /* Mobile: sidebar hidden by default */
 @media(max-width:600px){
-  .penny-sidebar{position:absolute;top:0;left:0;height:100%;z-index:10;box-shadow:4px 0 20px rgba(0,0,0,.15);}
+  .penny-layout{height:calc(100dvh - 116px);height:calc(100vh - 116px);}
+  .penny-sidebar{position:absolute;top:0;left:0;height:100%;z-index:10;box-shadow:4px 0 20px rgba(0,0,0,.15);width:85%;max-width:280px;}
   .penny-sidebar.collapsed{width:0;}
   .penny-main{width:100%;}
+  /* Penny price panel on mobile */
+  #pennyPricePanel{padding:10px 12px;}
+  .penny-chat-header{padding:8px 10px;gap:6px;}
+  .penny-context-btn{padding:5px 8px;font-size:11px;}
+  .penny-messages{padding:12px 10px;}
+  .penny-input-area{padding:8px 10px;}
+  .penny-textarea{font-size:16px;} /* prevent iOS zoom */
 }
 /* Dark mode Penny */
 body.dark .penny-sidebar{background:#111f2e;border-color:#2a4060;}
@@ -1159,7 +1177,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   </div>
 
   <!-- PENNY TAB — full AI chat experience -->
-  <div id="tab-penny" style="display:none;height:calc(100vh - 116px);flex-direction:column;">
+  <div id="tab-penny" style="display:none;height:calc(100dvh - 116px);height:calc(100vh - 116px);flex-direction:column;">
     <!-- Chat sessions sidebar + main chat area -->
     <div class="penny-layout">
       <!-- Sessions sidebar -->
@@ -1506,6 +1524,28 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       </div>
     </div>
 
+    <!-- Language & Appearance -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span class="prof-lbl-appearance">Language &amp; Appearance</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="prof-lbl-langLabel" style="font-size:14px;color:var(--text);">Language</span>
+          <select class="s-select" id="profileLang" onchange="changeProfileLang()" style="min-width:140px;">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="pt">Português</option>
+          </select>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="prof-lbl-darkModeLabel" style="font-size:14px;color:var(--text);">Dark Mode</span>
+          <label class="switch"><input type="checkbox" id="profileThemeSwitch" onchange="toggleTheme()"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
     <!-- Save button -->
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
     <div id="profile-saved-msg" class="prof-lbl-saved" style="display:none;text-align:center;margin-top:12px;color:var(--ok);font-size:14px;font-weight:600;">&#10003; Profile saved!</div>
@@ -1532,7 +1572,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Calculator -->
 <div class="modal-box" id="calcModal">
-  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
+  <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Calculator</div>
   <input type="text" id="calcDisplay" class="calc-display" readonly value="0">
   <div class="calc-grid">
@@ -1546,7 +1586,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Settings -->
 <div class="modal-box" id="settingsModal">
-  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
+  <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Settings</div>
   <div class="setting-row"><span class="s-label">Dark Mode</span><label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label></div>
   <div class="setting-row"><span class="s-label">Language</span><select class="s-select" id="setLang" onchange="changeLang('settings')"><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option></select></div>
@@ -1557,7 +1597,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Export -->
 <div class="modal-box" id="exportModal">
-  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
+  <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Export Results</div>
   <div class="export-pre" id="exportPre">Run a comparison first.</div>
   <button class="auth-btn" onclick="shareResults()" style="margin-bottom:10px">Share</button>
@@ -1566,7 +1606,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- New List / Rename List modal -->
 <div class="modal-box" id="listNameModal">
-  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
+  <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title" id="listNameModalTitle">New List</div>
   <input class="modal-input" type="text" id="listNameInput" placeholder="e.g. Weekly Grocery">
   <div class="modal-btn-row">
@@ -1577,7 +1617,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Duplicate item to list modal -->
 <div class="modal-box" id="dupItemModal">
-  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
+  <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Copy to List</div>
   <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Choose a list to copy this item to:</p>
   <div id="dupListOptions"></div>
@@ -1585,7 +1625,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Edit Grocery Item Modal -->
 <div class="modal-box" id="editItemModal">
-  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
+  <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Edit Item</div>
   <input type="hidden" id="editItemId">
   <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
@@ -1666,6 +1706,8 @@ function applyTheme(dark){
     ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
     : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   if(sw) sw.checked = dark;
+  const profSw = document.getElementById('profileThemeSwitch');
+  if(profSw) profSw.checked = dark;
 }
 
 // ────────────────────────────────────────────────
@@ -1796,6 +1838,22 @@ const TRANSLATIONS = {
     zipNote:'US zip codes only — used to find the best nearby deals',
     attachFile:'Attach image or file',
     attachCamera:'Camera',
+    profileShopFreq:'Shopping Frequency',
+    profileBudget:'Weekly Budget',
+    profilePreferredStores:'Preferred Stores',
+    profileEmailNote:'Updating your email also updates your login credentials.',
+    people:'people',
+    pennyTypeList:'Type List',
+    pennyPhotoScan:'Photo / Scan',
+    pennyMyLists:'My Lists',
+    pennyFindBestPrices:'Find Best Prices',
+    pennyFindPrices:'Find Prices',
+    pennyZipNear:'Searching near',
+    pennyZipNoZip:'Enter your zip in Profile for local results',
+    pennyUploadPhoto:'Tap to upload a photo of your list',
+    profileAppearance:'Language & Appearance',
+    profileLangLabel:'Language',
+    profileDarkMode:'Dark Mode',
   },
   es: {
     login:'Iniciar sesión', signup:'Registrarse', namePh:'Nombre completo', emailPh:'Correo electrónico', passPh:'Contraseña',
@@ -1919,6 +1977,22 @@ const TRANSLATIONS = {
     zipNote:'Solo códigos postales de EE.UU. — para encontrar las mejores ofertas cercanas',
     attachFile:'Adjuntar imagen o archivo',
     attachCamera:'Cámara',
+    profileShopFreq:'Frecuencia de compras',
+    profileBudget:'Presupuesto semanal',
+    profilePreferredStores:'Tiendas preferidas',
+    profileEmailNote:'Actualizar tu correo también actualiza tus credenciales de inicio de sesión.',
+    people:'personas',
+    pennyTypeList:'Escribir lista',
+    pennyPhotoScan:'Foto / Escanear',
+    pennyMyLists:'Mis listas',
+    pennyFindBestPrices:'Buscar mejores precios',
+    pennyFindPrices:'Ver precios',
+    pennyZipNear:'Buscando cerca de',
+    pennyZipNoZip:'Agrega tu código postal en Perfil para resultados locales',
+    pennyUploadPhoto:'Toca para subir una foto de tu lista',
+    profileAppearance:'Idioma y apariencia',
+    profileLangLabel:'Idioma',
+    profileDarkMode:'Modo oscuro',
   },
   pt: {
     login:'Entrar', signup:'Cadastrar', namePh:'Nome completo', emailPh:'E-mail', passPh:'Senha',
@@ -2042,6 +2116,22 @@ const TRANSLATIONS = {
     zipNote:'Apenas CEPs dos EUA — para encontrar as melhores ofertas próximas',
     attachFile:'Anexar imagem ou arquivo',
     attachCamera:'Câmera',
+    profileShopFreq:'Frequência de compras',
+    profileBudget:'Orçamento semanal',
+    profilePreferredStores:'Lojas preferidas',
+    profileEmailNote:'Atualizar seu e-mail também atualiza suas credenciais de login.',
+    people:'pessoas',
+    pennyTypeList:'Digitar lista',
+    pennyPhotoScan:'Foto / Escanear',
+    pennyMyLists:'Minhas listas',
+    pennyFindBestPrices:'Buscar melhores preços',
+    pennyFindPrices:'Ver preços',
+    pennyZipNear:'Buscando perto de',
+    pennyZipNoZip:'Adicione seu CEP no Perfil para resultados locais',
+    pennyUploadPhoto:'Toque para enviar uma foto da sua lista',
+    profileAppearance:'Idioma e aparência',
+    profileLangLabel:'Idioma',
+    profileDarkMode:'Modo escuro',
   }
 };
 
@@ -2208,8 +2298,26 @@ function applyLang(){
   // ── Penny tab ──
   const pennyNewBtn = document.querySelector('.penny-new-btn');
   if(pennyNewBtn&&t.pennyNewChat){ const svg=pennyNewBtn.querySelector('svg'); pennyNewBtn.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyNewChat; pennyNewBtn.setAttribute('onclick','pennyNewChat()'); }
-  const pennyCtxLbl = document.querySelector('.penny-context-lbl');
-  if(pennyCtxLbl&&t.pennyAddCompare) pennyCtxLbl.textContent=t.pennyAddCompare;
+  // Update both penny-context-lbl spans (Add Compare & Find Prices)
+  const pennyCtxLbls = document.querySelectorAll('.penny-context-lbl');
+  if(pennyCtxLbls[0]&&t.pennyAddCompare) pennyCtxLbls[0].textContent=t.pennyAddCompare;
+  if(pennyCtxLbls[1]&&t.pennyFindPrices) pennyCtxLbls[1].textContent=t.pennyFindPrices;
+  // Penny price panel tab labels
+  const pptType = document.getElementById('ppt-type');
+  if(pptType&&t.pennyTypeList){ const svg=pptType.querySelector('svg'); pptType.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyTypeList; pptType.setAttribute('onclick',"pennyPriceTab('type')"); }
+  const pptPhoto = document.getElementById('ppt-photo');
+  if(pptPhoto&&t.pennyPhotoScan){ const svg=pptPhoto.querySelector('svg'); pptPhoto.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyPhotoScan; pptPhoto.setAttribute('onclick',"pennyPriceTab('photo')"); }
+  const pptMylist = document.getElementById('ppt-mylist');
+  if(pptMylist&&t.pennyMyLists){ const svg=pptMylist.querySelector('svg'); pptMylist.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyMyLists; pptMylist.setAttribute('onclick',"pennyPriceTab('mylist')"); }
+  // Find Best Prices button
+  const pennyPriceSearchBtn = document.getElementById('pennyPriceSearchBtn');
+  if(pennyPriceSearchBtn&&t.pennyFindBestPrices){ const svg=pennyPriceSearchBtn.querySelector('svg'); pennyPriceSearchBtn.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyFindBestPrices; }
+  // Upload photo label
+  const pennyUploadLbl = document.querySelector('#ppp-photo label div');
+  if(pennyUploadLbl&&t.pennyUploadPhoto) pennyUploadLbl.textContent=t.pennyUploadPhoto;
+  // Penny price panel zip label (only if panel is open and zip label exists)
+  const pennyZipLbl = document.getElementById('pennyPriceZipLbl');
+  if(pennyZipLbl){ const zip=typeof loadU==='function'?loadU('zip',''):''; pennyZipLbl.textContent=zip?(t.pennyZipNear||'Searching near')+' '+zip:(t.pennyZipNoZip||'Enter your zip in Profile for local results'); }
   setPh('pennyInput', lang==='es'?'Pregúntale algo a Penny...':lang==='pt'?'Pergunte algo a Penny...':'Ask Penny anything...');
   // Penny suggestion chips (only when welcome screen is visible)
   const pennyWelcome = document.querySelector('.penny-welcome');
@@ -2257,6 +2365,47 @@ function applyLang(){
   if(tailorBadgeSpan) tailorBadgeSpan.textContent = lang==='es'?'Para Mejorar Tus Resultados':lang==='pt'?'Para Melhorar Seus Resultados':'To Enhance Your Results';
   const tailorSub = document.querySelector('.onboard-tailor-sub');
   if(tailorSub) tailorSub.textContent = lang==='es'?'Responde unas preguntas para personalizar todo para ti.':lang==='pt'?'Responda algumas perguntas para personalizarmos tudo para você.':'Answer a few quick questions so we can tailor everything for you.';
+
+  // ── Profile tab full labels (updated live on language change) ──
+  setQ('#tab-profile .tab-title', t.profileTitle||'My Profile');
+  setQ('#tab-profile .prof-lbl-account',    t.profileAccountInfo||'Account Info');
+  setQ('#tab-profile .prof-lbl-firstname',  t.profileFirstName||'First Name');
+  setQ('#tab-profile .prof-lbl-lastname',   t.profileLastName||'Last Name');
+  setQ('#tab-profile .prof-lbl-email',      t.profileEmail||'Email');
+  setQ('#tab-profile .prof-lbl-emailnote',  t.profileEmailNote||'Updating your email also updates your login credentials.');
+  setQ('#tab-profile .prof-lbl-changepass', t.profileChangePass||'Change Password');
+  setQ('#tab-profile .prof-lbl-curpass',    t.profileCurPass||'Current Password');
+  setQ('#tab-profile .prof-lbl-newpass',    t.profileNewPass||'New Password');
+  setQ('#tab-profile .prof-lbl-confpass',   t.profileConfPass||'Confirm New Password');
+  setQ('#tab-profile .prof-lbl-passnote',   t.profilePassNote||'Leave new & confirm blank to keep your current password.');
+  setQ('#tab-profile .prof-lbl-household',  t.profileHousehold||'Household Size');
+  setQ('#tab-profile .prof-lbl-shopfreq',   t.profileShopFreq||'Shopping Frequency');
+  setQ('#tab-profile .prof-lbl-budget',     t.profileBudget||'Weekly Budget');
+  setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
+  setQ('#tab-profile .prof-lbl-stores',     t.profilePreferredStores||t.profileStores||'Preferred Stores');
+  setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
+  setQ('#tab-profile .prof-lbl-appearance', t.profileAppearance||'Language & Appearance');
+  setQ('#tab-profile .prof-lbl-langLabel',  t.profileLangLabel||'Language');
+  setQ('#tab-profile .prof-lbl-darkModeLabel', t.profileDarkMode||'Dark Mode');
+  // Sync profile theme switch with current state
+  const profThemeSwitch = document.getElementById('profileThemeSwitch');
+  if(profThemeSwitch) profThemeSwitch.checked = document.body.classList.contains('dark');
+  // Sync profile lang dropdown
+  const profileLangDropdown = document.getElementById('profileLang');
+  if(profileLangDropdown) profileLangDropdown.value = lang;
+  const profPeopleLbl = document.querySelector('#tab-profile .onboard-stepper span[style*="color:var(--muted)"]');
+  if(profPeopleLbl) profPeopleLbl.textContent=t.people||'people';
+  const profBudgetNote = document.querySelector('#tab-profile .profile-section .onboard-stepper + div');
+  if(profBudgetNote) profBudgetNote.textContent=t.budgetNote||'Adjusts in $50 increments • $50 min • $2,000 max';
+  // Profile freq chips
+  const profFreqMap=[['daily',t.freqDaily],['twice_week',t.freqTwice],['weekly',t.freqWeekly],['biweekly',t.freqBiweekly],['monthly',t.freqMonthly]];
+  document.querySelectorAll('#profile-freq-chips .freq-chip:not(#profile-freq-other-chip)').forEach((chip,i)=>{ if(profFreqMap[i]&&profFreqMap[i][1]) chip.textContent=profFreqMap[i][1]; });
+  const profFreqOther=document.getElementById('profile-freq-other-chip');
+  if(profFreqOther&&t.freqOther) profFreqOther.textContent=t.freqOther;
+  const profOtherStore=document.getElementById('profile-other-chip');
+  if(profOtherStore&&t.storeOther) profOtherStore.textContent=t.storeOther;
+  setPh('profile-freq-other-text', lang==='es'?'Describe con qué frecuencia compras...':lang==='pt'?'Descreva com que frequência você faz compras...':'Describe how often you shop...');
+  setPh('profile-other-text', lang==='es'?'Nombre de tu tienda (ej. H-E-B, Wegmans)':lang==='pt'?'Nome da sua loja (ex. H-E-B, Wegmans)':'Type your store name (e.g. H-E-B, Wegmans)');
 
   // ── Profile danger zone ──
   setQ('.prof-lbl-danger', t.dangerZone||'Danger Zone');
@@ -3613,7 +3762,7 @@ function renderProfileTab(){
   setQ('#tab-profile .prof-lbl-firstname',  t.profileFirstName||'First Name');
   setQ('#tab-profile .prof-lbl-lastname',   t.profileLastName||'Last Name');
   setQ('#tab-profile .prof-lbl-email',      t.profileEmail||'Email');
-  setQ('#tab-profile .prof-lbl-emailnote',  'Updating your email also updates your login credentials.');
+  setQ('#tab-profile .prof-lbl-emailnote',  t.profileEmailNote||'Updating your email also updates your login credentials.');
   setQ('#tab-profile .prof-lbl-changepass', t.profileChangePass||'Change Password');
   setQ('#tab-profile .prof-lbl-curpass',    t.profileCurPass||'Current Password');
   setQ('#tab-profile .prof-lbl-newpass',    t.profileNewPass||'New Password');
@@ -3623,8 +3772,11 @@ function renderProfileTab(){
   setQ('#tab-profile .prof-lbl-shopfreq',   t.profileShopFreq||'Shopping Frequency');
   setQ('#tab-profile .prof-lbl-budget',     t.profileBudget||'Weekly Budget');
   setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
-  setQ('#tab-profile .prof-lbl-stores',     'Preferred Stores');
+  setQ('#tab-profile .prof-lbl-stores',     t.profilePreferredStores||t.profileStores||'Preferred Stores');
   setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
+  setQ('#tab-profile .prof-lbl-appearance', t.profileAppearance||'Language & Appearance');
+  setQ('#tab-profile .prof-lbl-langLabel',  t.profileLangLabel||'Language');
+  setQ('#tab-profile .prof-lbl-darkModeLabel', t.profileDarkMode||'Dark Mode');
   setQ('#tab-profile .prof-lbl-danger',     t.dangerZone||'Danger Zone');
   setQ('#tab-profile .prof-btn-delete',     t.deleteAccount||'Delete Account');
   setQ('#tab-profile .prof-lbl-deleteNote', t.deleteNote||'This permanently removes your account and all data. You can sign up again with the same email.');
@@ -3677,6 +3829,32 @@ function renderProfileTab(){
   const budgetEl = document.getElementById('profile-budget-val');
   if(budgetEl) budgetEl.innerText = '$' + profileBudget;
 
+  // Translate "people" label
+  const peopleLbl = document.querySelector('#tab-profile .onboard-stepper span[style*="color:var(--muted)"]');
+  if(peopleLbl) peopleLbl.textContent = t.people||'people';
+
+  // Translate budget note
+  const profileBudgetNote = document.querySelector('#tab-profile .profile-section .onboard-stepper + div');
+  if(profileBudgetNote) profileBudgetNote.textContent = t.budgetNote||'Adjusts in $50 increments • $50 min • $2,000 max';
+
+  // Translate frequency chips
+  const freqMap = [['daily',t.freqDaily],['twice_week',t.freqTwice],['weekly',t.freqWeekly],['biweekly',t.freqBiweekly],['monthly',t.freqMonthly]];
+  document.querySelectorAll('#profile-freq-chips .freq-chip:not(#profile-freq-other-chip)').forEach((chip,i)=>{ if(freqMap[i]&&freqMap[i][1]) chip.textContent=freqMap[i][1]; });
+  const profFreqOtherChipLbl = document.getElementById('profile-freq-other-chip');
+  if(profFreqOtherChipLbl&&t.freqOther) profFreqOtherChipLbl.textContent=t.freqOther;
+
+  // Translate "Other" store chip
+  const profOtherStoreChip = document.getElementById('profile-other-chip');
+  if(profOtherStoreChip&&t.storeOther) profOtherStoreChip.textContent=t.storeOther;
+
+  // Translate freq other placeholder
+  const profFreqOtherTxtEl = document.getElementById('profile-freq-other-text');
+  if(profFreqOtherTxtEl) profFreqOtherTxtEl.placeholder = lang==='es'?'Describe con qué frecuencia compras...':lang==='pt'?'Descreva com que frequência você faz compras...':'Describe how often you shop...';
+
+  // Translate other store placeholder
+  const profOtherStoreTxtEl = document.getElementById('profile-other-text');
+  if(profOtherStoreTxtEl) profOtherStoreTxtEl.placeholder = lang==='es'?'Nombre de tu tienda (ej. H-E-B, Wegmans)':lang==='pt'?'Nome da sua loja (ex. H-E-B, Wegmans)':'Type your store name (e.g. H-E-B, Wegmans)';
+
   // Update shopping frequency chips
   const freqChips = document.querySelectorAll('#profile-freq-chips .freq-chip');
   freqChips.forEach(chip => chip.classList.remove('selected'));
@@ -3727,6 +3905,9 @@ function renderProfileTab(){
   // Sync language dropdown
   const profileLangEl = document.getElementById('profileLang');
   if(profileLangEl) profileLangEl.value = lang;
+  // Sync theme switch
+  const profThemeSw = document.getElementById('profileThemeSwitch');
+  if(profThemeSw) profThemeSw.checked = document.body.classList.contains('dark');
 }
 
 function confirmDeleteAccount(){
@@ -4217,7 +4398,7 @@ function pennyTogglePricePanel(){
     // Show zip from profile
     const zip = loadU('zip','');
     const lbl = document.getElementById('pennyPriceZipLbl');
-    if(lbl) lbl.textContent = zip ? `Searching near ${zip}` : 'Enter your zip in Profile for local results';
+    if(lbl){ const t2=T(); lbl.textContent = zip ? (t2.pennyZipNear||'Searching near')+' '+zip : (t2.pennyZipNoZip||'Enter your zip in Profile for local results'); }
     pennyPriceTab('type');
     pennyPriceRenderMyLists();
   }
