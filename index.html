@@ -4012,7 +4012,7 @@ Rules:
 - Use the active list "${activeListName}" when no list is specified.
 - Keep your text reply warm, brief, and friendly. Let the action do the work.
 - Never show command tags in your visible response.
-- 150 words max for text. Write in flowing sentences, no bullet points.\`;
+- 150 words max for text. Write in flowing sentences, no bullet points.`;
 }
 
 // ── Penny Account Action Engine ──
@@ -4075,7 +4075,7 @@ function pennyExecuteActions(rawText){
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(lid, item)); n++; } });
         if(n) saveItms=true;
-        toasts.push(`Created "${list.name}"${n ? \` with ${n} items\` : ''}`);
+        toasts.push('Created "' + list.name + '"' + (n ? ' with ' + n + ' item' + (n!==1?'s':'') : ''));
       }
       else if(cmd.type === 'REMOVEITEMS'){
         const list = pennyResolveList(d.list); if(!list) return;
