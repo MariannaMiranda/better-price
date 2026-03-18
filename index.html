@@ -528,10 +528,10 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 .list-nav-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .list-nav-count{font-size:11px;background:var(--input-bg);color:var(--muted);padding:2px 7px;border-radius:20px;flex-shrink:0;}
 .list-nav-item.active .list-nav-count{background:var(--brand-light);color:var(--brand);}
-.list-nav-actions{display:none;gap:4px;}
-.list-nav-item:hover .list-nav-actions{display:flex;}
+.list-nav-actions{display:flex;gap:4px;}
 .list-nav-action{background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;transition:.2s;display:flex;align-items:center;}
 .list-nav-action:hover{color:var(--brand);}
+.list-nav-action.red{color:var(--muted);}
 .list-nav-action.red:hover{color:var(--danger);}
 .list-nav-action svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
@@ -803,6 +803,25 @@ input:checked+.slider:before{transform:translateX(20px);}
   .penny-sidebar.collapsed{width:0;}
   .penny-main{width:100%;}
 }
+/* Drag-and-drop overlay for Penny */
+.penny-drop-overlay{
+  display:none;position:absolute;inset:0;z-index:50;
+  background:rgba(0,51,102,.13);
+  border:3px dashed var(--brand);
+  border-radius:var(--r);
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;
+  pointer-events:none;
+  transition:opacity .15s;
+}
+.penny-drop-overlay.active{display:flex;}
+.penny-drop-overlay svg{width:44px;height:44px;stroke:var(--brand);fill:none;stroke-width:1.5;opacity:.7;}
+.penny-drop-overlay span{font-size:16px;font-weight:600;color:var(--brand);opacity:.85;}
+.penny-main{position:relative;}
+body.dark .penny-drop-overlay{background:rgba(77,143,204,.12);border-color:#4d8fcc;}
+body.dark .penny-drop-overlay svg{stroke:#4d8fcc;}
+body.dark .penny-drop-overlay span{color:#7ec8f8;}
+
 /* Dark mode Penny */
 body.dark .penny-sidebar{background:#111f2e;border-color:#2a4060;}
 body.dark .penny-chat-header{background:#111f2e;border-color:#2a4060;}
@@ -1170,7 +1189,12 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         <div class="penny-session-list" id="pennySessionList"></div>
       </div>
       <!-- Main chat -->
-      <div class="penny-main">
+      <div class="penny-main" id="pennyMain">
+        <!-- Drag-and-drop overlay -->
+        <div class="penny-drop-overlay" id="pennyDropOverlay">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Drop image here</span>
+        </div>
         <div class="penny-chat-header">
           <button class="penny-sidebar-toggle" onclick="togglePennySidebar()" title="Chats">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -2295,6 +2319,8 @@ function showApp(isNewUser=false){
   updateGrid(); renderHistory(); renderListNav(); renderPresets();
   if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
   applyLang();
+  // Wire up drag-and-drop for Penny — safe to call multiple times (idempotent guard inside)
+  initPennyDragDrop();
   if(isNewUser){
     obGoStep(1);
     document.getElementById('onboarding-screen').style.display='flex';
@@ -3058,19 +3084,19 @@ function renderListNav(){
   const noListsMsg = lang==='en'?'No lists yet.':lang==='es'?'Sin listas aún.':'Sem listas ainda.';
   if(!groceryLists.length){ nav.innerHTML=`<div style="padding:12px 16px;font-size:13px;color:var(--muted)">${noListsMsg}</div>`; return; }
   nav.innerHTML=groceryLists.map(list=>{
-    const count=groceryItems.filter(gi=>gi.listId===list.id).length;
-    return `<div class="list-nav-item ${activeListId===list.id?'active':''}" onclick="selectList(${list.id})">
+    const count=groceryItems.filter(gi=>String(gi.listId)===String(list.id)).length;
+    return `<div class="list-nav-item ${activeListId===list.id?'active':''}" onclick="selectList('${list.id}')">
       <span class="list-nav-name">${esc(list.name)}</span>
       <span class="list-nav-count">${count}</span>
       <div class="list-nav-actions">
-        <button class="list-nav-action" title="Rename" onclick="event.stopPropagation();promptRenameList(${list.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="list-nav-action red" title="Delete" onclick="event.stopPropagation();deleteList(${list.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        <button class="list-nav-action" title="Rename" onclick="event.stopPropagation();promptRenameList('${list.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="list-nav-action red" title="Delete" onclick="event.stopPropagation();deleteList('${list.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
     </div>`;
   }).join('');
 }
 
-function selectList(id){ activeListId=id; renderListNav(); renderGroceryContent(); }
+function selectList(id){ activeListId=String(id); renderListNav(); renderGroceryContent(); }
 
 function promptNewList(){
   const t=T();
@@ -3088,7 +3114,7 @@ function promptNewList(){
 
 function promptRenameList(id){
   const t=T();
-  const list=groceryLists.find(l=>l.id===id); if(!list)return;
+  const list=groceryLists.find(l=>String(l.id)===String(id)); if(!list)return;
   document.getElementById('listNameModalTitle').innerText=lang==='en'?'Rename List':lang==='es'?'Renombrar lista':'Renomear lista';
   document.getElementById('listNameInput').value=list.name;
   listNameCallback = (name) => { list.name=name; saveU('glists',groceryLists); renderListNav(); renderGroceryContent(); showToast(t.toastRenamed,'ok'); };
@@ -3109,10 +3135,10 @@ function deleteList(id){
   const t=T();
   showConfirm(lang==='en'?'Delete List':lang==='es'?'Eliminar lista':'Excluir lista',
     lang==='en'?'Delete this list and all its items?':lang==='es'?'¿Eliminar esta lista y todos sus artículos?':'Excluir esta lista e todos os seus itens?', ()=>{
-    groceryLists=groceryLists.filter(l=>l.id!==id);
-    groceryItems=groceryItems.filter(gi=>gi.listId!==id);
+    groceryLists=groceryLists.filter(l=>String(l.id)!==String(id));
+    groceryItems=groceryItems.filter(gi=>String(gi.listId)!==String(id));
     saveU('glists',groceryLists); saveU('gitems',groceryItems);
-    if(activeListId===id) activeListId=groceryLists[0]?.id||null;
+    if(String(activeListId)===String(id)) activeListId=groceryLists[0]?.id||null;
     renderListNav(); renderGroceryContent();
     showToast(t.toastDeleted);
   });
@@ -3123,12 +3149,12 @@ function deleteList(id){
 // ────────────────────────────────────────────────
 function renderGroceryContent(){
   const el=document.getElementById('groceryContent');
-  if(!activeListId||!groceryLists.find(l=>l.id===activeListId)){
+  if(!activeListId||!groceryLists.find(l=>String(l.id)===String(activeListId))){
     const t=T(); const lines=t.groceryEmpty.split('\n');
     el.innerHTML=`<div class="no-list-state"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg><p>${lines[0]}<br>${lines[1]||''}</p></div>`; return;
   }
-  const listName=groceryLists.find(l=>l.id===activeListId).name;
-  const listItems=groceryItems.filter(gi=>gi.listId===activeListId);
+  const listName=groceryLists.find(l=>String(l.id)===String(activeListId)).name;
+  const listItems=groceryItems.filter(gi=>String(gi.listId)===String(activeListId));
   const done=listItems.filter(i=>i.done).length;
   const t=T();
   const emptyListMsg = lang==='en'?'No items in this list yet.':lang==='es'?'Esta lista está vacía.':'Esta lista está vazia.';
@@ -3151,16 +3177,16 @@ function renderGroceryContent(){
       ? `<div class="empty-state"><p>${emptyListMsg}</p></div>`
       : listItems.map(item=>`
         <div class="grocery-item ${item.done?'done':''}">
-          <div class="g-check ${item.done?'on':''}" onclick="toggleDone(${item.id})"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="g-check ${item.done?'on':''}" onclick="toggleDone('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           <div class="gi-info">
             <div class="gi-name">${esc(item.name)}</div>
             <div class="gi-meta">${qtyWord}: ${esc(item.qty)}${item.store?' · '+esc(item.store):''}${item.notes?' · '+esc(item.notes):''}</div>
           </div>
           ${item.price?`<span class="gi-price">${currSymbol}${parseFloat(item.price).toFixed(2)}</span>`:''}
           <div class="gi-actions">
-            <button class="card-icon-btn" title="Edit item" onclick="promptEditItem(${item.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <button class="card-icon-btn" title="Copy to list" onclick="promptDupItem(${item.id})"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-            <button class="card-icon-btn" title="Delete" onclick="delGroceryItem(${item.id})" style="color:var(--danger)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="card-icon-btn" title="Edit item" onclick="promptEditItem('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="card-icon-btn" title="Copy to list" onclick="promptDupItem('${item.id}')"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            <button class="card-icon-btn" title="Delete" onclick="delGroceryItem('${item.id}')" style="color:var(--danger)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
         </div>`).join('')
     }
@@ -3182,8 +3208,8 @@ function addGroceryItem(){
   showToast(`"${name}" ${t.toastAdded}`,'ok');
   setTimeout(()=>{ const nf=document.getElementById('g-name'); if(nf)nf.focus(); },100);
 }
-function toggleDone(id){ const i=groceryItems.find(x=>x.id===id); if(i){i.done=!i.done;saveU('gitems',groceryItems);renderListNav();renderGroceryContent();} }
-function delGroceryItem(id){ const t=T(); showConfirm(lang==='en'?'Delete Item':lang==='es'?'Eliminar artículo':'Excluir item', lang==='en'?'Remove this item from the list?':lang==='es'?'¿Eliminar este artículo de la lista?':'Remover este item da lista?', ()=>{ groceryItems=groceryItems.filter(i=>i.id!==id); saveU('gitems',groceryItems); renderListNav(); renderGroceryContent(); }); }
+function toggleDone(id){ const i=groceryItems.find(x=>String(x.id)===String(id)); if(i){i.done=!i.done;saveU('gitems',groceryItems);renderListNav();renderGroceryContent();} }
+function delGroceryItem(id){ const t=T(); showConfirm(lang==='en'?'Delete Item':lang==='es'?'Eliminar artículo':'Excluir item', lang==='en'?'Remove this item from the list?':lang==='es'?'¿Eliminar este artículo de la lista?':'Remover este item da lista?', ()=>{ groceryItems=groceryItems.filter(i=>String(i.id)!==String(id)); saveU('gitems',groceryItems); renderListNav(); renderGroceryContent(); }); }
 function uncheckAll(){ const t=T(); showConfirm(t.uncheckAll, lang==='en'?'Remove all checkmarks from this list?':lang==='es'?'¿Quitar todas las marcas de esta lista?':'Remover todas as marcações desta lista?', ()=>{ groceryItems.filter(i=>i.listId===activeListId).forEach(i=>i.done=false); saveU('gitems',groceryItems); renderGroceryContent(); showToast(t.toastUncheck,'ok'); }); }
 
 function promptDupItem(id){
@@ -3934,7 +3960,9 @@ async function pennySend(){
 
   if(!pennyActiveSession) pennyNewChat();
 
-  const imageDataUrl = hasImages ? pennyPendingImages[0].dataUrl : null;
+  // Capture ALL pending images before clearing state
+  const capturedImages = pennyPendingImages.slice();
+  const imageDataUrl = capturedImages.length > 0 ? capturedImages[0].dataUrl : null;
   inp.value = '';
   inp.style.height = 'auto';
   pennyPendingImages = [];
@@ -3961,12 +3989,17 @@ async function pennySend(){
     lastRole = apiRole;
   }
 
-  // Add current message — use image_url format for Groq vision model
-  if(imageDataUrl){
-    apiMessages.push({ role: 'user', content: [
-      { type: 'image_url', image_url: { url: imageDataUrl } },
-      { type: 'text', text: text || 'What do you see? How can this help with my grocery shopping or price comparison?' }
-    ]});
+  // Add current message — multi-image support via image_url blocks for Groq vision
+  if(capturedImages.length > 0){
+    const contentBlocks = capturedImages.map(img => ({
+      type: 'image_url',
+      image_url: { url: img.dataUrl }
+    }));
+    contentBlocks.push({
+      type: 'text',
+      text: text || 'What do you see? How can this help with my grocery shopping or price comparison?'
+    });
+    apiMessages.push({ role: 'user', content: contentBlocks });
   } else {
     apiMessages.push({ role: 'user', content: text });
   }
@@ -4154,6 +4187,59 @@ function closeAIPanel(){}
 function resetPennyBtn(){}
 function startPenny(){ goTab('penny'); }
 
+// ── Penny Drag-and-Drop image support ──
+function initPennyDragDrop(){
+  const main = document.getElementById('pennyMain');
+  const overlay = document.getElementById('pennyDropOverlay');
+  if(!main || !overlay) return;
+  if(main._dropInitialized) return; // idempotency guard
+  main._dropInitialized = true;
+
+  let dragCounter = 0; // track nested dragenter/dragleave correctly
+
+  main.addEventListener('dragenter', e => {
+    e.preventDefault();
+    // Only respond to file drags
+    if(!e.dataTransfer.types.includes('Files')) return;
+    dragCounter++;
+    if(dragCounter === 1) overlay.classList.add('active');
+  });
+
+  main.addEventListener('dragleave', e => {
+    dragCounter--;
+    if(dragCounter === 0) overlay.classList.remove('active');
+  });
+
+  main.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  main.addEventListener('drop', e => {
+    e.preventDefault();
+    dragCounter = 0;
+    overlay.classList.remove('active');
+    const files = Array.from(e.dataTransfer.files).filter(f =>
+      f.type.startsWith('image/') || f.type === 'application/pdf'
+    );
+    if(!files.length){
+      showToast('Only images and PDFs are supported.', 'warn');
+      return;
+    }
+    // Load each file as base64 and add to pending
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        pennyPendingImages.push({ dataUrl: ev.target.result, name: file.name, mimeType: file.type });
+        renderPennyAttachStrip();
+      };
+      reader.readAsDataURL(file);
+    });
+    // Focus the text input after drop
+    document.getElementById('pennyInput')?.focus();
+  });
+}
+
 function buildSys(){
   const hh=loadU('household',2);
   const stores=loadU('preferred_stores',[]);
@@ -4163,7 +4249,7 @@ function buildSys(){
   const ln=lang==='es'?'Spanish':lang==='pt'?'Portuguese':'English';
 
   // Build rich grocery list context for Penny
-  const activeList = groceryLists.find(l=>l.id===activeListId);
+  const activeList = groceryLists.find(l=>String(l.id)===String(activeListId));
   const activeListName = activeList ? activeList.name : (groceryLists[0]?.name || 'My Weekly Essentials');
   const listContext = groceryLists.map(l => {
     const its = groceryItems.filter(gi => gi.listId === l.id);
