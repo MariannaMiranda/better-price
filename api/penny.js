@@ -6,7 +6,63 @@ export default async function handler(req, res) {
   try {
     const body = req.body;
 
-    // Try models in order until one works
+    // Detect if any message contains image content
+    const hasImage = (body.messages || []).some(m =>
+      Array.isArray(m.content) && m.content.some(c => c.type === 'image_url' || c.type === 'image')
+    );
+
+    if (hasImage) {
+      // Route to Groq vision model — free tier, supports image input
+      // Convert Anthropic-style image format to OpenAI/Groq format if needed
+      const messages = (body.messages || []).map(m => {
+        if (!Array.isArray(m.content)) return m;
+        const converted = m.content.map(c => {
+          if (c.type === 'image' && c.source?.type === 'base64') {
+            // Anthropic format → OpenAI format
+            return {
+              type: 'image_url',
+              image_url: {
+                url: `data:${c.source.media_type};base64,${c.source.data}`
+              }
+            };
+          }
+          return c;
+        });
+        return { ...m, content: converted };
+      });
+
+      // Prepend system message if present
+      const fullMessages = body.system
+        ? [{ role: 'system', content: body.system }, ...messages]
+        : messages;
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + process.env.GROQ_API_KEY,
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          max_tokens: body.max_tokens || 1000,
+          messages: fullMessages,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        const text = data.choices?.[0]?.message?.content || '';
+        return res.status(200).json({ text });
+      }
+
+      // Vision model failed — fall back to text response
+      const errMsg = data?.error?.message || 'Vision model error';
+      return res.status(200).json({
+        text: "I can see you attached an image, but I'm having trouble processing it right now. Could you describe what's in the photo? I'm happy to help with prices, products, or your grocery list."
+      });
+    }
+
+    // Text-only: try models in order until one works
     const models = [
       'llama-3.3-70b-versatile',
       'llama3-70b-8192',
@@ -14,7 +70,6 @@ export default async function handler(req, res) {
       'mixtral-8x7b-32768',
     ];
 
-    // Use the model from the request body if provided, otherwise try the list
     const requestedModel = body.model;
     const tryModels = models.includes(requestedModel)
       ? [requestedModel, ...models.filter(m => m !== requestedModel)]
@@ -41,7 +96,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ text });
       }
 
-      // If model not found, try next one
       const errMsg = data?.error?.message || '';
       lastError = errMsg;
       if (
@@ -52,11 +106,9 @@ export default async function handler(req, res) {
         continue;
       }
 
-      // Any other error (bad key, rate limit, etc.) — return immediately
       return res.status(response.status).json({ error: errMsg || 'Groq error' });
     }
 
-    // All models failed
     return res.status(500).json({ error: 'All models failed. Last error: ' + lastError });
 
   } catch (err) {
