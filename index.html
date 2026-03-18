@@ -1686,8 +1686,6 @@ function applyTheme(dark){
     ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
     : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   if(sw) sw.checked = dark;
-  const profSw = document.getElementById('profileThemeSwitch');
-  if(profSw) profSw.checked = dark;
 }
 
 // ────────────────────────────────────────────────
@@ -2366,15 +2364,6 @@ function applyLang(){
   setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
   setQ('#tab-profile .prof-lbl-stores',     t.profilePreferredStores||t.profileStores||'Preferred Stores');
   setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
-  setQ('#tab-profile .prof-lbl-appearance', t.profileAppearance||'Language & Appearance');
-  setQ('#tab-profile .prof-lbl-langLabel',  t.profileLangLabel||'Language');
-  setQ('#tab-profile .prof-lbl-darkModeLabel', t.profileDarkMode||'Dark Mode');
-  // Sync profile theme switch with current state
-  const profThemeSwitch = document.getElementById('profileThemeSwitch');
-  if(profThemeSwitch) profThemeSwitch.checked = document.body.classList.contains('dark');
-  // Sync profile lang dropdown
-  const profileLangDropdown = document.getElementById('profileLang');
-  if(profileLangDropdown) profileLangDropdown.value = lang;
   const profPeopleLbl = document.querySelector('#tab-profile .onboard-stepper span[style*="color:var(--muted)"]');
   if(profPeopleLbl) profPeopleLbl.textContent=t.people||'people';
   const profBudgetNote = document.querySelector('#tab-profile .profile-section .onboard-stepper + div');
@@ -2407,16 +2396,6 @@ function changeLang(src){
   applyLang();
 }
 
-function changeProfileLang(){
-  lang = document.getElementById('profileLang').value;
-  document.getElementById('authLang').value = lang;
-  document.getElementById('setLang').value = lang;
-  localStorage.setItem('bp_lang', lang);
-  applyLang();
-  // Re-sync after applyLang in case it overwrites the dropdown
-  const pl = document.getElementById('profileLang');
-  if(pl) pl.value = lang;
-}
 
 // ────────────────────────────────────────────────
 // AUTH
@@ -3756,9 +3735,6 @@ function renderProfileTab(){
   setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
   setQ('#tab-profile .prof-lbl-stores',     t.profilePreferredStores||t.profileStores||'Preferred Stores');
   setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
-  setQ('#tab-profile .prof-lbl-appearance', t.profileAppearance||'Language & Appearance');
-  setQ('#tab-profile .prof-lbl-langLabel',  t.profileLangLabel||'Language');
-  setQ('#tab-profile .prof-lbl-darkModeLabel', t.profileDarkMode||'Dark Mode');
   setQ('#tab-profile .prof-lbl-danger',     t.dangerZone||'Danger Zone');
   setQ('#tab-profile .prof-btn-delete',     t.deleteAccount||'Delete Account');
   setQ('#tab-profile .prof-lbl-deleteNote', t.deleteNote||'This permanently removes your account and all data. You can sign up again with the same email.');
@@ -3884,12 +3860,6 @@ function renderProfileTab(){
   const msg = document.getElementById('profile-saved-msg');
   if(msg) msg.style.display = 'none';
 
-  // Sync language dropdown
-  const profileLangEl = document.getElementById('profileLang');
-  if(profileLangEl) profileLangEl.value = lang;
-  // Sync theme switch
-  const profThemeSw = document.getElementById('profileThemeSwitch');
-  if(profThemeSw) profThemeSw.checked = document.body.classList.contains('dark');
 }
 
 function confirmDeleteAccount(){
