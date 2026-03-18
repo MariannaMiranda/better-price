@@ -3931,10 +3931,14 @@ function buildSys(){
   const freq=loadU('shop_frequency','');
   const ln=lang==='es'?'Spanish':lang==='pt'?'Portuguese':'English';
 
-  // Include current grocery list context
-  const listNames = groceryLists.map(l=>l.name).join(', ') || 'none yet';
+  // Build rich grocery list context for Penny
   const activeList = groceryLists.find(l=>l.id===activeListId);
   const activeListName = activeList ? activeList.name : (groceryLists[0]?.name || 'My Weekly Essentials');
+  const listContext = groceryLists.map(l => {
+    const its = groceryItems.filter(gi => gi.listId === l.id);
+    const sample = its.slice(0,6).map(i=>i.name).join(', ');
+    return `"${l.name}" (${its.length} items${its.length ? ': ' + sample + (its.length > 6 ? '...' : '') : ''})`;
+  }).join(' | ') || 'none yet';
 
   const cards=[];
   for(let i=0;i<items;i++){
@@ -3972,80 +3976,154 @@ function buildSys(){
   return `You are Penny, a warm and knowledgeable grocery shopping advisor — like a smart friend who knows prices inside and out. Always respond in ${ln}.
 
 ${contextLines}
-Grocery lists: ${listNames} | Active list: "${activeListName}"
+Grocery lists: ${listContext}
+Active list: "${activeListName}"
 
 Products being compared:
 ${lines||'(none entered yet)'}
 
-GROCERY LIST POWER — You CAN directly add items to the user's grocery list. When the user asks you to make a list, create a list, add items, or anything similar:
-1. Give your friendly response as normal.
-2. At the very end of your reply, on its own line, add a special tag in this exact format:
-ADDLIST:[{"name":"Item Name","qty":1,"notes":"optional note"},{"name":"Another Item","qty":2,"notes":""}]
-Use realistic item names, sensible quantities (e.g. 1 for a bag/box, 2 for common multiples).
-Include notes like "1 gallon", "organic", "bulk", etc. when helpful.
-Only include the ADDLIST tag when the user explicitly wants items added. Do not show the tag in your visible reply — it will be processed automatically and items added to their "${activeListName}" list.
+ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply on their own lines. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover — just do it.
 
-Response rules:
-1. Be warm and conversational — like a text from a knowledgeable friend.
-2. 200 words max for general answers. For grocery lists, keep your text brief and let the list do the work.
-3. Write in flowing sentences, never bullet points.
-4. If no products are listed yet for comparing, invite the user to share what they want to compare.`;
+Commands (append at end, multiple allowed):
+
+Add items to a list:
+ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+
+Remove items by name (partial match ok):
+REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
+
+Create a new list (optionally pre-filled):
+CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
+
+Delete an entire list:
+DELETELIST:{"name":"List Name"}
+
+Rename a list:
+RENAMELIST:{"from":"Old Name","to":"New Name"}
+
+Clear all checked-off items from a list:
+CLEARCHECKED:{"list":"List Name"}
+
+Move items from one list to another:
+MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
+
+Rules:
+- Always execute immediately — never just describe what you would do.
+- Use the active list "${activeListName}" when no list is specified.
+- Keep your text reply warm, brief, and friendly. Let the action do the work.
+- Never show command tags in your visible response.
+- 150 words max for text. Write in flowing sentences, no bullet points.\`;
 }
 
-// Parse and execute ADDLIST commands from Penny's response
-function pennyExecuteAddList(rawText){
-  const match = rawText.match(/ADDLIST:(\[[\s\S]*?\])/);
-  if(!match) return rawText; // no command found
+// ── Penny Account Action Engine ──
+function pennyUID(){ return 'gi_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
 
-  const cleanText = rawText.replace(/ADDLIST:\[[\s\S]*?\]/, '').trim();
+function pennyResolveList(nameHint){
+  if(!nameHint) return groceryLists.find(l => l.id === activeListId) || groceryLists[0];
+  const lower = nameHint.toLowerCase();
+  return groceryLists.find(l => l.name.toLowerCase() === lower)
+      || groceryLists.find(l => l.name.toLowerCase().includes(lower))
+      || groceryLists.find(l => l.id === activeListId)
+      || groceryLists[0];
+}
 
-  try {
-    const itemsToAdd = JSON.parse(match[1]);
-    if(!Array.isArray(itemsToAdd) || !itemsToAdd.length) return cleanText;
-
-    // Ensure there's a grocery list to add to
-    if(!groceryLists.length){
-      const lid = 'list_penny_' + Date.now();
-      groceryLists.push({ id: lid, name: 'My Weekly Essentials' });
-      saveU('glists', groceryLists);
-      activeListId = lid;
-      renderListNav();
-    }
-    const targetListId = activeListId || groceryLists[0].id;
-    const targetList = groceryLists.find(l => l.id === targetListId) || groceryLists[0];
-
-    let added = 0;
-    itemsToAdd.forEach(item => {
-      if(!item.name || !item.name.trim()) return;
-      const gi = {
-        id: 'gi_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-        listId: targetList.id,
-        name: item.name.trim(),
-        qty: item.qty || 1,
-        price: '',
-        store: '',
-        notes: item.notes || '',
-        checked: false
-      };
-      groceryItems.push(gi);
-      added++;
-    });
-
-    if(added > 0){
-      saveU('gitems', groceryItems);
-      renderListNav();
-      if(activeListId === targetList.id) renderGroceryContent();
-      const listMsg = lang==='es'
-        ? `Penny agregó ${added} artículo${added!==1?'s':''} a "${targetList.name}"`
-        : lang==='pt'
-        ? `Penny adicionou ${added} ite${added!==1?'ns':'m'} a "${targetList.name}"`
-        : `Penny added ${added} item${added!==1?'s':''} to "${targetList.name}"`;
-      showToast(listMsg, 'ok');
-    }
-  } catch(e){
-    console.warn('Penny ADDLIST parse error:', e);
+function pennyEnsureList(name){
+  let list = pennyResolveList(name);
+  if(!list || (name && list.name.toLowerCase() !== name.toLowerCase() && !list.name.toLowerCase().includes(name.toLowerCase()))){
+    list = { id: 'list_penny_' + Date.now(), name: name || 'Penny List' };
+    groceryLists.push(list);
+    saveU('glists', groceryLists);
+    activeListId = list.id;
+    renderListNav();
   }
+  return list;
+}
 
+function pennyMakeItem(listId, item){
+  return { id: pennyUID(), listId, name: item.name.trim(), qty: item.qty || 1, price: '', store: '', notes: item.notes || '', checked: false };
+}
+
+function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
+
+function pennyExecuteActions(rawText){
+  const cmdRx = /^(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(.+)$/gm;
+  const commands = [];
+  let m;
+  while((m = cmdRx.exec(rawText)) !== null){
+    try { commands.push({ type: m[1], data: JSON.parse(m[2]) }); } catch(e){ console.warn('Penny cmd parse:', m[0], e); }
+  }
+  const cleanText = rawText.replace(/^(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):.+$/gm, '').replace(/\n{3,}/g,'\n\n').trim();
+  if(!commands.length) return cleanText;
+
+  const toasts = [];
+  let saveLists = false, saveItms = false;
+
+  commands.forEach(cmd => {
+    const d = cmd.data;
+    try {
+      if(cmd.type === 'ADDLIST'){
+        if(!groceryLists.length){ pennyEnsureList(d.list || activeListName); }
+        const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
+        let n = 0;
+        (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
+        if(n){ saveItms=true; toasts.push(`Added ${n} item${n!==1?'s':''} to "${list.name}"`); }
+      }
+      else if(cmd.type === 'CREATELIST'){
+        const lid = 'list_penny_' + Date.now();
+        const list = { id: lid, name: d.name || 'New List' };
+        groceryLists.push(list); saveLists=true; activeListId=lid;
+        let n = 0;
+        (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(lid, item)); n++; } });
+        if(n) saveItms=true;
+        toasts.push(`Created "${list.name}"${n ? \` with ${n} items\` : ''}`);
+      }
+      else if(cmd.type === 'REMOVEITEMS'){
+        const list = pennyResolveList(d.list); if(!list) return;
+        const targets = (d.items || []).map(s => s.toLowerCase());
+        const before = groceryItems.length;
+        groceryItems = groceryItems.filter(gi => gi.listId !== list.id || !targets.some(t => gi.name.toLowerCase().includes(t)));
+        const removed = before - groceryItems.length;
+        if(removed){ saveItms=true; toasts.push(`Removed ${removed} item${removed!==1?'s':''} from "${list.name}"`); }
+      }
+      else if(cmd.type === 'DELETELIST'){
+        const list = pennyResolveList(d.name); if(!list) return;
+        const name = list.name;
+        groceryItems = groceryItems.filter(gi => gi.listId !== list.id);
+        groceryLists = groceryLists.filter(l => l.id !== list.id);
+        if(activeListId === list.id) activeListId = groceryLists[0]?.id || null;
+        saveLists=true; saveItms=true; toasts.push(`Deleted "${name}"`);
+      }
+      else if(cmd.type === 'RENAMELIST'){
+        const list = pennyResolveList(d.from); if(!list) return;
+        const old = list.name; list.name = d.to || list.name;
+        saveLists=true; toasts.push(`Renamed "${old}" to "${list.name}"`);
+      }
+      else if(cmd.type === 'CLEARCHECKED'){
+        const list = pennyResolveList(d.list); if(!list) return;
+        const before = groceryItems.length;
+        groceryItems = groceryItems.filter(gi => !(gi.listId === list.id && gi.checked));
+        const n = before - groceryItems.length;
+        if(n){ saveItms=true; toasts.push(`Cleared ${n} checked item${n!==1?'s':''}`); }
+      }
+      else if(cmd.type === 'MOVEITEMS'){
+        const fromList = pennyResolveList(d.from);
+        const toList = pennyEnsureList(d.to);
+        if(!fromList || !toList || fromList.id === toList.id) return;
+        const targets = (d.items || []).map(s => s.toLowerCase());
+        let n = 0;
+        groceryItems.forEach(gi => {
+          if(gi.listId !== fromList.id) return;
+          if(!targets.length || targets.some(t => gi.name.toLowerCase().includes(t))){ gi.listId = toList.id; n++; }
+        });
+        if(n){ saveItms=true; toasts.push(`Moved ${n} item${n!==1?'s':''} to "${toList.name}"`); }
+      }
+    } catch(e){ console.warn('Penny action error:', cmd.type, e); }
+  });
+
+  if(saveLists) saveU('glists', groceryLists);
+  if(saveItms) saveU('gitems', groceryItems);
+  if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
+  if(toasts.length) showToast(toasts.join(' · '), 'ok');
   return cleanText;
 }
 
