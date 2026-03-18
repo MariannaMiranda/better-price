@@ -803,25 +803,6 @@ input:checked+.slider:before{transform:translateX(20px);}
   .penny-sidebar.collapsed{width:0;}
   .penny-main{width:100%;}
 }
-/* Drag-and-drop overlay for Penny */
-.penny-drop-overlay{
-  display:none;position:absolute;inset:0;z-index:50;
-  background:rgba(0,51,102,.13);
-  border:3px dashed var(--brand);
-  border-radius:var(--r);
-  align-items:center;justify-content:center;
-  flex-direction:column;gap:10px;
-  pointer-events:none;
-  transition:opacity .15s;
-}
-.penny-drop-overlay.active{display:flex;}
-.penny-drop-overlay svg{width:44px;height:44px;stroke:var(--brand);fill:none;stroke-width:1.5;opacity:.7;}
-.penny-drop-overlay span{font-size:16px;font-weight:600;color:var(--brand);opacity:.85;}
-.penny-main{position:relative;}
-body.dark .penny-drop-overlay{background:rgba(77,143,204,.12);border-color:#4d8fcc;}
-body.dark .penny-drop-overlay svg{stroke:#4d8fcc;}
-body.dark .penny-drop-overlay span{color:#7ec8f8;}
-
 /* Dark mode Penny */
 body.dark .penny-sidebar{background:#111f2e;border-color:#2a4060;}
 body.dark .penny-chat-header{background:#111f2e;border-color:#2a4060;}
@@ -896,6 +877,108 @@ body.dark #ob-zip{background:var(--input-bg);color:var(--text);}
 body.dark .profile-section{background:#111f2e;border-color:#2a4060;}
 body.dark .profile-section-title{color:#eef2ff;}
 body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
+
+/* ── SHOP TAB ── */
+#tab-shop{display:none;padding:0;max-width:100%;}
+.shop-wrap{max-width:760px;margin:0 auto;padding:20px;}
+.shop-section{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);}
+.shop-section-title{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.shop-section-title svg{stroke:var(--brand);width:18px;height:18px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.shop-loc-row{display:flex;gap:10px;align-items:center;}
+.shop-loc-input{flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:14px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;transition:.2s;}
+.shop-loc-input:focus{border-color:var(--brand);}
+.shop-loc-btn{padding:11px 16px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.2s;display:flex;align-items:center;gap:6px;}
+.shop-loc-btn:hover{background:var(--brand-h);}
+.shop-loc-btn svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.shop-loc-status{font-size:12px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px;}
+.shop-loc-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.shop-loc-dot.found{background:var(--ok);}
+.shop-loc-dot.searching{background:var(--warn);animation:shopPulse 1s ease-in-out infinite;}
+@keyframes shopPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.shop-nearby-stores{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.shop-store-chip{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:5px;}
+.shop-store-chip.selected{border-color:var(--brand);background:var(--brand-light);color:var(--brand);}
+.shop-store-chip:hover{border-color:var(--brand);color:var(--brand);}
+.shop-store-dist{font-size:11px;color:var(--muted);}
+.shop-store-chip.selected .shop-store-dist{color:var(--brand);opacity:.7;}
+
+/* List input area */
+.shop-input-tabs{display:flex;gap:0;margin-bottom:16px;border:1.5px solid var(--border);border-radius:var(--rsm);overflow:hidden;}
+.shop-input-tab{flex:1;padding:9px 14px;background:var(--input-bg);color:var(--muted);border:none;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.shop-input-tab svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.shop-input-tab.active{background:var(--brand);color:#fff;}
+.shop-list-textarea{width:100%;min-height:110px;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:14px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;resize:vertical;line-height:1.7;transition:.2s;}
+.shop-list-textarea:focus{border-color:var(--brand);}
+.shop-upload-zone{border:2px dashed var(--border);border-radius:var(--rsm);padding:28px 20px;text-align:center;cursor:pointer;transition:.2s;background:var(--input-bg);position:relative;}
+.shop-upload-zone:hover,.shop-upload-zone.drag{border-color:var(--brand);background:var(--brand-light);}
+.shop-upload-icon{width:40px;height:40px;margin:0 auto 10px;color:var(--muted);}
+.shop-upload-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.shop-upload-lbl{font-size:14px;color:var(--muted);margin-bottom:4px;}
+.shop-upload-sub{font-size:12px;color:var(--muted);opacity:.7;}
+.shop-upload-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.shop-preview-img{max-width:100%;max-height:200px;border-radius:var(--rsm);margin-top:10px;display:none;}
+.shop-search-btn{width:100%;padding:14px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font-d);font-size:17px;font-weight:700;cursor:pointer;margin-top:14px;letter-spacing:.3px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.shop-search-btn:hover{background:var(--brand-h);}
+.shop-search-btn:disabled{opacity:.5;cursor:not-allowed;}
+.shop-search-btn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+
+/* Results */
+.shop-results-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.shop-results-title{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text);}
+.shop-results-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.shop-results-grid{display:flex;flex-direction:column;gap:12px;}
+.shop-store-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r);padding:18px 20px;transition:.2s;cursor:pointer;}
+.shop-store-card.winner{border-color:var(--ok);background:var(--ok-bg);}
+.shop-store-card.runner{border-color:var(--warn);background:#fffbeb;}
+.shop-store-card-hdr{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.shop-rank-badge{width:32px;height:32px;border-radius:9px;background:var(--input-bg);color:var(--muted);font-family:var(--font-d);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.shop-store-card.winner .shop-rank-badge{background:var(--ok);color:#fff;}
+.shop-store-card.runner .shop-rank-badge{background:var(--warn);color:#fff;}
+.shop-store-name{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);flex:1;}
+.shop-store-total{font-family:var(--font-m);font-size:22px;font-weight:600;color:var(--brand);}
+.shop-store-card.winner .shop-store-total{color:var(--ok);}
+.shop-store-savings{font-size:12px;color:var(--ok);font-weight:600;margin-top:2px;}
+.shop-store-dist-lbl{font-size:12px;color:var(--muted);}
+.shop-item-list{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px;}
+.shop-item-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;}
+.shop-item-name{color:var(--text);flex:1;}
+.shop-item-price{font-family:var(--font-m);font-size:13px;color:var(--brand);font-weight:500;}
+.shop-item-na{font-size:12px;color:var(--muted);font-style:italic;}
+.shop-winner-badge{background:var(--ok);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:.3px;}
+.shop-api-note{background:var(--brand-light);border:1px solid var(--brand);border-radius:var(--rsm);padding:12px 14px;font-size:12px;color:var(--brand);line-height:1.6;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+.shop-api-note svg{width:16px;height:16px;stroke:var(--brand);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px;}
+.shop-loading{text-align:center;padding:40px 20px;color:var(--muted);}
+.shop-loading-dots{display:flex;gap:8px;justify-content:center;margin-bottom:16px;}
+.shop-ld{width:12px;height:12px;border-radius:50%;background:var(--brand);animation:shopDot .9s ease-in-out infinite;}
+.shop-ld:nth-child(2){animation-delay:.2s;}
+.shop-ld:nth-child(3){animation-delay:.4s;}
+@keyframes shopDot{0%,80%,100%{transform:translateY(0);opacity:.3;}40%{transform:translateY(-8px);opacity:1;}}
+.shop-add-all-btn{width:100%;padding:12px;background:var(--ok);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:10px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.shop-add-all-btn:hover{background:#059669;}
+.shop-add-all-btn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+/* dark */
+body.dark .shop-section{background:#111f2e;border-color:#2a4060;}
+body.dark .shop-section-title{color:#eef2ff;}
+body.dark .shop-loc-input{background:#162535;border-color:#2a4060;color:#eef2ff;}
+body.dark .shop-loc-input:focus{border-color:#4d8fcc;}
+body.dark .shop-store-chip{background:#162535;border-color:#2a4060;color:#c8ddf0;}
+body.dark .shop-store-chip.selected{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
+body.dark .shop-input-tab{background:#162535;color:#7a9fc0;}
+body.dark .shop-input-tab.active{background:#1a3d66;color:#eef2ff;}
+body.dark .shop-input-tabs{border-color:#2a4060;}
+body.dark .shop-list-textarea{background:#162535;border-color:#2a4060;color:#eef2ff;}
+body.dark .shop-list-textarea:focus{border-color:#4d8fcc;}
+body.dark .shop-upload-zone{background:#162535;border-color:#2a4060;}
+body.dark .shop-upload-zone:hover,.shop-upload-zone.drag{background:#1a2f45;}
+body.dark .shop-store-card{background:#111f2e;border-color:#2a4060;}
+body.dark .shop-store-card.winner{background:#062018;border-color:#10b981;}
+body.dark .shop-store-card.runner{background:#1c1500;border-color:#f59e0b;}
+body.dark .shop-store-name{color:#eef2ff;}
+body.dark .shop-item-name{color:#c8ddf0;}
+body.dark .shop-item-list{border-color:#2a4060;}
+body.dark .shop-api-note{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
+body.dark .shop-api-note svg{stroke:#7ec8f8;}
+body.dark .shop-results-title{color:#eef2ff;}
 </style>
 </head>
 <body>
@@ -1117,6 +1200,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <button class="nav-tab" onclick="goTab('presets')" id="nt-presets"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Presets</span></button>
     <button class="nav-tab" onclick="goTab('penny')" id="nt-penny"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg><span>Penny</span></button>
     <button class="nav-tab" onclick="goTab('profile')" id="nt-profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+    <button class="nav-tab" onclick="goTab('shop')" id="nt-shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Shop</span></button>
   </nav>
 
   <!-- COMPARE TAB -->
@@ -1174,7 +1258,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   </div>
 
   <!-- PENNY TAB — full AI chat experience -->
-  <div id="tab-penny" style="display:none;height:calc(100vh - 116px);display:none;flex-direction:column;">
+  <div id="tab-penny" style="display:none;height:calc(100vh - 116px);flex-direction:column;">
     <!-- Chat sessions sidebar + main chat area -->
     <div class="penny-layout">
       <!-- Sessions sidebar -->
@@ -1189,12 +1273,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         <div class="penny-session-list" id="pennySessionList"></div>
       </div>
       <!-- Main chat -->
-      <div class="penny-main" id="pennyMain">
-        <!-- Drag-and-drop overlay -->
-        <div class="penny-drop-overlay" id="pennyDropOverlay">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>Drop image here</span>
-        </div>
+      <div class="penny-main">
         <div class="penny-chat-header">
           <button class="penny-sidebar-toggle" onclick="togglePennySidebar()" title="Chats">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1249,21 +1328,161 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   <!-- HELP TAB (hidden, accessible via ? in header) -->
   <div id="tab-help" style="display:none;"></div>
 
-  <!-- HELP MODAL -->
-  <div class="modal-box" id="helpModal" style="max-width:500px;">
-    <button class="modal-x" onclick="closeModals()">x</button>
-    <div class="modal-title">Help Guide</div>
-    <div class="help-section">
-      <div class="help-h">Getting Started</div>
-      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Scan or Enter a Product</div><div class="help-step-desc">On the Compare tab, tap "Scan Barcode" and point your camera at the barcode. Name and size auto-fill. Or type details manually.</div></div></div>
-      <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Enter the Price</div><div class="help-step-desc">Type the shelf price. Add a discount amount in the Discount field and choose % or flat amount.</div></div></div>
-      <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Tap COMPARE</div><div class="help-step-desc">The best value card turns green. Ties show a TIE badge.</div></div></div>
+  <!-- SHOP TAB -->
+  <div id="tab-shop">
+    <div class="shop-wrap">
+
+      <!-- Dev note -->
+      <div class="shop-api-note">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div><strong>Developer note:</strong> Live prices require backend API keys — Kroger, Walmart, Instacart, or Spoonacular. Google Maps API key required for real location &amp; store distances. See <code>SHOP_API_SETUP.md</code> in your project root. Without keys, Penny uses AI-estimated prices based on your zip code &amp; household data.</div>
+      </div>
+
+      <!-- 1. Location -->
+      <div class="shop-section">
+        <div class="shop-section-title">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.1 12.4 7.8 13.1a.3.3 0 0 0 .4 0C12.9 22.4 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
+          Your Location
+        </div>
+        <div class="shop-loc-row">
+          <input type="text" class="shop-loc-input" id="shopLocInput" placeholder="Enter zip code or city..." oninput="shopLocInputChanged()">
+          <button class="shop-loc-btn" onclick="shopGetGPS()">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            Use GPS
+          </button>
+        </div>
+        <div class="shop-loc-status" id="shopLocStatus">
+          <div class="shop-loc-dot" id="shopLocDot"></div>
+          <span id="shopLocText">Enter your location or tap Use GPS</span>
+        </div>
+        <!-- Nearby stores -->
+        <div id="shopNearbyStores" style="display:none;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 8px;">Stores Found Nearby — tap to select</div>
+          <div class="shop-nearby-stores" id="shopStoreChips"></div>
+        </div>
+      </div>
+
+      <!-- 2. Your list -->
+      <div class="shop-section">
+        <div class="shop-section-title">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Your Shopping List
+        </div>
+        <div class="shop-input-tabs" id="shopInputTabs">
+          <button class="shop-input-tab active" onclick="shopSwitchInput('type')" id="shopTab-type">
+            <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            Type List
+          </button>
+          <button class="shop-input-tab" onclick="shopSwitchInput('scan')" id="shopTab-scan">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Scan / Photo
+          </button>
+          <button class="shop-input-tab" onclick="shopSwitchInput('import')" id="shopTab-import">
+            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+            From My Lists
+          </button>
+        </div>
+
+        <!-- Type input -->
+        <div id="shopInputType">
+          <textarea class="shop-list-textarea" id="shopListText" placeholder="Type your shopping list here — one item per line, or just freeform&#10;&#10;Example:&#10;2 gallons whole milk&#10;dozen eggs&#10;3 lbs chicken breast&#10;large bag of rice&#10;orange juice"></textarea>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">One item per line or comma separated. Quantities are optional but help with accuracy.</div>
+        </div>
+
+        <!-- Scan/Photo input -->
+        <div id="shopInputScan" style="display:none;">
+          <div class="shop-upload-zone" id="shopDropZone" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="shopHandleDrop(event)">
+            <input type="file" class="shop-upload-input" id="shopImageInput" accept="image/*" onchange="shopHandleImage(this)">
+            <div class="shop-upload-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div class="shop-upload-lbl">Upload a photo of your handwritten list</div>
+            <div class="shop-upload-sub">Tap to choose a photo, or drag &amp; drop • JPG, PNG, HEIC</div>
+          </div>
+          <img id="shopPreviewImg" class="shop-preview-img" alt="List preview">
+          <div id="shopOcrResult" style="display:none;margin-top:12px;">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;">Items read from your photo:</div>
+            <div id="shopOcrItems" style="background:var(--input-bg);border-radius:var(--rsm);padding:12px 14px;font-size:14px;line-height:1.8;color:var(--text);"></div>
+          </div>
+        </div>
+
+        <!-- Import from grocery lists -->
+        <div id="shopInputImport" style="display:none;">
+          <div id="shopImportLists" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div id="shopImportEmpty" style="display:none;text-align:center;padding:30px 20px;color:var(--muted);font-size:14px;">No grocery lists yet. Create one in the Grocery tab first.</div>
+        </div>
+
+        <button class="shop-search-btn" id="shopSearchBtn" onclick="shopRunSearch()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Find Best Prices Near Me
+        </button>
+      </div>
+
+      <!-- 3. Results -->
+      <div id="shopResultsSection" style="display:none;">
+        <div class="shop-results-hdr">
+          <div>
+            <div class="shop-results-title">Price Comparison Results</div>
+            <div class="shop-results-sub" id="shopResultsSub"></div>
+          </div>
+          <button class="tool-btn" onclick="shopClearResults()" style="font-size:12px;padding:7px 12px;">New Search</button>
+        </div>
+        <div class="shop-loading" id="shopLoading" style="display:none;">
+          <div class="shop-loading-dots"><div class="shop-ld"></div><div class="shop-ld"></div><div class="shop-ld"></div></div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:6px;" id="shopLoadingMsg">Searching nearby stores...</div>
+          <div style="font-size:12px;color:var(--muted);" id="shopLoadingStep"></div>
+        </div>
+        <div class="shop-results-grid" id="shopResultsGrid"></div>
+      </div>
+
     </div>
+  </div>
+
+  <!-- HELP MODAL -->
+  <div class="modal-box" id="helpModal" style="max-width:520px;">
+    <button class="modal-x" onclick="closeModals()">&#10005;</button>
+    <div class="modal-title">Help Guide</div>
+
+    <!-- Compare -->
     <div class="help-section">
-      <div class="help-h">Tips</div>
-      <div class="help-tip"><span class="help-badge">Penny</span> Your AI shopping advisor. Ask anything about prices, savings, or what to buy.</div>
-      <div class="help-tip"><span class="help-badge">Grocery</span> Build lists, check off items on your trip, and reuse them every week.</div>
-      <div class="help-tip"><span class="help-badge">Presets</span> Save a Compare setup to reload anytime — great for items you compare often.</div>
+      <div class="help-h">📊 Compare Tab</div>
+      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Add your products</div><div class="help-step-desc">Each card = one product. Tap <strong>Scan Barcode</strong> to auto-fill the name and size, or just type them in yourself.</div></div></div>
+      <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Enter the price</div><div class="help-step-desc">Type the price shown on the shelf. If the item is on sale, enter the discount amount and choose <strong>%</strong> (percent off) or <strong>$</strong> (dollars off).</div></div></div>
+      <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Tap COMPARE</div><div class="help-step-desc">The best deal turns <strong style="color:var(--ok)">green</strong>. If two items are the same price per unit, both show a <strong style="color:var(--warn)">TIE</strong> badge. The result box below explains the winner.</div></div></div>
+      <div class="help-tip">💡 <strong>Tip:</strong> Go to <strong>Settings</strong> (toolbar) to change how many product cards show at once — up to 8.</div>
+    </div>
+
+    <!-- Grocery -->
+    <div class="help-section">
+      <div class="help-h">🛒 Grocery Tab</div>
+      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Create a list</div><div class="help-step-desc">Tap <strong>New List</strong> on the left sidebar and give it a name — like "Weekly Shop" or "Costco Run".</div></div></div>
+      <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Add items</div><div class="help-step-desc">Use the form to add items with a quantity, price, store, and any notes (e.g. "organic only"). Or ask <strong>Penny</strong> to add items for you.</div></div></div>
+      <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Shop and check off</div><div class="help-step-desc">While shopping, tap the checkbox next to each item. When done, use <strong>Clear Checked</strong> to reset the list for next time.</div></div></div>
+    </div>
+
+    <!-- Presets -->
+    <div class="help-section">
+      <div class="help-h">🔖 Presets Tab</div>
+      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Save a comparison</div><div class="help-step-desc">After setting up products on the Compare tab, go to Presets and tap <strong>Save Current</strong>. Give it a name like "Peanut Butter" so you can find it later.</div></div></div>
+      <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Reload anytime</div><div class="help-step-desc">Tap <strong>Load</strong> on any preset to instantly restore all the product cards. Great for items you compare every week.</div></div></div>
+    </div>
+
+    <!-- Penny -->
+    <div class="help-section">
+      <div class="help-h">🤖 Penny (AI Advisor)</div>
+      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Ask anything</div><div class="help-step-desc">Penny knows about your household, budget, and preferred stores. Ask things like <em>"What should I buy in bulk?"</em> or <em>"Which store is cheapest for produce?"</em></div></div></div>
+      <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Share your comparison</div><div class="help-step-desc">Tap <strong>Add Compare</strong> in the Penny tab to send your current product comparison to Penny and get a recommendation.</div></div></div>
+      <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Manage your grocery list</div><div class="help-step-desc">Just tell Penny what to add — she can create lists, add or remove items, and even suggest quantities based on your household size.</div></div></div>
+    </div>
+
+    <!-- History -->
+    <div class="help-section">
+      <div class="help-h">🕐 History Tab</div>
+      <div class="help-tip">Every comparison you run is automatically saved here with the date, winner, and price details. Tap the trash icon to remove individual entries, or <strong>Clear All</strong> to wipe the full history.</div>
+    </div>
+
+    <!-- Profile -->
+    <div class="help-section">
+      <div class="help-h">👤 Profile Tab</div>
+      <div class="help-tip">Update your name, email, and password here. You can also update your <strong>household size</strong>, <strong>shopping frequency</strong>, <strong>weekly budget</strong>, <strong>zip code</strong>, and <strong>preferred stores</strong> — Penny uses all of this to give you better advice.</div>
     </div>
   </div>
 
@@ -1371,6 +1590,39 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       </div>
     </div>
 
+    <!-- Shopping Frequency -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="prof-lbl-shopfreq">Shopping Frequency</span>
+      </div>
+      <div class="freq-grid" id="profile-freq-chips" style="justify-content:flex-start;margin-bottom:0;">
+        <div class="freq-chip" onclick="profileSelectFreq(this,'daily')">Every day</div>
+        <div class="freq-chip" onclick="profileSelectFreq(this,'twice_week')">Twice a week</div>
+        <div class="freq-chip" onclick="profileSelectFreq(this,'weekly')">Once a week</div>
+        <div class="freq-chip" onclick="profileSelectFreq(this,'biweekly')">Every 2 weeks</div>
+        <div class="freq-chip" onclick="profileSelectFreq(this,'monthly')">Once a month</div>
+        <div class="freq-chip" id="profile-freq-other-chip" onclick="profileSelectFreqOther(this)">Other</div>
+      </div>
+      <div class="other-store-row" id="profile-freq-other-row" style="margin-top:10px;">
+        <input type="text" class="other-store-input" id="profile-freq-other-text" placeholder="Describe how often you shop...">
+      </div>
+    </div>
+
+    <!-- Weekly Budget -->
+    <div class="profile-section">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span class="prof-lbl-budget">Weekly Budget</span>
+      </div>
+      <div class="onboard-stepper" style="margin-bottom:4px;">
+        <button class="stepper-btn" onclick="profileAdjBudget(-50)">&#8722;</button>
+        <div class="budget-display" id="profile-budget-val">$200</div>
+        <button class="stepper-btn" onclick="profileAdjBudget(50)">+</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;">Adjusts in $50 increments &bull; $50 min &bull; $2,000 max</div>
+    </div>
+
     <!-- Zip code -->
     <div class="profile-section">
       <div class="profile-section-title">
@@ -1434,7 +1686,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Calculator -->
 <div class="modal-box" id="calcModal">
-  <button class="modal-x" onclick="closeModals()">x</button>
+  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
   <div class="modal-title">Calculator</div>
   <input type="text" id="calcDisplay" class="calc-display" readonly value="0">
   <div class="calc-grid">
@@ -1448,7 +1700,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Settings -->
 <div class="modal-box" id="settingsModal">
-  <button class="modal-x" onclick="closeModals()">x</button>
+  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
   <div class="modal-title">Settings</div>
   <div class="setting-row"><span class="s-label">Dark Mode</span><label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label></div>
   <div class="setting-row"><span class="s-label">Language</span><select class="s-select" id="setLang" onchange="changeLang('settings')"><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option></select></div>
@@ -1459,7 +1711,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Export -->
 <div class="modal-box" id="exportModal">
-  <button class="modal-x" onclick="closeModals()">x</button>
+  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
   <div class="modal-title">Export Results</div>
   <div class="export-pre" id="exportPre">Run a comparison first.</div>
   <button class="auth-btn" onclick="shareResults()" style="margin-bottom:10px">Share</button>
@@ -1468,7 +1720,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- New List / Rename List modal -->
 <div class="modal-box" id="listNameModal">
-  <button class="modal-x" onclick="closeModals()">x</button>
+  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
   <div class="modal-title" id="listNameModalTitle">New List</div>
   <input class="modal-input" type="text" id="listNameInput" placeholder="e.g. Weekly Grocery">
   <div class="modal-btn-row">
@@ -1479,7 +1731,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Duplicate item to list modal -->
 <div class="modal-box" id="dupItemModal">
-  <button class="modal-x" onclick="closeModals()">x</button>
+  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
   <div class="modal-title">Copy to List</div>
   <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Choose a list to copy this item to:</p>
   <div id="dupListOptions"></div>
@@ -1487,7 +1739,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <!-- Edit Grocery Item Modal -->
 <div class="modal-box" id="editItemModal">
-  <button class="modal-x" onclick="closeModals()">x</button>
+  <button class="modal-x" onclick="closeModals()"><button class="modal-x" onclick="closeModals()">x</button>#10005;</button>
   <div class="modal-title">Edit Item</div>
   <input type="hidden" id="editItemId">
   <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
@@ -2312,15 +2564,13 @@ function showApp(isNewUser=false){
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   loadUserData();
   loadPennySessions();
-  ['history','grocery','presets','help','profile','penny'].forEach(n=>{
+  ['history','grocery','presets','help','profile','penny','shop'].forEach(n=>{
     const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
   });
   document.getElementById('tab-compare').style.display='block';
   updateGrid(); renderHistory(); renderListNav(); renderPresets();
   if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
   applyLang();
-  // Wire up drag-and-drop for Penny — safe to call multiple times (idempotent guard inside)
-  initPennyDragDrop();
   if(isNewUser){
     obGoStep(1);
     document.getElementById('onboarding-screen').style.display='flex';
@@ -2331,7 +2581,7 @@ function showApp(isNewUser=false){
 // TABS
 // ────────────────────────────────────────────────
 function goTab(name){
-  ['compare','history','grocery','presets','help','profile','penny'].forEach(n=>{
+  ['compare','history','grocery','presets','help','profile','penny','shop'].forEach(n=>{
     const el=document.getElementById(`tab-${n}`);
     if(el) el.style.display='none';
     document.getElementById(`nt-${n}`)?.classList.remove('active');
@@ -2344,6 +2594,7 @@ function goTab(name){
   document.getElementById(`nt-${name}`)?.classList.add('active');
   if(name==='profile') renderProfileTab();
   if(name==='grocery'){ renderListNav(); renderGroceryContent(); }
+  if(name==='shop') renderShopTab();
   if(name==='penny'){
     // On mobile default sidebar closed, on desktop open
     pennySidebarOpen = window.innerWidth >= 600;
@@ -2550,7 +2801,7 @@ function finishOnboarding(){
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   loadUserData();
   loadPennySessions();
-  ['history','grocery','presets','help','profile','penny'].forEach(n=>{
+  ['history','grocery','presets','help','profile','penny','shop'].forEach(n=>{
     const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
   });
   document.getElementById('tab-compare').style.display='block';
@@ -3459,10 +3710,35 @@ function cRes(){
 // ────────────────────────────────────────────────
 let profileHousehold = 2;
 let profileStores = [];
+let profileBudget = 200;
+let profileFreq = 'weekly';
 
 function profileAdjHousehold(d){
   profileHousehold = Math.max(1, Math.min(15, profileHousehold + d));
   document.getElementById('profile-household-val').innerText = profileHousehold;
+}
+
+function profileAdjBudget(d){
+  profileBudget = Math.max(50, Math.min(2000, profileBudget + d));
+  const el = document.getElementById('profile-budget-val');
+  if(el) el.innerText = '$' + profileBudget;
+}
+
+function profileSelectFreq(el, val){
+  document.querySelectorAll('#profile-freq-chips .freq-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  profileFreq = val;
+  const otherRow = document.getElementById('profile-freq-other-row');
+  if(otherRow) otherRow.style.display = 'none';
+}
+
+function profileSelectFreqOther(el){
+  document.querySelectorAll('#profile-freq-chips .freq-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  profileFreq = 'other';
+  const otherRow = document.getElementById('profile-freq-other-row');
+  if(otherRow) otherRow.style.display = 'block';
+  setTimeout(() => document.getElementById('profile-freq-other-text')?.focus(), 50);
 }
 
 function profileToggleStore(el, name){
@@ -3499,6 +3775,8 @@ function renderProfileTab(){
   setQ('#tab-profile .prof-lbl-confpass',   t.profileConfPass||'Confirm New Password');
   setQ('#tab-profile .prof-lbl-passnote',   t.profilePassNote||'Leave new & confirm blank to keep your current password.');
   setQ('#tab-profile .prof-lbl-household',  t.profileHousehold||'Household Size');
+  setQ('#tab-profile .prof-lbl-shopfreq',   t.profileShopFreq||'Shopping Frequency');
+  setQ('#tab-profile .prof-lbl-budget',     t.profileBudget||'Weekly Budget');
   setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
   setQ('#tab-profile .prof-lbl-stores',     'Preferred Stores');
   setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
@@ -3513,6 +3791,8 @@ function renderProfileTab(){
   // Load current saved values
   profileHousehold = loadU('household', 2);
   profileStores    = loadU('preferred_stores', []);
+  profileBudget    = loadU('weekly_budget', 200);
+  profileFreq      = loadU('shopping_freq', 'weekly');
   const zip        = loadU('zip', '');
 
   // Load session for name / email
@@ -3547,6 +3827,27 @@ function renderProfileTab(){
   // Update household stepper
   const hhEl = document.getElementById('profile-household-val');
   if(hhEl) hhEl.innerText = profileHousehold;
+
+  // Update budget
+  const budgetEl = document.getElementById('profile-budget-val');
+  if(budgetEl) budgetEl.innerText = '$' + profileBudget;
+
+  // Update shopping frequency chips
+  const freqChips = document.querySelectorAll('#profile-freq-chips .freq-chip');
+  freqChips.forEach(chip => chip.classList.remove('selected'));
+  const freqOtherChip = document.getElementById('profile-freq-other-chip');
+  const freqOtherRow  = document.getElementById('profile-freq-other-row');
+  const freqOtherText = document.getElementById('profile-freq-other-text');
+  if(profileFreq === 'other'){
+    if(freqOtherChip) freqOtherChip.classList.add('selected');
+    if(freqOtherRow)  freqOtherRow.style.display = 'block';
+    const savedOtherFreq = loadU('shopping_freq_other','');
+    if(freqOtherText) freqOtherText.value = savedOtherFreq;
+  } else {
+    const matchChip = document.querySelector(`#profile-freq-chips .freq-chip[onclick*="'${profileFreq}'"]`);
+    if(matchChip) matchChip.classList.add('selected');
+    if(freqOtherRow) freqOtherRow.style.display = 'none';
+  }
 
   // Update zip
   const zipEl = document.getElementById('profile-zip');
@@ -3747,6 +4048,15 @@ function saveProfile(){
   saveU('household', profileHousehold);
   saveU('preferred_stores', profileStores);
   saveU('zip', zipVal);
+  saveU('weekly_budget', profileBudget);
+  // Save shopping frequency
+  if(profileFreq === 'other'){
+    const freqOtherVal = (document.getElementById('profile-freq-other-text')?.value || '').trim();
+    saveU('shopping_freq', 'other');
+    if(freqOtherVal) saveU('shopping_freq_other', freqOtherVal);
+  } else {
+    saveU('shopping_freq', profileFreq);
+  }
 
   // Show saved confirmation
   const msg = document.getElementById('profile-saved-msg');
@@ -3960,9 +4270,7 @@ async function pennySend(){
 
   if(!pennyActiveSession) pennyNewChat();
 
-  // Capture ALL pending images before clearing state
-  const capturedImages = pennyPendingImages.slice();
-  const imageDataUrl = capturedImages.length > 0 ? capturedImages[0].dataUrl : null;
+  const imageDataUrl = hasImages ? pennyPendingImages[0].dataUrl : null;
   inp.value = '';
   inp.style.height = 'auto';
   pennyPendingImages = [];
@@ -3989,17 +4297,12 @@ async function pennySend(){
     lastRole = apiRole;
   }
 
-  // Add current message — multi-image support via image_url blocks for Groq vision
-  if(capturedImages.length > 0){
-    const contentBlocks = capturedImages.map(img => ({
-      type: 'image_url',
-      image_url: { url: img.dataUrl }
-    }));
-    contentBlocks.push({
-      type: 'text',
-      text: text || 'What do you see? How can this help with my grocery shopping or price comparison?'
-    });
-    apiMessages.push({ role: 'user', content: contentBlocks });
+  // Add current message — use image_url format for Groq vision model
+  if(imageDataUrl){
+    apiMessages.push({ role: 'user', content: [
+      { type: 'image_url', image_url: { url: imageDataUrl } },
+      { type: 'text', text: text || 'What do you see? How can this help with my grocery shopping or price comparison?' }
+    ]});
   } else {
     apiMessages.push({ role: 'user', content: text });
   }
@@ -4187,59 +4490,6 @@ function closeAIPanel(){}
 function resetPennyBtn(){}
 function startPenny(){ goTab('penny'); }
 
-// ── Penny Drag-and-Drop image support ──
-function initPennyDragDrop(){
-  const main = document.getElementById('pennyMain');
-  const overlay = document.getElementById('pennyDropOverlay');
-  if(!main || !overlay) return;
-  if(main._dropInitialized) return; // idempotency guard
-  main._dropInitialized = true;
-
-  let dragCounter = 0; // track nested dragenter/dragleave correctly
-
-  main.addEventListener('dragenter', e => {
-    e.preventDefault();
-    // Only respond to file drags
-    if(!e.dataTransfer.types.includes('Files')) return;
-    dragCounter++;
-    if(dragCounter === 1) overlay.classList.add('active');
-  });
-
-  main.addEventListener('dragleave', e => {
-    dragCounter--;
-    if(dragCounter === 0) overlay.classList.remove('active');
-  });
-
-  main.addEventListener('dragover', e => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-  });
-
-  main.addEventListener('drop', e => {
-    e.preventDefault();
-    dragCounter = 0;
-    overlay.classList.remove('active');
-    const files = Array.from(e.dataTransfer.files).filter(f =>
-      f.type.startsWith('image/') || f.type === 'application/pdf'
-    );
-    if(!files.length){
-      showToast('Only images and PDFs are supported.', 'warn');
-      return;
-    }
-    // Load each file as base64 and add to pending
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        pennyPendingImages.push({ dataUrl: ev.target.result, name: file.name, mimeType: file.type });
-        renderPennyAttachStrip();
-      };
-      reader.readAsDataURL(file);
-    });
-    // Focus the text input after drop
-    document.getElementById('pennyInput')?.focus();
-  });
-}
-
 function buildSys(){
   const hh=loadU('household',2);
   const stores=loadU('preferred_stores',[]);
@@ -4299,20 +4549,20 @@ Active list: "${activeListName}"
 Products being compared:
 ${lines||'(none entered yet)'}
 
-LIST MANAGEMENT — You have FULL ability to create, rename, delete, and manage the user's grocery lists. Execute actions by appending command tags on their own lines at the very end of your reply. Tags are invisible to the user and processed automatically. NEVER say you can't do something these commands cover — just do it.
+ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply on their own lines. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover — just do it.
 
-COMMAND REFERENCE (append at end of reply, multiple allowed):
+Commands (append at end, multiple allowed):
 
-Add items to an EXISTING list (list must already exist):
-ADDLIST:{"list":"Exact List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+Add items to a list:
+ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
 
-Create a NEW list (and optionally pre-fill it with items):
-CREATELIST:{"name":"New List Name","items":[{"name":"Item","qty":1,"notes":""}]}
+Remove items by name (partial match ok):
+REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
 
-Remove items from a list (partial name match ok):
-REMOVEITEMS:{"list":"List Name","items":["egg","milk"]}
+Create a new list (optionally pre-filled):
+CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
 
-Delete an entire list permanently:
+Delete an entire list:
 DELETELIST:{"name":"List Name"}
 
 Rename a list:
@@ -4321,47 +4571,69 @@ RENAMELIST:{"from":"Old Name","to":"New Name"}
 Clear all checked-off items from a list:
 CLEARCHECKED:{"list":"List Name"}
 
-Move items between lists:
+Move items from one list to another:
 MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
 
-CRITICAL RULES — follow these exactly:
+ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover.
 
-1. CREATING A NEW LIST: When the user asks for a new list or names a list that doesn't exist yet, ALWAYS use CREATELIST — never ADDLIST to an unknown name. If the user specifies the name (e.g. "add it to a Sunday dinner groceries list"), create it immediately with CREATELIST and add the items in the same command. Do NOT ask for a name if the user already gave one.
+Commands (append at end of reply, multiple allowed):
 
-2. ADDING TO EXISTING LISTS: When adding to a list that already exists, use ADDLIST with the exact existing list name. Do it immediately — no confirmation needed.
+Add items to existing list:
+ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
 
-3. Never mix up ADDLIST and CREATELIST — ADDLIST is for existing lists only, CREATELIST is for new ones.
+Remove items by name (partial match ok):
+REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
 
-4. Keep replies warm, brief, conversational — 150 words max. No bullet points. No command tags visible in your reply text.
+Create a new list (optionally pre-filled):
+CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
 
-5. After completing any list action, offer one quick helpful tip (store recommendation, bulk savings, estimated cost, etc.).
+Delete an entire list:
+DELETELIST:{"name":"List Name"}
 
-Active list is "${activeListName}" — use this when the user says "my list" or doesn't specify a list name.`;
+Rename a list:
+RENAMELIST:{"from":"Old Name","to":"New Name"}
+
+Clear all checked-off items from a list:
+CLEARCHECKED:{"list":"List Name"}
+
+Move items from one list to another:
+MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
+
+CONVERSATION RULES — follow these exactly:
+
+1. CREATING A NEW LIST: Never auto-create a list without asking for a name first. If the user wants a new list, ask: what would you like to name it? Then once they reply with a name, create it with CREATELIST. Exception: if the user explicitly says the name in their message (e.g. "make a list called Party"), create it immediately.
+
+2. ADDING ITEMS: Before adding items to a new list, ask if they want any extra notes per item (store preference, brand, size) or if they want you to recommend quantities based on their household size. Keep this quick — one friendly sentence. Then add immediately after they respond (or if they say "just add them" skip the question and add right away).
+
+3. EXISTING LISTS: When adding to an existing list by name, just do it — no need to ask.
+
+4. RECOMMENDATIONS: Always offer a brief helpful tip after completing an action (e.g. best store for those items, bulk buying suggestion, estimated cost).
+
+5. Keep replies warm, brief, conversational. 150 words max. No bullet points. No command tags visible.
+- Use the active list "${activeListName}" when no list name is specified and the user wants to add to an existing list.`;
 }
 
 // ── Penny Account Action Engine ──
 function pennyUID(){ return 'gi_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
 
 function pennyResolveList(nameHint){
-  // No hint: use active list or first list (safe fallback)
   if(!nameHint) return groceryLists.find(l => l.id === activeListId) || groceryLists[0];
-  const lower = nameHint.trim().toLowerCase();
-  // Exact match first, then partial — but NEVER fall back to active/first list
-  // when a specific name was given and doesn't match. Return null so caller knows.
+  const lower = nameHint.toLowerCase();
   return groceryLists.find(l => l.name.toLowerCase() === lower)
       || groceryLists.find(l => l.name.toLowerCase().includes(lower))
-      || null;
+      || groceryLists.find(l => l.id === activeListId)
+      || groceryLists[0];
 }
 
 function pennyEnsureList(name){
-  // Only create if truly not found
-  const existing = pennyResolveList(name);
-  if(existing) return existing;
-  const list = { id: 'list_penny_' + Date.now(), name: (name || 'Penny List').trim() };
-  groceryLists.push(list);
-  saveU('glists', groceryLists);
-  activeListId = list.id;
-  renderListNav();
+  let list = pennyResolveList(name);
+  if(!list || (name && list.name.toLowerCase() !== name.toLowerCase() && !list.name.toLowerCase().includes(name.toLowerCase()))){
+    list = { id: 'list_penny_' + Date.now(), name: name || 'Penny List' };
+    groceryLists.push(list);
+    saveU('glists', groceryLists);
+    activeListId = list.id;
+    renderListNav();
+  }
   return list;
 }
 
@@ -4388,16 +4660,8 @@ function pennyExecuteActions(rawText){
     const d = cmd.data;
     try {
       if(cmd.type === 'ADDLIST'){
-        // ADDLIST only targets an EXISTING list — never silently creates or falls back.
-        // If the list doesn't exist, Penny should have used CREATELIST first.
-        // Fallback with no name hint: use active list.
-        let list = d.list ? pennyResolveList(d.list) : (groceryLists.find(l=>l.id===activeListId)||groceryLists[0]);
-        if(!list){
-          // List name given but doesn't exist — auto-create it so items aren't lost
-          list = { id: 'list_penny_'+Date.now(), name: d.list.trim() };
-          groceryLists.push(list); saveLists=true; activeListId=list.id; renderListNav();
-          toasts.push('Created "'+list.name+'"');
-        }
+        if(!groceryLists.length){ pennyEnsureList(d.list || activeListName); }
+        const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
         if(n){ saveItms=true; toasts.push(`Added ${n} item${n!==1?'s':''} to "${list.name}"`); }
@@ -4459,6 +4723,504 @@ function pennyExecuteActions(rawText){
   if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
   if(toasts.length) showToast(toasts.join(' · '), 'ok');
   return cleanText;
+}
+
+
+// ────────────────────────────────────────────────
+// SHOP TAB — Live Price Search Engine
+// ────────────────────────────────────────────────
+
+let shopLocation = null;          // { lat, lng, label, zip }
+let shopSelectedStores = [];      // store names the user picked
+let shopNearbyStoreData = [];     // [{name, distance, placeId}]
+let shopCurrentInputMode = 'type';
+let shopOcrItems = [];            // items extracted from photo
+let shopSearchAbort = null;
+
+// ── Render / init ──
+function renderShopTab(){
+  // Pre-fill location from saved zip
+  const savedZip = loadU('zip','');
+  if(savedZip && !shopLocation){
+    document.getElementById('shopLocInput').value = savedZip;
+    shopLocation = { zip: savedZip, label: savedZip };
+    shopSetLocStatus('found', 'Using saved zip code: ' + savedZip);
+  }
+  // Pre-select saved preferred stores
+  if(!shopSelectedStores.length){
+    shopSelectedStores = loadU('preferred_stores',[]).slice();
+  }
+  renderShopImportLists();
+}
+
+function shopLocInputChanged(){
+  const v = document.getElementById('shopLocInput').value.trim();
+  shopLocation = v ? { zip: v, label: v } : null;
+  shopSetLocStatus('', v ? 'Press "Find Best Prices" to search' : 'Enter your location or tap Use GPS');
+  // Clear store chips since location changed
+  document.getElementById('shopNearbyStores').style.display = 'none';
+  shopNearbyStoreData = [];
+}
+
+function shopSetLocStatus(state, msg){
+  const dot  = document.getElementById('shopLocDot');
+  const text = document.getElementById('shopLocText');
+  dot.className = 'shop-loc-dot' + (state ? ' ' + state : '');
+  text.textContent = msg;
+}
+
+// ── GPS ──
+function shopGetGPS(){
+  if(!navigator.geolocation){ showToast('GPS not supported on this device',''); return; }
+  shopSetLocStatus('searching', 'Getting your location…');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      shopLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, label: 'Your current location' };
+      shopSetLocStatus('found', `Location found (${shopLocation.lat.toFixed(4)}, ${shopLocation.lng.toFixed(4)})`);
+      document.getElementById('shopLocInput').value = 'Current location (GPS)';
+      shopFindNearbyStores();
+    },
+    err => {
+      shopSetLocStatus('', 'Could not get GPS — try entering your zip code');
+      showToast('GPS access denied — enter zip code instead','');
+    },
+    { timeout: 10000 }
+  );
+}
+
+// ── Find Nearby Stores ──
+// Tries /api/shop/nearby-stores (Google Places backend).
+// Falls back to preferred stores from profile if unavailable.
+async function shopFindNearbyStores(){
+  if(!shopLocation) return;
+  shopSetLocStatus('searching','Finding nearby grocery stores…');
+  document.getElementById('shopNearbyStores').style.display = 'none';
+
+  // Build known store list from profile prefs as instant fallback
+  const profileStores = loadU('preferred_stores',[]);
+
+  try {
+    const body = shopLocation.lat
+      ? { lat: shopLocation.lat, lng: shopLocation.lng }
+      : { zip: shopLocation.zip };
+
+    const r = await fetch('/api/shop/nearby-stores', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(6000)
+    });
+
+    if(r.ok){
+      const data = await r.json();
+      shopNearbyStoreData = data.stores || [];
+    } else { throw new Error('api-unavailable'); }
+  } catch(e){
+    // API not configured — build from profile stores + common chains
+    const base = profileStores.length ? profileStores :
+      ['Walmart','Target','Publix','Kroger','Aldi','Costco','Sam\'s Club','Whole Foods','Trader Joe\'s','Sprouts'];
+    shopNearbyStoreData = base.map((name,i) => ({ name, distance: null, placeId: null }));
+  }
+
+  renderShopStoreChips();
+  shopSetLocStatus('found', `Location set — ${shopNearbyStoreData.length} stores available`);
+}
+
+function renderShopStoreChips(){
+  const wrap = document.getElementById('shopStoreChips');
+  const profileStores = loadU('preferred_stores',[]);
+  wrap.innerHTML = shopNearbyStoreData.map(s => {
+    const sel = shopSelectedStores.includes(s.name) ||
+                (!shopSelectedStores.length && profileStores.includes(s.name));
+    if(sel && !shopSelectedStores.includes(s.name)) shopSelectedStores.push(s.name);
+    const dist = s.distance ? `<span class="shop-store-dist">${s.distance}</span>` : '';
+    return `<div class="shop-store-chip${sel?' selected':''}" onclick="shopToggleStore(this,'${s.name.replace(/'/g,"\\'")}')">
+      ${esc(s.name)}${dist}
+    </div>`;
+  }).join('');
+  document.getElementById('shopNearbyStores').style.display = 'block';
+}
+
+function shopToggleStore(el, name){
+  el.classList.toggle('selected');
+  if(el.classList.contains('selected')){
+    if(!shopSelectedStores.includes(name)) shopSelectedStores.push(name);
+  } else {
+    shopSelectedStores = shopSelectedStores.filter(s => s !== name);
+  }
+}
+
+// ── Input tab switching ──
+function shopSwitchInput(mode){
+  shopCurrentInputMode = mode;
+  ['type','scan','import'].forEach(m => {
+    const typeEl   = document.getElementById('shopInputType');
+    const scanEl   = document.getElementById('shopInputScan');
+    const importEl = document.getElementById('shopInputImport');
+    const tabEl    = document.getElementById('shopTab-'+m);
+    if(typeEl)   typeEl.style.display   = m==='type'   ? 'block' : 'none';
+    if(scanEl)   scanEl.style.display   = m==='scan'   ? 'block' : 'none';
+    if(importEl) importEl.style.display = m==='import' ? 'block' : 'none';
+    if(tabEl)    tabEl.classList.toggle('active', m===mode);
+  });
+  if(mode === 'import') renderShopImportLists();
+}
+
+// ── Import from grocery lists ──
+function renderShopImportLists(){
+  const wrap = document.getElementById('shopImportLists');
+  const empty = document.getElementById('shopImportEmpty');
+  if(!groceryLists.length){ wrap.style.display='none'; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  wrap.style.display = 'flex';
+  wrap.innerHTML = groceryLists.map(list => {
+    const items = groceryItems.filter(i => i.listId === list.id && !i.checked);
+    if(!items.length) return '';
+    return `<div class="shop-section" style="margin-bottom:0;cursor:pointer;transition:.2s;" onclick="shopImportList('${list.id}')" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--text);">${esc(list.name)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${items.length} item${items.length!==1?'s':''} · ${items.map(i=>esc(i.name)).slice(0,3).join(', ')}${items.length>3?' …':''}</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function shopImportList(listId){
+  const items = groceryItems.filter(i => i.listId === listId && !i.checked);
+  const text = items.map(i => (i.qty && i.qty > 1 ? i.qty + ' ' : '') + i.name + (i.notes ? ' (' + i.notes + ')' : '')).join('\n');
+  shopSwitchInput('type');
+  document.getElementById('shopListText').value = text;
+  showToast('List imported — tap Find Best Prices','ok');
+}
+
+// ── Image / OCR ──
+function shopHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('shopDropZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) shopProcessImage(file);
+}
+
+function shopHandleImage(input){
+  const file = input.files[0];
+  if(file) shopProcessImage(file);
+}
+
+async function shopProcessImage(file){
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const dataUrl = e.target.result;
+    const img = document.getElementById('shopPreviewImg');
+    img.src = dataUrl;
+    img.style.display = 'block';
+
+    // Show loading state
+    document.getElementById('shopOcrResult').style.display = 'block';
+    document.getElementById('shopOcrItems').innerHTML =
+      '<div style="display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px;"><div class="shop-ld"></div><div class="shop-ld"></div><div class="shop-ld"></div><span style="margin-left:4px;">Reading your list…</span></div>';
+
+    try {
+      const base64 = dataUrl.split(',')[1];
+      const mediaType = file.type || 'image/jpeg';
+
+      // Call Penny vision API to OCR the handwritten list
+      const res = await anthropicFetch({
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:800,
+          system:`You are a grocery list reader. The user will show you a photo of a handwritten or printed shopping list.
+Extract every item you can read. Return ONLY a plain list — one item per line, no numbering, no bullet points, no extra text.
+If you can see quantities, include them at the start of the line (e.g. "2 gallons milk").
+If handwriting is unclear, make your best guess. Never say you cannot read it — always extract what you can.`,
+          messages:[{
+            role:'user',
+            content:[
+              { type:'image', source:{ type:'base64', media_type: mediaType, data: base64 } },
+              { type:'text', text:'Please read all the grocery items from this shopping list.' }
+            ]
+          }]
+        })
+      });
+
+      const data = await res.json();
+      const text = (data.content||[]).map(b=>b.text||'').join('').trim();
+      shopOcrItems = text.split('\n').map(l=>l.trim()).filter(Boolean);
+
+      document.getElementById('shopOcrItems').innerHTML =
+        shopOcrItems.map(item => `<div style="padding:3px 0;border-bottom:1px solid var(--border);">${esc(item)}</div>`).join('') +
+        `<button onclick="shopUseOcrItems()" style="margin-top:10px;width:100%;padding:10px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;">Use These Items ✓</button>`;
+    } catch(err){
+      document.getElementById('shopOcrItems').innerHTML =
+        '<div style="color:var(--danger);font-size:13px;">Could not read image. Try a clearer photo or type your list manually.</div>';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function shopUseOcrItems(){
+  shopSwitchInput('type');
+  document.getElementById('shopListText').value = shopOcrItems.join('\n');
+  showToast('Items imported — review and tap Find Best Prices','ok');
+}
+
+// ── Parse list text into items array ──
+function shopParseList(text){
+  return text.split(/[\n,]+/)
+    .map(l => l.trim().replace(/^[-•*]\s*/,''))
+    .filter(l => l.length > 1)
+    .map(l => {
+      // Try to split qty from name: "2 gallons milk" → qty:2, name:"gallons milk"
+      const m = l.match(/^(\d+\.?\d*)\s+(.+)/);
+      return m ? { qty: parseFloat(m[1]), name: m[2].trim(), raw: l } : { qty: 1, name: l, raw: l };
+    });
+}
+
+// ── Main search ──
+async function shopRunSearch(){
+  // Validate location
+  if(!shopLocation){
+    // Try to auto-use saved zip
+    const savedZip = loadU('zip','');
+    if(savedZip){
+      shopLocation = { zip: savedZip, label: savedZip };
+    } else {
+      showToast('Please enter your location first','');
+      document.getElementById('shopLocInput').focus();
+      return;
+    }
+  }
+
+  // Get the list
+  let rawText = '';
+  if(shopCurrentInputMode === 'type'){
+    rawText = document.getElementById('shopListText').value.trim();
+  } else if(shopCurrentInputMode === 'scan'){
+    rawText = shopOcrItems.join('\n');
+  }
+  if(!rawText){ showToast('Please enter a shopping list first',''); return; }
+
+  const items = shopParseList(rawText);
+  if(!items.length){ showToast('No items found in your list',''); return; }
+
+  // Get stores to search — use selected, fall back to profile prefs
+  let stores = shopSelectedStores.length ? shopSelectedStores : loadU('preferred_stores',[]);
+  if(!stores.length) stores = ['Walmart','Target','Publix','Kroger','Aldi'];
+
+  // If we haven't loaded nearby stores yet, do it first
+  if(!shopNearbyStoreData.length){
+    await shopFindNearbyStores();
+    stores = shopSelectedStores.length ? shopSelectedStores : stores;
+  }
+
+  // Show results section + loading
+  document.getElementById('shopResultsSection').style.display = 'block';
+  document.getElementById('shopLoading').style.display = 'block';
+  document.getElementById('shopResultsGrid').innerHTML = '';
+  document.getElementById('shopSearchBtn').disabled = true;
+  document.getElementById('shopResultsSub').textContent = '';
+
+  const loadMsgs = [
+    ['Checking prices at nearby stores…', ''],
+    ['Searching ' + stores.slice(0,3).join(', ') + '…', 'Comparing unit prices & quantities'],
+    ['Crunching the numbers…', 'Calculating your total at each store'],
+    ['Almost done…', 'Ranking results by total cost']
+  ];
+  let msgIdx = 0;
+  const loadInterval = setInterval(()=>{
+    if(msgIdx < loadMsgs.length){
+      document.getElementById('shopLoadingMsg').textContent = loadMsgs[msgIdx][0];
+      document.getElementById('shopLoadingStep').textContent = loadMsgs[msgIdx][1];
+      msgIdx++;
+    }
+  }, 1400);
+
+  document.getElementById('shopResultsSection').scrollIntoView({ behavior:'smooth', block:'start' });
+
+  try {
+    const hh       = loadU('household', 2);
+    const budget   = loadU('weekly_budget', 0);
+    const zip      = shopLocation.zip || loadU('zip','');
+    const freq     = loadU('shopping_freq','weekly');
+
+    // ── Try live pricing API first ──
+    let results = null;
+    try {
+      const liveRes = await fetch('/api/shop/prices', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ items, stores, zip, lat: shopLocation.lat, lng: shopLocation.lng }),
+        signal: AbortSignal.timeout(8000)
+      });
+      if(liveRes.ok) results = await liveRes.json();
+    } catch(e){ /* fall through to AI estimation */ }
+
+    // ── AI price estimation fallback ──
+    if(!results){
+      const systemPrompt = `You are a grocery price expert for US stores. Given a shopping list and a set of stores, estimate realistic current prices for each item at each store.
+Return ONLY valid JSON — no markdown, no explanation — in exactly this format:
+{
+  "stores": [
+    {
+      "name": "StoreName",
+      "items": [
+        { "name": "item name", "price": 3.49, "unit": "per lb", "available": true },
+        { "name": "item name", "price": null, "available": false }
+      ],
+      "total": 42.17,
+      "notes": "one short sentence about this store's strengths"
+    }
+  ]
+}
+Use realistic 2025 US prices. Reflect known price differences between stores (e.g. Aldi/Walmart cheaper than Whole Foods/Trader Joe's). Mark items unavailable if the store genuinely wouldn't carry them. Include a total for each store.`;
+
+      const userPrompt = `Location: ${zip || 'US'}
+Household size: ${hh} people
+Stores to check: ${stores.join(', ')}
+
+Shopping list:
+${items.map(i => `- ${i.qty > 1 ? i.qty + 'x ' : ''}${i.name}`).join('\n')}
+
+Return prices for every item at every store.`;
+
+      const res = await anthropicFetch({
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:2000,
+          system: systemPrompt,
+          messages:[{ role:'user', content: userPrompt }]
+        })
+      });
+
+      const data = await res.json();
+      const raw = (data.content||[]).map(b=>b.text||'').join('').trim();
+      const clean = raw.replace(/```json|```/g,'').trim();
+      results = JSON.parse(clean);
+    }
+
+    clearInterval(loadInterval);
+    document.getElementById('shopLoading').style.display = 'none';
+    shopRenderResults(results, items, stores);
+
+  } catch(err){
+    clearInterval(loadInterval);
+    document.getElementById('shopLoading').style.display = 'none';
+    document.getElementById('shopResultsGrid').innerHTML =
+      `<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px;">
+        Something went wrong. Check your connection and try again.<br>
+        <small style="color:var(--muted);">${esc(err.message||'')}</small>
+      </div>`;
+  }
+
+  document.getElementById('shopSearchBtn').disabled = false;
+}
+
+// ── Render results ──
+function shopRenderResults(data, items, stores){
+  const storeResults = (data.stores || []).sort((a,b) => (a.total||999) - (b.total||999));
+  const grid = document.getElementById('shopResultsGrid');
+  const cheapest = storeResults[0];
+
+  document.getElementById('shopResultsSub').textContent =
+    `${items.length} item${items.length!==1?'s':''} · ${storeResults.length} store${storeResults.length!==1?'s':''} compared`;
+
+  grid.innerHTML = storeResults.map((store, rank) => {
+    const isWinner = rank === 0;
+    const isRunner = rank === 1;
+    const cardClass = isWinner ? 'winner' : isRunner ? 'runner' : '';
+    const savings = isWinner ? '' :
+      (cheapest.total && store.total ? `$${(store.total - cheapest.total).toFixed(2)} more than ${esc(cheapest.name)}` : '');
+
+    const nearbyData = shopNearbyStoreData.find(s => s.name === store.name);
+    const distLabel = nearbyData?.distance ? `<div class="shop-store-dist-lbl">📍 ${esc(nearbyData.distance)} away</div>` : '';
+
+    const itemRows = (store.items || []).map(item => {
+      const priceStr = item.available && item.price != null
+        ? `<span class="shop-item-price">$${parseFloat(item.price).toFixed(2)}${item.unit ? ' <small style="font-weight:400;font-size:11px;color:var(--muted);">'+esc(item.unit)+'</small>' : ''}</span>`
+        : `<span class="shop-item-na">not available</span>`;
+      return `<div class="shop-item-row"><span class="shop-item-name">${esc(item.name)}</span>${priceStr}</div>`;
+    }).join('');
+
+    const winnerBadge = isWinner ? '<span class="shop-winner-badge">BEST DEAL</span>' : '';
+    const totalColor = isWinner ? 'var(--ok)' : 'var(--brand)';
+
+    return `<div class="shop-store-card ${cardClass}">
+      <div class="shop-store-card-hdr">
+        <div class="shop-rank-badge">${rank+1}</div>
+        <div style="flex:1;">
+          <div class="shop-store-name">${esc(store.name)} ${winnerBadge}</div>
+          ${distLabel}
+          ${store.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(store.notes)}</div>` : ''}
+        </div>
+        <div style="text-align:right;">
+          <div class="shop-store-total" style="color:${totalColor};">$${parseFloat(store.total||0).toFixed(2)}</div>
+          ${savings ? `<div class="shop-store-savings" style="color:var(--muted);">${savings}</div>` : '<div class="shop-store-savings">Cheapest option</div>'}
+        </div>
+      </div>
+      <div class="shop-item-list">${itemRows}</div>
+    </div>`;
+  }).join('');
+
+  // Add to Grocery List button for winner
+  if(cheapest){
+    grid.innerHTML += `
+      <button class="shop-add-all-btn" onclick="shopAddWinnerToList('${esc(cheapest.name)}')">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        Add ${esc(cheapest.name)} List to Grocery Lists
+      </button>`;
+  }
+
+  // Save to history
+  saveU('shop_last_results', { date: Date.now(), stores: storeResults.map(s=>({name:s.name,total:s.total})), itemCount: items.length });
+}
+
+// ── Add winner store's items to a grocery list ──
+function shopAddWinnerToList(storeName){
+  // Find or create a list named after the store
+  let list = groceryLists.find(l => l.name === storeName + ' Run') || null;
+  if(!list){
+    const lid = 'list_shop_' + Date.now();
+    list = { id: lid, name: storeName + ' Run' };
+    groceryLists.push(list);
+    saveU('glists', groceryLists);
+    activeListId = lid;
+  }
+
+  // Parse items from current text
+  const rawText = document.getElementById('shopListText').value.trim() || shopOcrItems.join('\n');
+  const items = shopParseList(rawText);
+  items.forEach(item => {
+    groceryItems.push({
+      id: 'gi_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      listId: list.id,
+      name: item.name,
+      qty: item.qty || 1,
+      price: '',
+      store: storeName,
+      notes: '',
+      checked: false
+    });
+  });
+  saveU('gitems', groceryItems);
+  showToast(`Added ${items.length} items to "${list.name}" list`, 'ok');
+  setTimeout(()=>{ goTab('grocery'); activeListId = list.id; renderListNav(); renderGroceryContent(); }, 800);
+}
+
+function shopClearResults(){
+  document.getElementById('shopResultsSection').style.display = 'none';
+  document.getElementById('shopResultsGrid').innerHTML = '';
+  document.getElementById('shopListText').value = '';
+  shopOcrItems = [];
+  document.getElementById('shopOcrResult').style.display = 'none';
+  document.getElementById('shopPreviewImg').style.display = 'none';
+  const img = document.getElementById('shopPreviewImg'); if(img) img.src='';
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // ────────────────────────────────────────────────
