@@ -819,6 +819,9 @@ body.dark .penny-textarea:focus{border-color:#4d8fcc;}
 body.dark .penny-attach-btn{color:#7a9fc0;}
 body.dark .penny-context-btn{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
 body.dark .penny-context-btn:hover{background:#1a3d66;color:#fff;}
+body.dark #pennyPricePanel{background:#111f2e;border-color:#4d8fcc;}
+body.dark #pennyPriceListText{background:#162535;color:#eef2ff;border-color:#2a4060;}
+body.dark #pennyPricePhotoResult{background:#162535;color:#c8ddf0;}
 body.dark .penny-new-btn{background:#1a3d66;}
 body.dark .penny-welcome-icon{background:#1a2f45;}
 .ai-wrap{max-width:700px;margin:0 auto 10px;padding:0 20px;}
@@ -878,107 +881,6 @@ body.dark .profile-section{background:#111f2e;border-color:#2a4060;}
 body.dark .profile-section-title{color:#eef2ff;}
 body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
-/* ── SHOP TAB ── */
-#tab-shop{display:none;padding:0;max-width:100%;}
-.shop-wrap{max-width:760px;margin:0 auto;padding:20px;}
-.shop-section{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);}
-.shop-section-title{display:flex;align-items:center;gap:8px;font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
-.shop-section-title svg{stroke:var(--brand);width:18px;height:18px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.shop-loc-row{display:flex;gap:10px;align-items:center;}
-.shop-loc-input{flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:14px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;transition:.2s;}
-.shop-loc-input:focus{border-color:var(--brand);}
-.shop-loc-btn{padding:11px 16px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.2s;display:flex;align-items:center;gap:6px;}
-.shop-loc-btn:hover{background:var(--brand-h);}
-.shop-loc-btn svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-.shop-loc-status{font-size:12px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px;}
-.shop-loc-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
-.shop-loc-dot.found{background:var(--ok);}
-.shop-loc-dot.searching{background:var(--warn);animation:shopPulse 1s ease-in-out infinite;}
-@keyframes shopPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-.shop-nearby-stores{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
-.shop-store-chip{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:5px;}
-.shop-store-chip.selected{border-color:var(--brand);background:var(--brand-light);color:var(--brand);}
-.shop-store-chip:hover{border-color:var(--brand);color:var(--brand);}
-.shop-store-dist{font-size:11px;color:var(--muted);}
-.shop-store-chip.selected .shop-store-dist{color:var(--brand);opacity:.7;}
-
-/* List input area */
-.shop-input-tabs{display:flex;gap:0;margin-bottom:16px;border:1.5px solid var(--border);border-radius:var(--rsm);overflow:hidden;}
-.shop-input-tab{flex:1;padding:9px 14px;background:var(--input-bg);color:var(--muted);border:none;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
-.shop-input-tab svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.shop-input-tab.active{background:var(--brand);color:#fff;}
-.shop-list-textarea{width:100%;min-height:110px;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:14px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;resize:vertical;line-height:1.7;transition:.2s;}
-.shop-list-textarea:focus{border-color:var(--brand);}
-.shop-upload-zone{border:2px dashed var(--border);border-radius:var(--rsm);padding:28px 20px;text-align:center;cursor:pointer;transition:.2s;background:var(--input-bg);position:relative;}
-.shop-upload-zone:hover,.shop-upload-zone.drag{border-color:var(--brand);background:var(--brand-light);}
-.shop-upload-icon{width:40px;height:40px;margin:0 auto 10px;color:var(--muted);}
-.shop-upload-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
-.shop-upload-lbl{font-size:14px;color:var(--muted);margin-bottom:4px;}
-.shop-upload-sub{font-size:12px;color:var(--muted);opacity:.7;}
-.shop-upload-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.shop-preview-img{max-width:100%;max-height:200px;border-radius:var(--rsm);margin-top:10px;display:none;}
-.shop-search-btn{width:100%;padding:14px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font-d);font-size:17px;font-weight:700;cursor:pointer;margin-top:14px;letter-spacing:.3px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:10px;}
-.shop-search-btn:hover{background:var(--brand-h);}
-.shop-search-btn:disabled{opacity:.5;cursor:not-allowed;}
-.shop-search-btn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-
-/* Results */
-.shop-results-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.shop-results-title{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text);}
-.shop-results-sub{font-size:12px;color:var(--muted);margin-top:2px;}
-.shop-results-grid{display:flex;flex-direction:column;gap:12px;}
-.shop-store-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r);padding:18px 20px;transition:.2s;cursor:pointer;}
-.shop-store-card.winner{border-color:var(--ok);background:var(--ok-bg);}
-.shop-store-card.runner{border-color:var(--warn);background:#fffbeb;}
-.shop-store-card-hdr{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
-.shop-rank-badge{width:32px;height:32px;border-radius:9px;background:var(--input-bg);color:var(--muted);font-family:var(--font-d);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.shop-store-card.winner .shop-rank-badge{background:var(--ok);color:#fff;}
-.shop-store-card.runner .shop-rank-badge{background:var(--warn);color:#fff;}
-.shop-store-name{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);flex:1;}
-.shop-store-total{font-family:var(--font-m);font-size:22px;font-weight:600;color:var(--brand);}
-.shop-store-card.winner .shop-store-total{color:var(--ok);}
-.shop-store-savings{font-size:12px;color:var(--ok);font-weight:600;margin-top:2px;}
-.shop-store-dist-lbl{font-size:12px;color:var(--muted);}
-.shop-item-list{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px;}
-.shop-item-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;}
-.shop-item-name{color:var(--text);flex:1;}
-.shop-item-price{font-family:var(--font-m);font-size:13px;color:var(--brand);font-weight:500;}
-.shop-item-na{font-size:12px;color:var(--muted);font-style:italic;}
-.shop-winner-badge{background:var(--ok);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:.3px;}
-.shop-api-note{background:var(--brand-light);border:1px solid var(--brand);border-radius:var(--rsm);padding:12px 14px;font-size:12px;color:var(--brand);line-height:1.6;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
-.shop-api-note svg{width:16px;height:16px;stroke:var(--brand);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px;}
-.shop-loading{text-align:center;padding:40px 20px;color:var(--muted);}
-.shop-loading-dots{display:flex;gap:8px;justify-content:center;margin-bottom:16px;}
-.shop-ld{width:12px;height:12px;border-radius:50%;background:var(--brand);animation:shopDot .9s ease-in-out infinite;}
-.shop-ld:nth-child(2){animation-delay:.2s;}
-.shop-ld:nth-child(3){animation-delay:.4s;}
-@keyframes shopDot{0%,80%,100%{transform:translateY(0);opacity:.3;}40%{transform:translateY(-8px);opacity:1;}}
-.shop-add-all-btn{width:100%;padding:12px;background:var(--ok);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:10px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.shop-add-all-btn:hover{background:#059669;}
-.shop-add-all-btn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-/* dark */
-body.dark .shop-section{background:#111f2e;border-color:#2a4060;}
-body.dark .shop-section-title{color:#eef2ff;}
-body.dark .shop-loc-input{background:#162535;border-color:#2a4060;color:#eef2ff;}
-body.dark .shop-loc-input:focus{border-color:#4d8fcc;}
-body.dark .shop-store-chip{background:#162535;border-color:#2a4060;color:#c8ddf0;}
-body.dark .shop-store-chip.selected{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
-body.dark .shop-input-tab{background:#162535;color:#7a9fc0;}
-body.dark .shop-input-tab.active{background:#1a3d66;color:#eef2ff;}
-body.dark .shop-input-tabs{border-color:#2a4060;}
-body.dark .shop-list-textarea{background:#162535;border-color:#2a4060;color:#eef2ff;}
-body.dark .shop-list-textarea:focus{border-color:#4d8fcc;}
-body.dark .shop-upload-zone{background:#162535;border-color:#2a4060;}
-body.dark .shop-upload-zone:hover,.shop-upload-zone.drag{background:#1a2f45;}
-body.dark .shop-store-card{background:#111f2e;border-color:#2a4060;}
-body.dark .shop-store-card.winner{background:#062018;border-color:#10b981;}
-body.dark .shop-store-card.runner{background:#1c1500;border-color:#f59e0b;}
-body.dark .shop-store-name{color:#eef2ff;}
-body.dark .shop-item-name{color:#c8ddf0;}
-body.dark .shop-item-list{border-color:#2a4060;}
-body.dark .shop-api-note{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
-body.dark .shop-api-note svg{stroke:#7ec8f8;}
-body.dark .shop-results-title{color:#eef2ff;}
 </style>
 </head>
 <body>
@@ -1200,7 +1102,6 @@ body.dark .shop-results-title{color:#eef2ff;}
     <button class="nav-tab" onclick="goTab('presets')" id="nt-presets"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Presets</span></button>
     <button class="nav-tab" onclick="goTab('penny')" id="nt-penny"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg><span>Penny</span></button>
     <button class="nav-tab" onclick="goTab('profile')" id="nt-profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
-    <button class="nav-tab" onclick="goTab('shop')" id="nt-shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Shop</span></button>
   </nav>
 
   <!-- COMPARE TAB -->
@@ -1287,7 +1188,59 @@ body.dark .shop-results-title{color:#eef2ff;}
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             <span class="penny-context-lbl">Add Compare</span>
           </button>
+          <button class="penny-context-btn" onclick="pennyTogglePricePanel()" id="pennyPriceBtn" title="Find best prices at local stores">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span class="penny-context-lbl">Find Prices</span>
+          </button>
         </div>
+
+        <!-- Price search panel — slides in below header, above messages -->
+        <div id="pennyPricePanel" style="display:none;background:var(--white);border-bottom:2px solid var(--brand);padding:14px 16px;flex-shrink:0;animation:slideDown .25s ease;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:13px;font-weight:700;color:var(--brand);display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.1 12.4 7.8 13.1a.3.3 0 0 0 .4 0C12.9 22.4 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
+              <span id="pennyPriceZipLbl">Searching near your saved zip code</span>
+            </div>
+            <button onclick="pennyTogglePricePanel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;">&#10005;</button>
+          </div>
+          <!-- List input tabs -->
+          <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:var(--rsm);overflow:hidden;margin-bottom:10px;">
+            <button class="penny-price-tab active" id="ppt-type" onclick="pennyPriceTab('type')" style="flex:1;padding:8px;background:var(--brand);color:#fff;border:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Type List
+            </button>
+            <button class="penny-price-tab" id="ppt-photo" onclick="pennyPriceTab('photo')" style="flex:1;padding:8px;background:var(--input-bg);color:var(--muted);border:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Photo / Scan
+            </button>
+            <button class="penny-price-tab" id="ppt-mylist" onclick="pennyPriceTab('mylist')" style="flex:1;padding:8px;background:var(--input-bg);color:var(--muted);border:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+              My Lists
+            </button>
+          </div>
+          <!-- Type input -->
+          <div id="ppp-type">
+            <textarea id="pennyPriceListText" style="width:100%;min-height:80px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:13px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;resize:none;line-height:1.6;transition:.2s;" placeholder="Type items — one per line or comma separated&#10;e.g. milk, eggs, chicken, rice, orange juice" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor=''"></textarea>
+          </div>
+          <!-- Photo input -->
+          <div id="ppp-photo" style="display:none;">
+            <label style="display:block;border:2px dashed var(--border);border-radius:var(--rsm);padding:18px;text-align:center;cursor:pointer;background:var(--input-bg);transition:.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor=''">
+              <input type="file" accept="image/*" style="display:none;" onchange="pennyPriceHandlePhoto(this)">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 6px;display:block;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <div style="font-size:13px;color:var(--muted);">Tap to upload a photo of your list</div>
+            </label>
+            <div id="pennyPricePhotoResult" style="display:none;margin-top:8px;font-size:13px;color:var(--text);background:var(--input-bg);border-radius:var(--rsm);padding:10px 12px;line-height:1.7;"></div>
+          </div>
+          <!-- My Lists picker -->
+          <div id="ppp-mylist" style="display:none;">
+            <div id="pennyPriceMyLists" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;"></div>
+          </div>
+          <button onclick="pennyPriceSearch()" style="width:100%;margin-top:10px;padding:11px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s;" onmouseover="this.style.background='var(--brand-h)'" onmouseout="this.style.background='var(--brand)'" id="pennyPriceSearchBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Find Best Prices
+          </button>
+        </div>
+
         <div class="penny-messages" id="pennyMessages">
           <div class="penny-welcome">
             <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
@@ -1329,113 +1282,6 @@ body.dark .shop-results-title{color:#eef2ff;}
   <div id="tab-help" style="display:none;"></div>
 
   <!-- SHOP TAB -->
-  <div id="tab-shop">
-    <div class="shop-wrap">
-
-      <!-- Dev note -->
-      <div class="shop-api-note">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div><strong>Developer note:</strong> Live prices require backend API keys — Kroger, Walmart, Instacart, or Spoonacular. Google Maps API key required for real location &amp; store distances. See <code>SHOP_API_SETUP.md</code> in your project root. Without keys, Penny uses AI-estimated prices based on your zip code &amp; household data.</div>
-      </div>
-
-      <!-- 1. Location -->
-      <div class="shop-section">
-        <div class="shop-section-title">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.1 12.4 7.8 13.1a.3.3 0 0 0 .4 0C12.9 22.4 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
-          Your Location
-        </div>
-        <div class="shop-loc-row">
-          <input type="text" class="shop-loc-input" id="shopLocInput" placeholder="Enter zip code or city..." oninput="shopLocInputChanged()">
-          <button class="shop-loc-btn" onclick="shopGetGPS()">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-            Use GPS
-          </button>
-        </div>
-        <div class="shop-loc-status" id="shopLocStatus">
-          <div class="shop-loc-dot" id="shopLocDot"></div>
-          <span id="shopLocText">Enter your location or tap Use GPS</span>
-        </div>
-        <!-- Nearby stores -->
-        <div id="shopNearbyStores" style="display:none;">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 8px;">Stores Found Nearby — tap to select</div>
-          <div class="shop-nearby-stores" id="shopStoreChips"></div>
-        </div>
-      </div>
-
-      <!-- 2. Your list -->
-      <div class="shop-section">
-        <div class="shop-section-title">
-          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          Your Shopping List
-        </div>
-        <div class="shop-input-tabs" id="shopInputTabs">
-          <button class="shop-input-tab active" onclick="shopSwitchInput('type')" id="shopTab-type">
-            <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-            Type List
-          </button>
-          <button class="shop-input-tab" onclick="shopSwitchInput('scan')" id="shopTab-scan">
-            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Scan / Photo
-          </button>
-          <button class="shop-input-tab" onclick="shopSwitchInput('import')" id="shopTab-import">
-            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
-            From My Lists
-          </button>
-        </div>
-
-        <!-- Type input -->
-        <div id="shopInputType">
-          <textarea class="shop-list-textarea" id="shopListText" placeholder="Type your shopping list here — one item per line, or just freeform&#10;&#10;Example:&#10;2 gallons whole milk&#10;dozen eggs&#10;3 lbs chicken breast&#10;large bag of rice&#10;orange juice"></textarea>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px;">One item per line or comma separated. Quantities are optional but help with accuracy.</div>
-        </div>
-
-        <!-- Scan/Photo input -->
-        <div id="shopInputScan" style="display:none;">
-          <div class="shop-upload-zone" id="shopDropZone" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="shopHandleDrop(event)">
-            <input type="file" class="shop-upload-input" id="shopImageInput" accept="image/*" onchange="shopHandleImage(this)">
-            <div class="shop-upload-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-            <div class="shop-upload-lbl">Upload a photo of your handwritten list</div>
-            <div class="shop-upload-sub">Tap to choose a photo, or drag &amp; drop • JPG, PNG, HEIC</div>
-          </div>
-          <img id="shopPreviewImg" class="shop-preview-img" alt="List preview">
-          <div id="shopOcrResult" style="display:none;margin-top:12px;">
-            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;">Items read from your photo:</div>
-            <div id="shopOcrItems" style="background:var(--input-bg);border-radius:var(--rsm);padding:12px 14px;font-size:14px;line-height:1.8;color:var(--text);"></div>
-          </div>
-        </div>
-
-        <!-- Import from grocery lists -->
-        <div id="shopInputImport" style="display:none;">
-          <div id="shopImportLists" style="display:flex;flex-direction:column;gap:8px;"></div>
-          <div id="shopImportEmpty" style="display:none;text-align:center;padding:30px 20px;color:var(--muted);font-size:14px;">No grocery lists yet. Create one in the Grocery tab first.</div>
-        </div>
-
-        <button class="shop-search-btn" id="shopSearchBtn" onclick="shopRunSearch()">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Find Best Prices Near Me
-        </button>
-      </div>
-
-      <!-- 3. Results -->
-      <div id="shopResultsSection" style="display:none;">
-        <div class="shop-results-hdr">
-          <div>
-            <div class="shop-results-title">Price Comparison Results</div>
-            <div class="shop-results-sub" id="shopResultsSub"></div>
-          </div>
-          <button class="tool-btn" onclick="shopClearResults()" style="font-size:12px;padding:7px 12px;">New Search</button>
-        </div>
-        <div class="shop-loading" id="shopLoading" style="display:none;">
-          <div class="shop-loading-dots"><div class="shop-ld"></div><div class="shop-ld"></div><div class="shop-ld"></div></div>
-          <div style="font-size:14px;font-weight:500;margin-bottom:6px;" id="shopLoadingMsg">Searching nearby stores...</div>
-          <div style="font-size:12px;color:var(--muted);" id="shopLoadingStep"></div>
-        </div>
-        <div class="shop-results-grid" id="shopResultsGrid"></div>
-      </div>
-
-    </div>
-  </div>
-
   <!-- HELP MODAL -->
   <div class="modal-box" id="helpModal" style="max-width:520px;">
     <button class="modal-x" onclick="closeModals()">&#10005;</button>
@@ -2564,7 +2410,7 @@ function showApp(isNewUser=false){
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   loadUserData();
   loadPennySessions();
-  ['history','grocery','presets','help','profile','penny','shop'].forEach(n=>{
+  ['history','grocery','presets','help','profile','penny'].forEach(n=>{
     const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
   });
   document.getElementById('tab-compare').style.display='block';
@@ -2581,7 +2427,7 @@ function showApp(isNewUser=false){
 // TABS
 // ────────────────────────────────────────────────
 function goTab(name){
-  ['compare','history','grocery','presets','help','profile','penny','shop'].forEach(n=>{
+  ['compare','history','grocery','presets','help','profile','penny'].forEach(n=>{
     const el=document.getElementById(`tab-${n}`);
     if(el) el.style.display='none';
     document.getElementById(`nt-${n}`)?.classList.remove('active');
@@ -2594,7 +2440,6 @@ function goTab(name){
   document.getElementById(`nt-${name}`)?.classList.add('active');
   if(name==='profile') renderProfileTab();
   if(name==='grocery'){ renderListNav(); renderGroceryContent(); }
-  if(name==='shop') renderShopTab();
   if(name==='penny'){
     // On mobile default sidebar closed, on desktop open
     pennySidebarOpen = window.innerWidth >= 600;
@@ -2801,7 +2646,7 @@ function finishOnboarding(){
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   loadUserData();
   loadPennySessions();
-  ['history','grocery','presets','help','profile','penny','shop'].forEach(n=>{
+  ['history','grocery','presets','help','profile','penny'].forEach(n=>{
     const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
   });
   document.getElementById('tab-compare').style.display='block';
@@ -4363,6 +4208,129 @@ function pennyInjectCompare(){
   goTab('penny');
 }
 
+// ── Penny In-Chat Price Search Panel ──
+function pennyTogglePricePanel(){
+  const panel = document.getElementById('pennyPricePanel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen){
+    // Show zip from profile
+    const zip = loadU('zip','');
+    const lbl = document.getElementById('pennyPriceZipLbl');
+    if(lbl) lbl.textContent = zip ? `Searching near ${zip}` : 'Enter your zip in Profile for local results';
+    pennyPriceTab('type');
+    pennyPriceRenderMyLists();
+  }
+}
+
+function pennyPriceTab(mode){
+  ['type','photo','mylist'].forEach(m => {
+    const pane = document.getElementById('ppp-'+m);
+    const btn  = document.getElementById('ppt-'+m);
+    if(pane) pane.style.display = m===mode ? 'block' : 'none';
+    if(btn){
+      btn.style.background = m===mode ? 'var(--brand)' : 'var(--input-bg)';
+      btn.style.color = m===mode ? '#fff' : 'var(--muted)';
+    }
+  });
+  if(mode==='mylist') pennyPriceRenderMyLists();
+}
+
+function pennyPriceRenderMyLists(){
+  const wrap = document.getElementById('pennyPriceMyLists');
+  if(!wrap) return;
+  if(!groceryLists.length){
+    wrap.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0;">No grocery lists yet — create one in the Grocery tab.</div>';
+    return;
+  }
+  wrap.innerHTML = groceryLists.map(list => {
+    const its = groceryItems.filter(i => i.listId===list.id && !i.checked);
+    if(!its.length) return '';
+    return `<div onclick="pennyPriceImportList('${list.id}')" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rsm);cursor:pointer;background:var(--input-bg);transition:.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor=''">
+      <div style="font-size:13px;font-weight:600;color:var(--text);">${esc(list.name)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">${its.length} items · ${its.slice(0,4).map(i=>esc(i.name)).join(', ')}${its.length>4?' …':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function pennyPriceImportList(listId){
+  const its = groceryItems.filter(i => i.listId===listId && !i.checked);
+  const text = its.map(i => (i.qty>1?i.qty+'x ':'')+i.name).join('\n');
+  pennyPriceTab('type');
+  const ta = document.getElementById('pennyPriceListText');
+  if(ta) ta.value = text;
+  showToast('List imported — tap Find Best Prices','ok');
+}
+
+async function pennyPriceHandlePhoto(input){
+  const file = input.files[0];
+  if(!file) return;
+  const resultDiv = document.getElementById('pennyPricePhotoResult');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<span style="color:var(--muted);">Reading your list…</span>';
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const base64 = e.target.result.split(',')[1];
+      const res = await anthropicFetch({
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:'claude-sonnet-4-20250514', max_tokens:500,
+          system:'Extract every grocery item from this photo of a shopping list. Return ONLY the items, one per line, no numbering or bullets. Include quantities if visible.',
+          messages:[{ role:'user', content:[
+            { type:'image', source:{ type:'base64', media_type: file.type||'image/jpeg', data: base64 }},
+            { type:'text', text:'Read all grocery items from this list.' }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      const text = (data.content||[]).map(b=>b.text||'').join('').trim();
+      resultDiv.innerHTML = text.split('\n').filter(Boolean).map(l=>`<div style="padding:2px 0;border-bottom:1px solid var(--border);">${esc(l)}</div>`).join('') +
+        `<button onclick="pennyPriceMoveToText()" style="margin-top:8px;width:100%;padding:7px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-size:12px;font-weight:600;cursor:pointer;">Use These Items ✓</button>`;
+      resultDiv._text = text;
+    } catch(e){
+      resultDiv.innerHTML = '<span style="color:var(--danger);font-size:12px;">Could not read — try a clearer photo or type your list.</span>';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function pennyPriceMoveToText(){
+  const resultDiv = document.getElementById('pennyPricePhotoResult');
+  pennyPriceTab('type');
+  const ta = document.getElementById('pennyPriceListText');
+  if(ta && resultDiv._text) ta.value = resultDiv._text;
+}
+
+async function pennyPriceSearch(){
+  const rawText = (document.getElementById('pennyPriceListText').value||'').trim();
+  if(!rawText){ showToast('Enter a shopping list first',''); return; }
+
+  const items = rawText.split(/[\n,]+/).map(l=>l.trim().replace(/^[-•*\d.]+\s*/,'')).filter(l=>l.length>1);
+  if(!items.length){ showToast('No items found',''); return; }
+
+  const zip      = loadU('zip','');
+  const hh       = loadU('household', 2);
+  const budget   = loadU('weekly_budget', 0);
+  const stores   = loadU('preferred_stores',[]);
+  const storeList = stores.length ? stores.join(', ') : 'Walmart, Target, Publix, Kroger, Aldi';
+
+  // Close panel, send as a Penny message
+  document.getElementById('pennyPricePanel').style.display = 'none';
+  document.getElementById('pennyPriceListText').value = '';
+
+  const userMsg = `Please compare prices for my grocery list at stores near ${zip||'my location'} and tell me where I save the most.\n\nMy list (${hh}-person household):\n${items.map(i=>`• ${i}`).join('\n')}\n\nStores to check: ${storeList}`;
+
+  // Put it in the chat input and fire it
+  const inp = document.getElementById('pennyInput');
+  if(inp){
+    inp.value = userMsg;
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+  }
+  pennySend();
+}
+
 function pennyChooseFile(){
   const input = document.createElement('input');
   input.type = 'file';
@@ -4549,6 +4517,8 @@ Active list: "${activeListName}"
 Products being compared:
 ${lines||'(none entered yet)'}
 
+STORE PRICE COMPARISONS — When the user shares a grocery list and asks you to compare prices at local stores, give realistic 2025 US price estimates for each item at each store. Always rank stores cheapest to most expensive with total basket cost. Call out the best deal clearly. Be specific with dollar amounts. Reflect real store price differences (Aldi/Walmart typically cheapest, Whole Foods/Sprouts typically most expensive). If the user has preferred stores in their profile, prioritize those. Use their zip code for regional context.
+
 ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply on their own lines. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover — just do it.
 
 Commands (append at end, multiple allowed):
@@ -4725,503 +4695,6 @@ function pennyExecuteActions(rawText){
   return cleanText;
 }
 
-
-// ────────────────────────────────────────────────
-// SHOP TAB — Live Price Search Engine
-// ────────────────────────────────────────────────
-
-let shopLocation = null;          // { lat, lng, label, zip }
-let shopSelectedStores = [];      // store names the user picked
-let shopNearbyStoreData = [];     // [{name, distance, placeId}]
-let shopCurrentInputMode = 'type';
-let shopOcrItems = [];            // items extracted from photo
-let shopSearchAbort = null;
-
-// ── Render / init ──
-function renderShopTab(){
-  // Pre-fill location from saved zip
-  const savedZip = loadU('zip','');
-  if(savedZip && !shopLocation){
-    document.getElementById('shopLocInput').value = savedZip;
-    shopLocation = { zip: savedZip, label: savedZip };
-    shopSetLocStatus('found', 'Using saved zip code: ' + savedZip);
-  }
-  // Pre-select saved preferred stores
-  if(!shopSelectedStores.length){
-    shopSelectedStores = loadU('preferred_stores',[]).slice();
-  }
-  renderShopImportLists();
-}
-
-function shopLocInputChanged(){
-  const v = document.getElementById('shopLocInput').value.trim();
-  shopLocation = v ? { zip: v, label: v } : null;
-  shopSetLocStatus('', v ? 'Press "Find Best Prices" to search' : 'Enter your location or tap Use GPS');
-  // Clear store chips since location changed
-  document.getElementById('shopNearbyStores').style.display = 'none';
-  shopNearbyStoreData = [];
-}
-
-function shopSetLocStatus(state, msg){
-  const dot  = document.getElementById('shopLocDot');
-  const text = document.getElementById('shopLocText');
-  dot.className = 'shop-loc-dot' + (state ? ' ' + state : '');
-  text.textContent = msg;
-}
-
-// ── GPS ──
-function shopGetGPS(){
-  if(!navigator.geolocation){ showToast('GPS not supported on this device',''); return; }
-  shopSetLocStatus('searching', 'Getting your location…');
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      shopLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, label: 'Your current location' };
-      shopSetLocStatus('found', `Location found (${shopLocation.lat.toFixed(4)}, ${shopLocation.lng.toFixed(4)})`);
-      document.getElementById('shopLocInput').value = 'Current location (GPS)';
-      shopFindNearbyStores();
-    },
-    err => {
-      shopSetLocStatus('', 'Could not get GPS — try entering your zip code');
-      showToast('GPS access denied — enter zip code instead','');
-    },
-    { timeout: 10000 }
-  );
-}
-
-// ── Find Nearby Stores ──
-// Tries /api/shop/nearby-stores (Google Places backend).
-// Falls back to preferred stores from profile if unavailable.
-async function shopFindNearbyStores(){
-  if(!shopLocation) return;
-  shopSetLocStatus('searching','Finding nearby grocery stores…');
-  document.getElementById('shopNearbyStores').style.display = 'none';
-
-  // Build known store list from profile prefs as instant fallback
-  const profileStores = loadU('preferred_stores',[]);
-
-  try {
-    const body = shopLocation.lat
-      ? { lat: shopLocation.lat, lng: shopLocation.lng }
-      : { zip: shopLocation.zip };
-
-    const r = await fetch('/api/shop/nearby-stores', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(6000)
-    });
-
-    if(r.ok){
-      const data = await r.json();
-      shopNearbyStoreData = data.stores || [];
-    } else { throw new Error('api-unavailable'); }
-  } catch(e){
-    // API not configured — build from profile stores + common chains
-    const base = profileStores.length ? profileStores :
-      ['Walmart','Target','Publix','Kroger','Aldi','Costco','Sam\'s Club','Whole Foods','Trader Joe\'s','Sprouts'];
-    shopNearbyStoreData = base.map((name,i) => ({ name, distance: null, placeId: null }));
-  }
-
-  renderShopStoreChips();
-  shopSetLocStatus('found', `Location set — ${shopNearbyStoreData.length} stores available`);
-}
-
-function renderShopStoreChips(){
-  const wrap = document.getElementById('shopStoreChips');
-  const profileStores = loadU('preferred_stores',[]);
-  wrap.innerHTML = shopNearbyStoreData.map(s => {
-    const sel = shopSelectedStores.includes(s.name) ||
-                (!shopSelectedStores.length && profileStores.includes(s.name));
-    if(sel && !shopSelectedStores.includes(s.name)) shopSelectedStores.push(s.name);
-    const dist = s.distance ? `<span class="shop-store-dist">${s.distance}</span>` : '';
-    return `<div class="shop-store-chip${sel?' selected':''}" onclick="shopToggleStore(this,'${s.name.replace(/'/g,"\\'")}')">
-      ${esc(s.name)}${dist}
-    </div>`;
-  }).join('');
-  document.getElementById('shopNearbyStores').style.display = 'block';
-}
-
-function shopToggleStore(el, name){
-  el.classList.toggle('selected');
-  if(el.classList.contains('selected')){
-    if(!shopSelectedStores.includes(name)) shopSelectedStores.push(name);
-  } else {
-    shopSelectedStores = shopSelectedStores.filter(s => s !== name);
-  }
-}
-
-// ── Input tab switching ──
-function shopSwitchInput(mode){
-  shopCurrentInputMode = mode;
-  ['type','scan','import'].forEach(m => {
-    const typeEl   = document.getElementById('shopInputType');
-    const scanEl   = document.getElementById('shopInputScan');
-    const importEl = document.getElementById('shopInputImport');
-    const tabEl    = document.getElementById('shopTab-'+m);
-    if(typeEl)   typeEl.style.display   = m==='type'   ? 'block' : 'none';
-    if(scanEl)   scanEl.style.display   = m==='scan'   ? 'block' : 'none';
-    if(importEl) importEl.style.display = m==='import' ? 'block' : 'none';
-    if(tabEl)    tabEl.classList.toggle('active', m===mode);
-  });
-  if(mode === 'import') renderShopImportLists();
-}
-
-// ── Import from grocery lists ──
-function renderShopImportLists(){
-  const wrap = document.getElementById('shopImportLists');
-  const empty = document.getElementById('shopImportEmpty');
-  if(!groceryLists.length){ wrap.style.display='none'; empty.style.display='block'; return; }
-  empty.style.display = 'none';
-  wrap.style.display = 'flex';
-  wrap.innerHTML = groceryLists.map(list => {
-    const items = groceryItems.filter(i => i.listId === list.id && !i.checked);
-    if(!items.length) return '';
-    return `<div class="shop-section" style="margin-bottom:0;cursor:pointer;transition:.2s;" onclick="shopImportList('${list.id}')" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor=''">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-weight:600;font-size:14px;color:var(--text);">${esc(list.name)}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${items.length} item${items.length!==1?'s':''} · ${items.map(i=>esc(i.name)).slice(0,3).join(', ')}${items.length>3?' …':''}</div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function shopImportList(listId){
-  const items = groceryItems.filter(i => i.listId === listId && !i.checked);
-  const text = items.map(i => (i.qty && i.qty > 1 ? i.qty + ' ' : '') + i.name + (i.notes ? ' (' + i.notes + ')' : '')).join('\n');
-  shopSwitchInput('type');
-  document.getElementById('shopListText').value = text;
-  showToast('List imported — tap Find Best Prices','ok');
-}
-
-// ── Image / OCR ──
-function shopHandleDrop(e){
-  e.preventDefault();
-  document.getElementById('shopDropZone').classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if(file && file.type.startsWith('image/')) shopProcessImage(file);
-}
-
-function shopHandleImage(input){
-  const file = input.files[0];
-  if(file) shopProcessImage(file);
-}
-
-async function shopProcessImage(file){
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const dataUrl = e.target.result;
-    const img = document.getElementById('shopPreviewImg');
-    img.src = dataUrl;
-    img.style.display = 'block';
-
-    // Show loading state
-    document.getElementById('shopOcrResult').style.display = 'block';
-    document.getElementById('shopOcrItems').innerHTML =
-      '<div style="display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px;"><div class="shop-ld"></div><div class="shop-ld"></div><div class="shop-ld"></div><span style="margin-left:4px;">Reading your list…</span></div>';
-
-    try {
-      const base64 = dataUrl.split(',')[1];
-      const mediaType = file.type || 'image/jpeg';
-
-      // Call Penny vision API to OCR the handwritten list
-      const res = await anthropicFetch({
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:800,
-          system:`You are a grocery list reader. The user will show you a photo of a handwritten or printed shopping list.
-Extract every item you can read. Return ONLY a plain list — one item per line, no numbering, no bullet points, no extra text.
-If you can see quantities, include them at the start of the line (e.g. "2 gallons milk").
-If handwriting is unclear, make your best guess. Never say you cannot read it — always extract what you can.`,
-          messages:[{
-            role:'user',
-            content:[
-              { type:'image', source:{ type:'base64', media_type: mediaType, data: base64 } },
-              { type:'text', text:'Please read all the grocery items from this shopping list.' }
-            ]
-          }]
-        })
-      });
-
-      const data = await res.json();
-      const text = (data.content||[]).map(b=>b.text||'').join('').trim();
-      shopOcrItems = text.split('\n').map(l=>l.trim()).filter(Boolean);
-
-      document.getElementById('shopOcrItems').innerHTML =
-        shopOcrItems.map(item => `<div style="padding:3px 0;border-bottom:1px solid var(--border);">${esc(item)}</div>`).join('') +
-        `<button onclick="shopUseOcrItems()" style="margin-top:10px;width:100%;padding:10px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;">Use These Items ✓</button>`;
-    } catch(err){
-      document.getElementById('shopOcrItems').innerHTML =
-        '<div style="color:var(--danger);font-size:13px;">Could not read image. Try a clearer photo or type your list manually.</div>';
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-function shopUseOcrItems(){
-  shopSwitchInput('type');
-  document.getElementById('shopListText').value = shopOcrItems.join('\n');
-  showToast('Items imported — review and tap Find Best Prices','ok');
-}
-
-// ── Parse list text into items array ──
-function shopParseList(text){
-  return text.split(/[\n,]+/)
-    .map(l => l.trim().replace(/^[-•*]\s*/,''))
-    .filter(l => l.length > 1)
-    .map(l => {
-      // Try to split qty from name: "2 gallons milk" → qty:2, name:"gallons milk"
-      const m = l.match(/^(\d+\.?\d*)\s+(.+)/);
-      return m ? { qty: parseFloat(m[1]), name: m[2].trim(), raw: l } : { qty: 1, name: l, raw: l };
-    });
-}
-
-// ── Main search ──
-async function shopRunSearch(){
-  // Validate location
-  if(!shopLocation){
-    // Try to auto-use saved zip
-    const savedZip = loadU('zip','');
-    if(savedZip){
-      shopLocation = { zip: savedZip, label: savedZip };
-    } else {
-      showToast('Please enter your location first','');
-      document.getElementById('shopLocInput').focus();
-      return;
-    }
-  }
-
-  // Get the list
-  let rawText = '';
-  if(shopCurrentInputMode === 'type'){
-    rawText = document.getElementById('shopListText').value.trim();
-  } else if(shopCurrentInputMode === 'scan'){
-    rawText = shopOcrItems.join('\n');
-  }
-  if(!rawText){ showToast('Please enter a shopping list first',''); return; }
-
-  const items = shopParseList(rawText);
-  if(!items.length){ showToast('No items found in your list',''); return; }
-
-  // Get stores to search — use selected, fall back to profile prefs
-  let stores = shopSelectedStores.length ? shopSelectedStores : loadU('preferred_stores',[]);
-  if(!stores.length) stores = ['Walmart','Target','Publix','Kroger','Aldi'];
-
-  // If we haven't loaded nearby stores yet, do it first
-  if(!shopNearbyStoreData.length){
-    await shopFindNearbyStores();
-    stores = shopSelectedStores.length ? shopSelectedStores : stores;
-  }
-
-  // Show results section + loading
-  document.getElementById('shopResultsSection').style.display = 'block';
-  document.getElementById('shopLoading').style.display = 'block';
-  document.getElementById('shopResultsGrid').innerHTML = '';
-  document.getElementById('shopSearchBtn').disabled = true;
-  document.getElementById('shopResultsSub').textContent = '';
-
-  const loadMsgs = [
-    ['Checking prices at nearby stores…', ''],
-    ['Searching ' + stores.slice(0,3).join(', ') + '…', 'Comparing unit prices & quantities'],
-    ['Crunching the numbers…', 'Calculating your total at each store'],
-    ['Almost done…', 'Ranking results by total cost']
-  ];
-  let msgIdx = 0;
-  const loadInterval = setInterval(()=>{
-    if(msgIdx < loadMsgs.length){
-      document.getElementById('shopLoadingMsg').textContent = loadMsgs[msgIdx][0];
-      document.getElementById('shopLoadingStep').textContent = loadMsgs[msgIdx][1];
-      msgIdx++;
-    }
-  }, 1400);
-
-  document.getElementById('shopResultsSection').scrollIntoView({ behavior:'smooth', block:'start' });
-
-  try {
-    const hh       = loadU('household', 2);
-    const budget   = loadU('weekly_budget', 0);
-    const zip      = shopLocation.zip || loadU('zip','');
-    const freq     = loadU('shopping_freq','weekly');
-
-    // ── Try live pricing API first ──
-    let results = null;
-    try {
-      const liveRes = await fetch('/api/shop/prices', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ items, stores, zip, lat: shopLocation.lat, lng: shopLocation.lng }),
-        signal: AbortSignal.timeout(8000)
-      });
-      if(liveRes.ok) results = await liveRes.json();
-    } catch(e){ /* fall through to AI estimation */ }
-
-    // ── AI price estimation fallback ──
-    if(!results){
-      const systemPrompt = `You are a grocery price expert for US stores. Given a shopping list and a set of stores, estimate realistic current prices for each item at each store.
-Return ONLY valid JSON — no markdown, no explanation — in exactly this format:
-{
-  "stores": [
-    {
-      "name": "StoreName",
-      "items": [
-        { "name": "item name", "price": 3.49, "unit": "per lb", "available": true },
-        { "name": "item name", "price": null, "available": false }
-      ],
-      "total": 42.17,
-      "notes": "one short sentence about this store's strengths"
-    }
-  ]
-}
-Use realistic 2025 US prices. Reflect known price differences between stores (e.g. Aldi/Walmart cheaper than Whole Foods/Trader Joe's). Mark items unavailable if the store genuinely wouldn't carry them. Include a total for each store.`;
-
-      const userPrompt = `Location: ${zip || 'US'}
-Household size: ${hh} people
-Stores to check: ${stores.join(', ')}
-
-Shopping list:
-${items.map(i => `- ${i.qty > 1 ? i.qty + 'x ' : ''}${i.name}`).join('\n')}
-
-Return prices for every item at every store.`;
-
-      const res = await anthropicFetch({
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:2000,
-          system: systemPrompt,
-          messages:[{ role:'user', content: userPrompt }]
-        })
-      });
-
-      const data = await res.json();
-      const raw = (data.content||[]).map(b=>b.text||'').join('').trim();
-      const clean = raw.replace(/```json|```/g,'').trim();
-      results = JSON.parse(clean);
-    }
-
-    clearInterval(loadInterval);
-    document.getElementById('shopLoading').style.display = 'none';
-    shopRenderResults(results, items, stores);
-
-  } catch(err){
-    clearInterval(loadInterval);
-    document.getElementById('shopLoading').style.display = 'none';
-    document.getElementById('shopResultsGrid').innerHTML =
-      `<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px;">
-        Something went wrong. Check your connection and try again.<br>
-        <small style="color:var(--muted);">${esc(err.message||'')}</small>
-      </div>`;
-  }
-
-  document.getElementById('shopSearchBtn').disabled = false;
-}
-
-// ── Render results ──
-function shopRenderResults(data, items, stores){
-  const storeResults = (data.stores || []).sort((a,b) => (a.total||999) - (b.total||999));
-  const grid = document.getElementById('shopResultsGrid');
-  const cheapest = storeResults[0];
-
-  document.getElementById('shopResultsSub').textContent =
-    `${items.length} item${items.length!==1?'s':''} · ${storeResults.length} store${storeResults.length!==1?'s':''} compared`;
-
-  grid.innerHTML = storeResults.map((store, rank) => {
-    const isWinner = rank === 0;
-    const isRunner = rank === 1;
-    const cardClass = isWinner ? 'winner' : isRunner ? 'runner' : '';
-    const savings = isWinner ? '' :
-      (cheapest.total && store.total ? `$${(store.total - cheapest.total).toFixed(2)} more than ${esc(cheapest.name)}` : '');
-
-    const nearbyData = shopNearbyStoreData.find(s => s.name === store.name);
-    const distLabel = nearbyData?.distance ? `<div class="shop-store-dist-lbl">📍 ${esc(nearbyData.distance)} away</div>` : '';
-
-    const itemRows = (store.items || []).map(item => {
-      const priceStr = item.available && item.price != null
-        ? `<span class="shop-item-price">$${parseFloat(item.price).toFixed(2)}${item.unit ? ' <small style="font-weight:400;font-size:11px;color:var(--muted);">'+esc(item.unit)+'</small>' : ''}</span>`
-        : `<span class="shop-item-na">not available</span>`;
-      return `<div class="shop-item-row"><span class="shop-item-name">${esc(item.name)}</span>${priceStr}</div>`;
-    }).join('');
-
-    const winnerBadge = isWinner ? '<span class="shop-winner-badge">BEST DEAL</span>' : '';
-    const totalColor = isWinner ? 'var(--ok)' : 'var(--brand)';
-
-    return `<div class="shop-store-card ${cardClass}">
-      <div class="shop-store-card-hdr">
-        <div class="shop-rank-badge">${rank+1}</div>
-        <div style="flex:1;">
-          <div class="shop-store-name">${esc(store.name)} ${winnerBadge}</div>
-          ${distLabel}
-          ${store.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(store.notes)}</div>` : ''}
-        </div>
-        <div style="text-align:right;">
-          <div class="shop-store-total" style="color:${totalColor};">$${parseFloat(store.total||0).toFixed(2)}</div>
-          ${savings ? `<div class="shop-store-savings" style="color:var(--muted);">${savings}</div>` : '<div class="shop-store-savings">Cheapest option</div>'}
-        </div>
-      </div>
-      <div class="shop-item-list">${itemRows}</div>
-    </div>`;
-  }).join('');
-
-  // Add to Grocery List button for winner
-  if(cheapest){
-    grid.innerHTML += `
-      <button class="shop-add-all-btn" onclick="shopAddWinnerToList('${esc(cheapest.name)}')">
-        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-        Add ${esc(cheapest.name)} List to Grocery Lists
-      </button>`;
-  }
-
-  // Save to history
-  saveU('shop_last_results', { date: Date.now(), stores: storeResults.map(s=>({name:s.name,total:s.total})), itemCount: items.length });
-}
-
-// ── Add winner store's items to a grocery list ──
-function shopAddWinnerToList(storeName){
-  // Find or create a list named after the store
-  let list = groceryLists.find(l => l.name === storeName + ' Run') || null;
-  if(!list){
-    const lid = 'list_shop_' + Date.now();
-    list = { id: lid, name: storeName + ' Run' };
-    groceryLists.push(list);
-    saveU('glists', groceryLists);
-    activeListId = lid;
-  }
-
-  // Parse items from current text
-  const rawText = document.getElementById('shopListText').value.trim() || shopOcrItems.join('\n');
-  const items = shopParseList(rawText);
-  items.forEach(item => {
-    groceryItems.push({
-      id: 'gi_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
-      listId: list.id,
-      name: item.name,
-      qty: item.qty || 1,
-      price: '',
-      store: storeName,
-      notes: '',
-      checked: false
-    });
-  });
-  saveU('gitems', groceryItems);
-  showToast(`Added ${items.length} items to "${list.name}" list`, 'ok');
-  setTimeout(()=>{ goTab('grocery'); activeListId = list.id; renderListNav(); renderGroceryContent(); }, 800);
-}
-
-function shopClearResults(){
-  document.getElementById('shopResultsSection').style.display = 'none';
-  document.getElementById('shopResultsGrid').innerHTML = '';
-  document.getElementById('shopListText').value = '';
-  shopOcrItems = [];
-  document.getElementById('shopOcrResult').style.display = 'none';
-  document.getElementById('shopPreviewImg').style.display = 'none';
-  const img = document.getElementById('shopPreviewImg'); if(img) img.src='';
-  window.scrollTo({top:0,behavior:'smooth'});
-}
 
 // ────────────────────────────────────────────────
 // INIT
