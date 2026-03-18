@@ -3723,7 +3723,8 @@ async function pennySend(){
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: buildSys(), messages: apiMessages })
     });
     const data = await res.json();
-    const txt = data.content?.[0]?.text || 'Something went wrong. Try again.';
+    const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
+    const txt = pennyExecuteAddList(rawTxt);
     pennyRemoveTyping();
     pennyAddMessage('penny', txt);
     // Generate a meaningful title from the first exchange (non-blocking)
@@ -3929,6 +3930,12 @@ function buildSys(){
   const budget=loadU('weekly_budget',0);
   const freq=loadU('shop_frequency','');
   const ln=lang==='es'?'Spanish':lang==='pt'?'Portuguese':'English';
+
+  // Include current grocery list context
+  const listNames = groceryLists.map(l=>l.name).join(', ') || 'none yet';
+  const activeList = groceryLists.find(l=>l.id===activeListId);
+  const activeListName = activeList ? activeList.name : (groceryLists[0]?.name || 'My Weekly Essentials');
+
   const cards=[];
   for(let i=0;i<items;i++){
     const p=parseFloat(document.getElementById('p-'+i)?.value)||0;
@@ -3965,19 +3972,81 @@ function buildSys(){
   return `You are Penny, a warm and knowledgeable grocery shopping advisor — like a smart friend who knows prices inside and out. Always respond in ${ln}.
 
 ${contextLines}
+Grocery lists: ${listNames} | Active list: "${activeListName}"
 
 Products being compared:
 ${lines||'(none entered yet)'}
 
-Response rules — follow this order every time:
-1. Name the winner immediately and clearly.
-2. In 1-2 sentences explain WHY: use cost-per-day or how long it lasts for this household.
-3. If stores are set, give a quick price estimate at each one (label them as estimates).
-4. End with one clear, direct recommendation.
-5. Keep it conversational — like a text from a knowledgeable friend.
-6. 200 words max. Write in flowing sentences, never bullet points.
+GROCERY LIST POWER — You CAN directly add items to the user's grocery list. When the user asks you to make a list, create a list, add items, or anything similar:
+1. Give your friendly response as normal.
+2. At the very end of your reply, on its own line, add a special tag in this exact format:
+ADDLIST:[{"name":"Item Name","qty":1,"notes":"optional note"},{"name":"Another Item","qty":2,"notes":""}]
+Use realistic item names, sensible quantities (e.g. 1 for a bag/box, 2 for common multiples).
+Include notes like "1 gallon", "organic", "bulk", etc. when helpful.
+Only include the ADDLIST tag when the user explicitly wants items added. Do not show the tag in your visible reply — it will be processed automatically and items added to their "${activeListName}" list.
 
-If no products are listed yet, warmly invite the user to share what they want to compare and offer a helpful example. For follow-up questions stay concise and helpful.`;
+Response rules:
+1. Be warm and conversational — like a text from a knowledgeable friend.
+2. 200 words max for general answers. For grocery lists, keep your text brief and let the list do the work.
+3. Write in flowing sentences, never bullet points.
+4. If no products are listed yet for comparing, invite the user to share what they want to compare.`;
+}
+
+// Parse and execute ADDLIST commands from Penny's response
+function pennyExecuteAddList(rawText){
+  const match = rawText.match(/ADDLIST:(\[[\s\S]*?\])/);
+  if(!match) return rawText; // no command found
+
+  const cleanText = rawText.replace(/ADDLIST:\[[\s\S]*?\]/, '').trim();
+
+  try {
+    const itemsToAdd = JSON.parse(match[1]);
+    if(!Array.isArray(itemsToAdd) || !itemsToAdd.length) return cleanText;
+
+    // Ensure there's a grocery list to add to
+    if(!groceryLists.length){
+      const lid = 'list_penny_' + Date.now();
+      groceryLists.push({ id: lid, name: 'My Weekly Essentials' });
+      saveU('glists', groceryLists);
+      activeListId = lid;
+      renderListNav();
+    }
+    const targetListId = activeListId || groceryLists[0].id;
+    const targetList = groceryLists.find(l => l.id === targetListId) || groceryLists[0];
+
+    let added = 0;
+    itemsToAdd.forEach(item => {
+      if(!item.name || !item.name.trim()) return;
+      const gi = {
+        id: 'gi_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+        listId: targetList.id,
+        name: item.name.trim(),
+        qty: item.qty || 1,
+        price: '',
+        store: '',
+        notes: item.notes || '',
+        checked: false
+      };
+      groceryItems.push(gi);
+      added++;
+    });
+
+    if(added > 0){
+      saveU('gitems', groceryItems);
+      renderListNav();
+      if(activeListId === targetList.id) renderGroceryContent();
+      const listMsg = lang==='es'
+        ? `Penny agregó ${added} artículo${added!==1?'s':''} a "${targetList.name}"`
+        : lang==='pt'
+        ? `Penny adicionou ${added} ite${added!==1?'ns':'m'} a "${targetList.name}"`
+        : `Penny added ${added} item${added!==1?'s':''} to "${targetList.name}"`;
+      showToast(listMsg, 'ok');
+    }
+  } catch(e){
+    console.warn('Penny ADDLIST parse error:', e);
+  }
+
+  return cleanText;
 }
 
 // ────────────────────────────────────────────────
