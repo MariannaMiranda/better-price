@@ -4299,20 +4299,20 @@ Active list: "${activeListName}"
 Products being compared:
 ${lines||'(none entered yet)'}
 
-ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply on their own lines. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover — just do it.
+LIST MANAGEMENT — You have FULL ability to create, rename, delete, and manage the user's grocery lists. Execute actions by appending command tags on their own lines at the very end of your reply. Tags are invisible to the user and processed automatically. NEVER say you can't do something these commands cover — just do it.
 
-Commands (append at end, multiple allowed):
+COMMAND REFERENCE (append at end of reply, multiple allowed):
 
-Add items to a list:
-ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+Add items to an EXISTING list (list must already exist):
+ADDLIST:{"list":"Exact List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
 
-Remove items by name (partial match ok):
-REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
+Create a NEW list (and optionally pre-fill it with items):
+CREATELIST:{"name":"New List Name","items":[{"name":"Item","qty":1,"notes":""}]}
 
-Create a new list (optionally pre-filled):
-CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
+Remove items from a list (partial name match ok):
+REMOVEITEMS:{"list":"List Name","items":["egg","milk"]}
 
-Delete an entire list:
+Delete an entire list permanently:
 DELETELIST:{"name":"List Name"}
 
 Rename a list:
@@ -4321,69 +4321,47 @@ RENAMELIST:{"from":"Old Name","to":"New Name"}
 Clear all checked-off items from a list:
 CLEARCHECKED:{"list":"List Name"}
 
-Move items from one list to another:
+Move items between lists:
 MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
 
-ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover.
+CRITICAL RULES — follow these exactly:
 
-Commands (append at end of reply, multiple allowed):
+1. CREATING A NEW LIST: When the user asks for a new list or names a list that doesn't exist yet, ALWAYS use CREATELIST — never ADDLIST to an unknown name. If the user specifies the name (e.g. "add it to a Sunday dinner groceries list"), create it immediately with CREATELIST and add the items in the same command. Do NOT ask for a name if the user already gave one.
 
-Add items to existing list:
-ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+2. ADDING TO EXISTING LISTS: When adding to a list that already exists, use ADDLIST with the exact existing list name. Do it immediately — no confirmation needed.
 
-Remove items by name (partial match ok):
-REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
+3. Never mix up ADDLIST and CREATELIST — ADDLIST is for existing lists only, CREATELIST is for new ones.
 
-Create a new list (optionally pre-filled):
-CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
+4. Keep replies warm, brief, conversational — 150 words max. No bullet points. No command tags visible in your reply text.
 
-Delete an entire list:
-DELETELIST:{"name":"List Name"}
+5. After completing any list action, offer one quick helpful tip (store recommendation, bulk savings, estimated cost, etc.).
 
-Rename a list:
-RENAMELIST:{"from":"Old Name","to":"New Name"}
-
-Clear all checked-off items from a list:
-CLEARCHECKED:{"list":"List Name"}
-
-Move items from one list to another:
-MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
-
-CONVERSATION RULES — follow these exactly:
-
-1. CREATING A NEW LIST: Never auto-create a list without asking for a name first. If the user wants a new list, ask: what would you like to name it? Then once they reply with a name, create it with CREATELIST. Exception: if the user explicitly says the name in their message (e.g. "make a list called Party"), create it immediately.
-
-2. ADDING ITEMS: Before adding items to a new list, ask if they want any extra notes per item (store preference, brand, size) or if they want you to recommend quantities based on their household size. Keep this quick — one friendly sentence. Then add immediately after they respond (or if they say "just add them" skip the question and add right away).
-
-3. EXISTING LISTS: When adding to an existing list by name, just do it — no need to ask.
-
-4. RECOMMENDATIONS: Always offer a brief helpful tip after completing an action (e.g. best store for those items, bulk buying suggestion, estimated cost).
-
-5. Keep replies warm, brief, conversational. 150 words max. No bullet points. No command tags visible.
-- Use the active list "${activeListName}" when no list name is specified and the user wants to add to an existing list.`;
+Active list is "${activeListName}" — use this when the user says "my list" or doesn't specify a list name.`;
 }
 
 // ── Penny Account Action Engine ──
 function pennyUID(){ return 'gi_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
 
 function pennyResolveList(nameHint){
+  // No hint: use active list or first list (safe fallback)
   if(!nameHint) return groceryLists.find(l => l.id === activeListId) || groceryLists[0];
-  const lower = nameHint.toLowerCase();
+  const lower = nameHint.trim().toLowerCase();
+  // Exact match first, then partial — but NEVER fall back to active/first list
+  // when a specific name was given and doesn't match. Return null so caller knows.
   return groceryLists.find(l => l.name.toLowerCase() === lower)
       || groceryLists.find(l => l.name.toLowerCase().includes(lower))
-      || groceryLists.find(l => l.id === activeListId)
-      || groceryLists[0];
+      || null;
 }
 
 function pennyEnsureList(name){
-  let list = pennyResolveList(name);
-  if(!list || (name && list.name.toLowerCase() !== name.toLowerCase() && !list.name.toLowerCase().includes(name.toLowerCase()))){
-    list = { id: 'list_penny_' + Date.now(), name: name || 'Penny List' };
-    groceryLists.push(list);
-    saveU('glists', groceryLists);
-    activeListId = list.id;
-    renderListNav();
-  }
+  // Only create if truly not found
+  const existing = pennyResolveList(name);
+  if(existing) return existing;
+  const list = { id: 'list_penny_' + Date.now(), name: (name || 'Penny List').trim() };
+  groceryLists.push(list);
+  saveU('glists', groceryLists);
+  activeListId = list.id;
+  renderListNav();
   return list;
 }
 
@@ -4410,8 +4388,16 @@ function pennyExecuteActions(rawText){
     const d = cmd.data;
     try {
       if(cmd.type === 'ADDLIST'){
-        if(!groceryLists.length){ pennyEnsureList(d.list || activeListName); }
-        const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
+        // ADDLIST only targets an EXISTING list — never silently creates or falls back.
+        // If the list doesn't exist, Penny should have used CREATELIST first.
+        // Fallback with no name hint: use active list.
+        let list = d.list ? pennyResolveList(d.list) : (groceryLists.find(l=>l.id===activeListId)||groceryLists[0]);
+        if(!list){
+          // List name given but doesn't exist — auto-create it so items aren't lost
+          list = { id: 'list_penny_'+Date.now(), name: d.list.trim() };
+          groceryLists.push(list); saveLists=true; activeListId=list.id; renderListNav();
+          toasts.push('Created "'+list.name+'"');
+        }
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
         if(n){ saveItms=true; toasts.push(`Added ${n} item${n!==1?'s':''} to "${list.name}"`); }
