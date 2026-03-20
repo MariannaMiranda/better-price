@@ -1132,7 +1132,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
     <div class="products-wrap"><div class="products-grid" id="grid"></div></div>
     <div class="compare-wrap"><button id="compareBtn" onclick="compare()">COMPARE</button></div>
-    <div class="analysis-wrap"><div class="analysis-row"><textarea id="analysisBox" readonly placeholder="Results will appear here..."></textarea><button class="btn-save-analysis" onclick="saveAnalysisAsPreset()"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save to Preset</button></div></div>
+    <div class="analysis-wrap"><div class="analysis-row"><textarea id="analysisBox" readonly placeholder="Results will appear here..."></textarea><button class="btn-save-analysis" onclick="saveAnalysisAsPreset()"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span id="txt-save-preset">Save to Preset</span></button></div></div>
   </div>
 
   <!-- HISTORY TAB -->
@@ -2301,9 +2301,7 @@ function applyLang(){
   const tipTexts   = [t.hf1, t.hf2, t.hf3, t.hf4, t.hf6];
   helpBadges.forEach((b,i)=>{ if(badgeKeys[i]) b.innerText=badgeKeys[i]; });
   helpTips.forEach((tip,i)=>{ if(tipTexts[i]){ const badge=tip.querySelector('.help-badge'); tip.innerHTML=(badge?badge.outerHTML:'')+' '+tipTexts[i]; } });
-  // Save to Preset button
-  const savePresetBtn = document.querySelector('.btn-save-analysis');
-  if(savePresetBtn){ const svgEl=savePresetBtn.querySelector('svg'); savePresetBtn.innerHTML=''; if(svgEl) savePresetBtn.appendChild(svgEl); savePresetBtn.append(' '+(t.saveToPreset||'Save to Preset')); }
+  setText('txt-save-preset', t.saveToPreset);
   // Re-render history so empty state translates
   if(typeof renderHistory === 'function') renderHistory();
   // Re-render category pickers
@@ -2312,6 +2310,7 @@ function applyLang(){
   const savedCards=[]; for(let i=0;i<items;i++) savedCards.push(getCard(i));
   updateGrid();
   savedCards.forEach((d,i)=>{ if(i<items) setCard(i,d); });
+  translateStarterData(); renderListNav();
   if(activeListId) renderGroceryContent();
   renderPresets();
 
@@ -3155,36 +3154,83 @@ function catPickerClearName(idx){
   if(bd) bd.classList.remove('open');
 }
 
+// Translations for the auto-generated starter grocery list
+const STARTER_NAMES = {
+  listName:{ en:'My Weekly Essentials', es:'Mis productos semanales', pt:'Meus essenciais semanais' },
+  s1:{ en:'Eggs', es:'Huevos', pt:'Ovos' },
+  s2:{ en:'Milk', es:'Leche', pt:'Leite' },
+  s3:{ en:'Bread', es:'Pan', pt:'Pão' },
+  s4:{ en:'Butter', es:'Mantequilla', pt:'Manteiga' },
+  s5:{ en:'Chicken Breast', es:'Pechuga de pollo', pt:'Peito de frango' },
+  s6:{ en:'Ground Beef', es:'Carne molida', pt:'Carne moída' },
+  s7:{ en:'Bananas', es:'Plátanos', pt:'Bananas' },
+  s8:{ en:'Apples', es:'Manzanas', pt:'Maçãs' },
+  s9:{ en:'Spinach', es:'Espinacas', pt:'Espinafre' },
+  s10:{ en:'Tomatoes', es:'Tomates', pt:'Tomates' },
+  s11:{ en:'Onions', es:'Cebollas', pt:'Cebolas' },
+  s12:{ en:'Garlic', es:'Ajo', pt:'Alho' },
+  s13:{ en:'Rice', es:'Arroz', pt:'Arroz' },
+  s14:{ en:'Pasta', es:'Pasta', pt:'Macarrão' },
+  s15:{ en:'Pasta Sauce', es:'Salsa para pasta', pt:'Molho para macarrão' },
+  s16:{ en:'Canned Beans', es:'Frijoles enlatados', pt:'Feijão enlatado' },
+  s17:{ en:'Olive Oil', es:'Aceite de oliva', pt:'Azeite de oliva' },
+  s18:{ en:'Shredded Cheese', es:'Queso rallado', pt:'Queijo ralado' },
+  s19:{ en:'Yogurt', es:'Yogur', pt:'Iogurte' },
+  s20:{ en:'Orange Juice', es:'Jugo de naranja', pt:'Suco de laranja' },
+  s21:{ en:'Laundry Detergent', es:'Detergente para ropa', pt:'Sabão em pó' },
+  s22:{ en:'Dish Soap', es:'Lavavajillas', pt:'Detergente para louça' },
+  s23:{ en:'Toilet Paper', es:'Papel higiénico', pt:'Papel higiênico' },
+  s24:{ en:'Paper Towels', es:'Papel de cocina', pt:'Papel-toalha' },
+};
+
+function translateStarterData(){
+  const l = lang||'en';
+  let changed = false;
+  groceryLists.forEach(list => {
+    if(list.starterList && STARTER_NAMES.listName[l] && list.name !== STARTER_NAMES.listName[l]){
+      list.name = STARTER_NAMES.listName[l]; changed = true;
+    }
+  });
+  groceryItems.forEach(item => {
+    if(item.starterKey && STARTER_NAMES[item.starterKey] && STARTER_NAMES[item.starterKey][l]){
+      if(item.name !== STARTER_NAMES[item.starterKey][l]){ item.name = STARTER_NAMES[item.starterKey][l]; changed = true; }
+    }
+  });
+  if(changed){ saveU('glists', groceryLists); saveU('gitems', groceryItems); }
+}
+
 function createStarterGroceryList(){
   const existing = loadU('glists', []);
   if(existing.length > 0) return; // only for brand new users
   const lid = 'list_starter_' + Date.now();
-  const list = { id: lid, name: 'My Weekly Essentials' };
+  const l = lang||'en';
+  const SN = STARTER_NAMES;
+  const list = { id: lid, name: SN.listName[l]||SN.listName.en, starterList: true };
   const starterItems = [
-    {id:'s1',listId:lid,name:'Eggs',qty:1,price:'',store:'',notes:'1 dozen',checked:false},
-    {id:'s2',listId:lid,name:'Milk',qty:1,price:'',store:'',notes:'1 gallon',checked:false},
-    {id:'s3',listId:lid,name:'Bread',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s4',listId:lid,name:'Butter',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s5',listId:lid,name:'Chicken Breast',qty:2,price:'',store:'',notes:'lbs',checked:false},
-    {id:'s6',listId:lid,name:'Ground Beef',qty:1,price:'',store:'',notes:'1 lb',checked:false},
-    {id:'s7',listId:lid,name:'Bananas',qty:1,price:'',store:'',notes:'1 bunch',checked:false},
-    {id:'s8',listId:lid,name:'Apples',qty:1,price:'',store:'',notes:'1 bag',checked:false},
-    {id:'s9',listId:lid,name:'Spinach',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s10',listId:lid,name:'Tomatoes',qty:2,price:'',store:'',notes:'',checked:false},
-    {id:'s11',listId:lid,name:'Onions',qty:1,price:'',store:'',notes:'3 lb bag',checked:false},
-    {id:'s12',listId:lid,name:'Garlic',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s13',listId:lid,name:'Rice',qty:1,price:'',store:'',notes:'5 lb bag',checked:false},
-    {id:'s14',listId:lid,name:'Pasta',qty:1,price:'',store:'',notes:'1 lb box',checked:false},
-    {id:'s15',listId:lid,name:'Pasta Sauce',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s16',listId:lid,name:'Canned Beans',qty:2,price:'',store:'',notes:'',checked:false},
-    {id:'s17',listId:lid,name:'Olive Oil',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s18',listId:lid,name:'Shredded Cheese',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s19',listId:lid,name:'Yogurt',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s20',listId:lid,name:'Orange Juice',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s21',listId:lid,name:'Laundry Detergent',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s22',listId:lid,name:'Dish Soap',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s23',listId:lid,name:'Toilet Paper',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s24',listId:lid,name:'Paper Towels',qty:1,price:'',store:'',notes:'',checked:false},
+    {id:'s1',listId:lid,name:SN.s1[l]||SN.s1.en,qty:1,price:'',store:'',notes:'1 dozen',checked:false,starterKey:'s1'},
+    {id:'s2',listId:lid,name:SN.s2[l]||SN.s2.en,qty:1,price:'',store:'',notes:'1 gallon',checked:false,starterKey:'s2'},
+    {id:'s3',listId:lid,name:SN.s3[l]||SN.s3.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s3'},
+    {id:'s4',listId:lid,name:SN.s4[l]||SN.s4.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s4'},
+    {id:'s5',listId:lid,name:SN.s5[l]||SN.s5.en,qty:2,price:'',store:'',notes:'lbs',checked:false,starterKey:'s5'},
+    {id:'s6',listId:lid,name:SN.s6[l]||SN.s6.en,qty:1,price:'',store:'',notes:'1 lb',checked:false,starterKey:'s6'},
+    {id:'s7',listId:lid,name:SN.s7[l]||SN.s7.en,qty:1,price:'',store:'',notes:'1 bunch',checked:false,starterKey:'s7'},
+    {id:'s8',listId:lid,name:SN.s8[l]||SN.s8.en,qty:1,price:'',store:'',notes:'1 bag',checked:false,starterKey:'s8'},
+    {id:'s9',listId:lid,name:SN.s9[l]||SN.s9.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s9'},
+    {id:'s10',listId:lid,name:SN.s10[l]||SN.s10.en,qty:2,price:'',store:'',notes:'',checked:false,starterKey:'s10'},
+    {id:'s11',listId:lid,name:SN.s11[l]||SN.s11.en,qty:1,price:'',store:'',notes:'3 lb bag',checked:false,starterKey:'s11'},
+    {id:'s12',listId:lid,name:SN.s12[l]||SN.s12.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s12'},
+    {id:'s13',listId:lid,name:SN.s13[l]||SN.s13.en,qty:1,price:'',store:'',notes:'5 lb bag',checked:false,starterKey:'s13'},
+    {id:'s14',listId:lid,name:SN.s14[l]||SN.s14.en,qty:1,price:'',store:'',notes:'1 lb box',checked:false,starterKey:'s14'},
+    {id:'s15',listId:lid,name:SN.s15[l]||SN.s15.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s15'},
+    {id:'s16',listId:lid,name:SN.s16[l]||SN.s16.en,qty:2,price:'',store:'',notes:'',checked:false,starterKey:'s16'},
+    {id:'s17',listId:lid,name:SN.s17[l]||SN.s17.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s17'},
+    {id:'s18',listId:lid,name:SN.s18[l]||SN.s18.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s18'},
+    {id:'s19',listId:lid,name:SN.s19[l]||SN.s19.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s19'},
+    {id:'s20',listId:lid,name:SN.s20[l]||SN.s20.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s20'},
+    {id:'s21',listId:lid,name:SN.s21[l]||SN.s21.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s21'},
+    {id:'s22',listId:lid,name:SN.s22[l]||SN.s22.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s22'},
+    {id:'s23',listId:lid,name:SN.s23[l]||SN.s23.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s23'},
+    {id:'s24',listId:lid,name:SN.s24[l]||SN.s24.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s24'},
   ];
   saveU('glists', [list]);
   saveU('gitems', starterItems);
@@ -3592,7 +3638,7 @@ function saveEditItem(){
   const item=groceryItems.find(i=>i.id===id); if(!item)return;
   const name=document.getElementById('edit-name').value.trim();
   if(!name){ showToast(T().toastItemNameEmpty); return; }
-  item.name=name;
+  item.name=name; delete item.starterKey; // user edited — stop auto-translating
   item.qty=document.getElementById('edit-qty').value||'1';
   item.price=document.getElementById('edit-price').value;
   item.store=document.getElementById('edit-store').value.trim();
@@ -4918,7 +4964,7 @@ function pennyExecuteActions(rawText){
         const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
-        if(n){ saveItms=true; toasts.push(`Added ${n} item${n!==1?'s':''} to "${list.name}"`); }
+        if(n){ saveItms=true; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
       }
       else if(cmd.type === 'CREATELIST'){
         const lid = 'list_penny_' + Date.now();
