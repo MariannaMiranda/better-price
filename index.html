@@ -2386,6 +2386,10 @@ function applyLang(){
   // ── Help modal ──
   const helpModalTitle = document.querySelector('#helpModal .modal-title');
   if(helpModalTitle) helpModalTitle.innerText = lang==='es'?'Guía de ayuda':lang==='pt'?'Guia de ajuda':'Help Guide';
+
+  // Re-render Penny so welcome screen and session list reflect new language
+  if(typeof renderPennyMessages === 'function') renderPennyMessages();
+  if(typeof renderPennySessions === 'function') renderPennySessions();
 }
 
 function changeLang(src){
