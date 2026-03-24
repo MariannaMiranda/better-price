@@ -547,7 +547,8 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 }
 @media(max-width:680px){
   .grocery-layout{flex-direction:column;}
-  .grocery-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:12px;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;}
+  .grocery-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:12px;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;}
+  #listNav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
   .sidebar-section-label{display:none;}
   .grocery-content{padding:16px 14px;}
 }
@@ -872,6 +873,9 @@ body.dark .penny-attach-btn{color:#7a9fc0;}
 .penny-drop-overlay{position:absolute;inset:0;z-index:20;border-radius:inherit;background:rgba(13,71,161,.13);border:2.5px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;}
 .penny-drop-overlay span{background:var(--brand);color:#fff;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:600;font-family:var(--font-d);}
 .penny-drag-active .penny-drop-overlay{display:flex;}
+.lp-drop-overlay{position:absolute;inset:0;z-index:30;border-radius:inherit;background:rgba(13,71,161,.13);border:2.5px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;}
+.lp-drop-overlay span{background:var(--brand);color:#fff;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:600;font-family:var(--font-d);}
+.lp-drag-active .lp-drop-overlay{display:flex;}
 body.dark .penny-context-btn{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
 body.dark .penny-context-btn:hover{background:#1a3d66;color:#fff;}
 body.dark #pennyPricePanel{background:#111f2e;border-color:#4d8fcc;}
@@ -1125,7 +1129,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             style="width:100%;padding:18px 20px;border:2px solid var(--brand);border-radius:var(--rsm);font-size:28px;font-weight:700;font-family:var(--font-m);text-align:center;background:var(--brand-light);color:var(--text);outline:none;letter-spacing:6px;"
             placeholder="- - - - -" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5);document.getElementById('ob-zip-err').style.display='none';this.style.borderColor='';">
         </div>
-        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;">US zip codes only &mdash; used to find the best nearby deals</div>
+        <div id="ob-zip-note" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;">US zip codes only &mdash; used to find the best nearby deals</div>
       </div>
       <button class="onboard-next" onclick="tryFinishOnboarding()">Get Started &#8594;</button>
       <span class="onboard-skip" onclick="obSkipped[5]=true;finishOnboarding()">Skip for now</span>
@@ -1136,17 +1140,19 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 <button id="landing-penny-fab" onclick="toggleLandingPenny()" title="Chat with Penny" style="display:none;">
   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 </button>
-<div id="landing-penny-popup">
+<div id="landing-penny-popup" style="position:relative;"
+  ondragenter="lpDragEnter(event)" ondragover="lpDragOver(event)" ondragleave="lpDragLeave(event)" ondrop="lpDrop(event)">
+  <div class="lp-drop-overlay"><span>Drop image here</span></div>
   <div class="lp-header">
   <div class="lp-avatar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
     <div class="lp-header-info">
       <div class="lp-header-name">Penny</div>
-      <div class="lp-header-sub">AI Shopping Advisor</div>
+      <div class="lp-header-sub" id="lp-header-sub">AI Shopping Advisor</div>
     </div>
     <button class="lp-close-btn" onclick="toggleLandingPenny()">&#10005;</button>
   </div>
   <div class="lp-msgs" id="lp-msgs">
-    <div class="lp-msg lp-penny">Hi! I'm Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!</div>
+    <div class="lp-msg lp-penny lp-initial-msg">Hi! I'm Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!</div>
   </div>
   <div class="lp-input-row">
     <textarea class="lp-textarea" id="lp-input" rows="1" placeholder="Ask Penny..." onkeydown="lpKeyDown(event)"></textarea>
@@ -1309,7 +1315,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
         <div class="penny-messages" id="pennyMessages" style="position:relative;"
           ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
-          <div class="penny-drop-overlay"><span>📎 Drop image to send</span></div>
+          <div class="penny-drop-overlay"><span>Drop image here</span></div>
           <div class="penny-welcome">
             <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
             <div class="penny-welcome-text" id="pennyWelcomeText">Hey! I'm Penny, your AI shopping advisor.</div>
@@ -1698,7 +1704,7 @@ let listNameCallback = null;
 let dupItemId = null;
 
 const CURR_RATES = { '$':1 };
-const UNIT_RATES = { oz:1, lb:16, g:0.035274, kg:35.274, ml:0.033814, l:33.814, gal:128, count:1, ft:1, in:0.083333, yd:3, m:3.28084 };
+const UNIT_RATES = { oz:1, lb:16, g:0.035274, kg:35.274, ml:0.033814, l:33.814, gal:128, count:1, sheets:1, ft:1, in:0.083333, yd:3, m:3.28084 };
 
 function initTheme(){ applyTheme(localStorage.getItem('bp_theme')==='dark'); }
 function toggleTheme(){ applyTheme(!document.body.classList.contains('dark')); }
@@ -2349,7 +2355,7 @@ function applyLang(){
   const obOtherChip = document.getElementById('ob-other-chip');
   if(obOtherChip&&t.storeOther) obOtherChip.textContent=t.storeOther;
 
-  if(t.zipNote){ const zn=document.querySelector('#ob-step-5 input + div'); if(zn) zn.textContent=t.zipNote; }
+  if(t.zipNote){ const zn=document.getElementById('ob-zip-note'); if(zn) zn.textContent=t.zipNote; }
 
   const pennyNewBtn = document.querySelector('.penny-new-btn');
   if(pennyNewBtn&&t.pennyNewChat){ const svg=pennyNewBtn.querySelector('svg'); pennyNewBtn.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyNewChat; pennyNewBtn.setAttribute('onclick','pennyNewChat()'); }
@@ -2374,6 +2380,18 @@ function applyLang(){
   const pennyZipLbl = document.getElementById('pennyPriceZipLbl');
   if(pennyZipLbl){ const zip=typeof loadU==='function'?loadU('zip',''):''; pennyZipLbl.textContent=zip?(t.pennyZipNear||'Searching near')+' '+zip:(t.pennyZipNoZip||'Enter your zip in Profile for local results'); }
   setPh('pennyInput', lang==='es'?'Pregúntale algo a Penny...':lang==='pt'?'Pergunte algo a Penny...':'Ask Penny anything...');
+
+  // Landing popup Penny UI
+  const lpSub=document.getElementById('lp-header-sub');
+  if(lpSub) lpSub.textContent=lang==='es'?'Asesora de Compras IA':lang==='pt'?'Consultora de Compras IA':'AI Shopping Advisor';
+  setPh('lp-input', lang==='es'?'Pregúntale a Penny...':lang==='pt'?'Pergunte a Penny...':'Ask Penny...');
+  const lpSendBtn=document.getElementById('lp-send-btn');
+  if(lpSendBtn) lpSendBtn.textContent=lang==='es'?'Enviar':lang==='pt'?'Enviar':'Send';
+  const lpInitial=document.querySelector('#lp-msgs .lp-initial-msg');
+  if(lpInitial) lpInitial.textContent=lang==='es'?'¡Hola! Soy Penny, tu asesora de compras con IA. ¡Pregúntame cualquier cosa sobre ahorro en compras o cómo funciona la app!':lang==='pt'?'Olá! Sou Penny, sua consultora de compras com IA. Pergunte-me qualquer coisa sobre economias em compras ou como o app funciona!':'Hi! I\'m Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!';
+  document.querySelectorAll('.penny-badge').forEach(el=>{
+    el.textContent=lang==='es'?'Asesora IA':lang==='pt'?'Conselheira IA':'AI Advisor';
+  });
 
   setPh('pennyPriceListText', lang==='es'?'Escribe artículos — uno por línea o separados por coma\np.ej. leche, huevos, pollo, arroz, jugo de naranja':lang==='pt'?'Digite itens — um por linha ou separados por vírgula\nex. leite, ovos, frango, arroz, suco de laranja':'Type items — one per line or comma separated\ne.g. milk, eggs, chicken, rice, orange juice');
 
@@ -2878,9 +2896,7 @@ function onCatChange(idx){
   if(!cat) return;
   const brands = BRAND_DATA[cat] || [];
   if(brands.length){
-    bd.innerHTML = brands.map(b =>
-      '<div class="brand-opt" onmousedown="selectBrand(' + idx + ',\'' + b.replace(/'/g,"\\'") + '\')">' + b + '</div>'
-    ).join('');
+    bd.innerHTML = brands.map(b=>{const d=_xlBrand(b);return '<div class="brand-opt" onmousedown="selectBrand('+idx+',\''+d.replace(/'/g,"\\'")+'\')">'+d+'</div>';}).join('');
     bd.classList.add('open');
   }
   setTimeout(() => nameEl.focus(), 50);
@@ -3261,6 +3277,10 @@ function createStarterGroceryList(){
   saveU('glists', [list]);
   saveU('gitems', starterItems);
 }
+function _xlBrand(b){
+  if(b!=='Store Brand') return b;
+  return lang==='es'?'Marca Propia':lang==='pt'?'Marca Própria':'Store Brand';
+}
 function onNameInput(idx){
   if(_brandSelected) return;
   const cat=document.getElementById(`cat-${idx}`)?.value;
@@ -3270,10 +3290,10 @@ function onNameInput(idx){
 
   const brands = cat && BRAND_DATA[cat] ? BRAND_DATA[cat] : [];
 
-  if(val && brands.some(b=>b.toLowerCase()===val)){ bd.classList.remove('open'); bd.innerHTML=''; return; }
-  const filtered = val ? brands.filter(b=>b.toLowerCase().includes(val)) : brands;
+  if(val && brands.some(b=>_xlBrand(b).toLowerCase()===val)){ bd.classList.remove('open'); bd.innerHTML=''; return; }
+  const filtered = val ? brands.filter(b=>_xlBrand(b).toLowerCase().includes(val)||b.toLowerCase().includes(val)) : brands;
   if(!filtered.length){ bd.classList.remove('open'); return; }
-  bd.innerHTML=filtered.slice(0,10).map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
+  bd.innerHTML=filtered.slice(0,10).map(b=>{const d=_xlBrand(b);return `<div class="brand-opt" onmousedown="selectBrand(${idx},'${d.replace(/'/g,"\\'")}')"> ${d}</div>`;}).join('');
   bd.classList.add('open');
 }
 let _brandSelected = false;
@@ -3338,7 +3358,7 @@ function updateGrid(){
       </div>
       <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
       <label class="card-label">${t.priceLabel}</label>
-      <input type="number" class="price-input" id="p-${i}" placeholder="0.00" oninput="clearPriceErr(${i})">
+      <input type="text" inputmode="decimal" class="price-input" id="p-${i}" placeholder="0.00" onkeydown="priceKeyDown(${i},event)" onpaste="onPricePaste(${i},event)" autocomplete="off">
       <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
       <div class="field-row" style="margin-top:10px">
         <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" class="card-input" id="dv-${i}" value="0"></div>
@@ -3348,7 +3368,7 @@ function updateGrid(){
       <div class="field-row">
         <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}">
         <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
-          <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
+          <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="sheets">sht</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
         </select>
       </div>
       <label class="card-label">${t.packLabel}</label>
@@ -3380,7 +3400,7 @@ function updateGrid(){
 }
 
 function getCard(i){ return {p:document.getElementById(`p-${i}`)?.value||'',dv:document.getElementById(`dv-${i}`)?.value||'0',dt:document.getElementById(`dt-${i}`)?.value||'p',s:document.getElementById(`s-${i}`)?.value||'',u:document.getElementById(`u-${i}`)?.value||'oz',q:document.getElementById(`q-${i}`)?.value||'1',n:document.getElementById(`n-${i}`)?.value||''}; }
-function setCard(i,d){ ['p','dv','dt','s','u','q','n'].forEach(k=>{ const el=document.getElementById(`${k}-${i}`); if(el)el.value=d[k]!=null?d[k]:''; }); }
+function setCard(i,d){ ['p','dv','dt','s','u','q','n'].forEach(k=>{ const el=document.getElementById(`${k}-${i}`); if(el){ el.value=d[k]!=null?d[k]:''; if(k==='p'&&d[k]){ const c=Math.round(parseFloat(d[k])*100); el.dataset.raw=isNaN(c)?'':String(c); } } }); }
 
 function dupCard(idx){
   const t=T();
@@ -3403,6 +3423,47 @@ function dupCard(idx){
 function clearPriceErr(idx){
   const pEl=document.getElementById(`p-${idx}`); if(pEl) pEl.style.borderColor='';
   const errEl=document.getElementById(`price-err-${idx}`); if(errEl) errEl.style.display='none';
+}
+function _priceRawFmt(raw){
+  if(!raw) return '';
+  const s=raw.padStart(3,'0');
+  return parseInt(s.slice(0,-2),10)+'.'+s.slice(-2);
+}
+function priceKeyDown(idx,e){
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(['Tab','Enter','Escape','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+  const inp=document.getElementById(`p-${idx}`);
+  if(!inp) return;
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    let raw=(inp.dataset.raw||'').replace(/\D/g,'');
+    raw=raw.slice(0,-1);
+    inp.dataset.raw=raw; inp.value=_priceRawFmt(raw);
+    clearPriceErr(idx); return;
+  }
+  if(e.key==='Delete'){
+    e.preventDefault();
+    inp.dataset.raw=''; inp.value='';
+    clearPriceErr(idx); return;
+  }
+  if(!/^\d$/.test(e.key)){ e.preventDefault(); return; }
+  e.preventDefault();
+  let raw=(inp.dataset.raw||'').replace(/\D/g,'');
+  if(raw.length>=6) return;
+  raw+=e.key;
+  inp.dataset.raw=raw; inp.value=_priceRawFmt(raw);
+  clearPriceErr(idx);
+}
+function onPricePaste(idx,e){
+  e.preventDefault();
+  const text=(e.clipboardData||window.clipboardData).getData('text').replace(/[^0-9.]/g,'');
+  const num=parseFloat(text);
+  if(isNaN(num)) return;
+  const inp=document.getElementById(`p-${idx}`);
+  if(!inp) return;
+  const raw=String(Math.round(num*100)).slice(-6);
+  inp.dataset.raw=raw; inp.value=_priceRawFmt(raw);
+  clearPriceErr(idx);
 }
 function autoUnit(i){ const u=document.getElementById(`u-${i}`),s=document.getElementById(`s-${i}`); if(u.value==='count'&&!s.value)s.value='1'; }
 
@@ -3834,7 +3895,7 @@ function parseSize(text){
     'lb':'lb','lbs':'lb','pound':'lb','pounds':'lb',
     'count':'count','ct':'count','pack':'count','pk':'count',
     'pcs':'count','pc':'count','pieces':'count','piece':'count',
-    'sheets':'count','sheet':'count','rolls':'count','roll':'count',
+    'sheets':'sheets','sheet':'sheets','rolls':'count','roll':'count',
     'bars':'count','bar':'count','tabs':'count','tablets':'count','tablet':'count',
     'capsules':'count','capsule':'count','caps':'count',
     'eggs':'count','egg':'count',
@@ -4805,7 +4866,7 @@ function pennyDragLeave(e){
 function _showPennyImgToast(n){
   let t = document.getElementById('penny-img-toast');
   if(!t){ t=document.createElement('div'); t.id='penny-img-toast'; t.className='penny-img-toast'; document.body.appendChild(t); }
-  t.textContent = n===1 ? '📷 Image added — type your message and send!' : `📷 ${n} images added — type your message and send!`;
+  t.textContent = n===1 ? 'Image added — type your message and send!' : `${n} images added — type your message and send!`;
   t.classList.add('show');
   clearTimeout(t._tid);
   t._tid = setTimeout(()=>t.classList.remove('show'), 2800);
@@ -4831,6 +4892,43 @@ function pennyDrop(e){
   });
   if(files.length) document.getElementById('pennyInput')?.focus();
 }
+function lpDragEnter(e){
+  e.preventDefault(); e.stopPropagation();
+  if(!_hasFileDrag(e)) return;
+  document.getElementById('landing-penny-popup')?.classList.add('lp-drag-active');
+}
+function lpDragOver(e){
+  e.preventDefault(); e.stopPropagation();
+  if(!_hasFileDrag(e)) return;
+  e.dataTransfer.dropEffect='copy';
+  document.getElementById('landing-penny-popup')?.classList.add('lp-drag-active');
+}
+function lpDragLeave(e){
+  e.preventDefault(); e.stopPropagation();
+  const popup=document.getElementById('landing-penny-popup');
+  if(popup&&!popup.contains(e.relatedTarget)) popup.classList.remove('lp-drag-active');
+}
+function lpDrop(e){
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById('landing-penny-popup')?.classList.remove('lp-drag-active');
+  const files=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));
+  if(!files.length) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    // Append image as a user message in the lp chat
+    const msgs=document.getElementById('lp-msgs');
+    if(msgs){
+      const img=document.createElement('img');
+      img.src=ev.target.result; img.style.cssText='max-width:100%;max-height:180px;border-radius:8px;display:block;margin-top:4px;';
+      const wrap=document.createElement('div');
+      wrap.className='lp-msg lp-user'; wrap.appendChild(img);
+      msgs.appendChild(wrap); msgs.scrollTop=msgs.scrollHeight;
+    }
+    _showPennyImgToast(1);
+  };
+  reader.readAsDataURL(files[0]);
+}
+
 function pennyHandleFile(input){
   const file = input.files[0];
   if(!file) return;
