@@ -1006,27 +1006,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
   </div>
 
-  <!-- Floating Penny Chat Widget (landing page) -->
-  <button id="landing-penny-fab" onclick="toggleLandingPenny()" title="Chat with Penny">
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  </button>
-  <div id="landing-penny-popup">
-    <div class="lp-header">
-      <div class="lp-avatar">✨</div>
-      <div class="lp-header-info">
-        <div class="lp-header-name">Penny</div>
-        <div class="lp-header-sub">AI Shopping Advisor</div>
-      </div>
-      <button class="lp-close-btn" onclick="toggleLandingPenny()">&#10005;</button>
-    </div>
-    <div class="lp-msgs" id="lp-msgs">
-      <div class="lp-msg lp-penny">Hi! I'm Penny, your AI shopping advisor for Better Price! Ask me how the app works, or anything about saving on groceries.</div>
-    </div>
-    <div class="lp-input-row">
-      <textarea class="lp-textarea" id="lp-input" rows="1" placeholder="Ask Penny..." onkeydown="lpKeyDown(event)"></textarea>
-      <button class="lp-send-btn" id="lp-send-btn" onclick="sendLandingPenny()">Send</button>
-    </div>
-  </div>
 </div>
 
 <!-- ══ ONBOARDING ══ -->
@@ -1152,6 +1131,29 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
   </div>
 </div>
+
+<!-- ══ FLOATING PENNY WIDGET (auth + compare) ══ -->
+<button id="landing-penny-fab" onclick="toggleLandingPenny()" title="Chat with Penny" style="display:none;">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+<div id="landing-penny-popup">
+  <div class="lp-header">
+    <div class="lp-avatar">✨</div>
+    <div class="lp-header-info">
+      <div class="lp-header-name">Penny</div>
+      <div class="lp-header-sub">AI Shopping Advisor</div>
+    </div>
+    <button class="lp-close-btn" onclick="toggleLandingPenny()">&#10005;</button>
+  </div>
+  <div class="lp-msgs" id="lp-msgs">
+    <div class="lp-msg lp-penny">Hi! I'm Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!</div>
+  </div>
+  <div class="lp-input-row">
+    <textarea class="lp-textarea" id="lp-input" rows="1" placeholder="Ask Penny..." onkeydown="lpKeyDown(event)"></textarea>
+    <button class="lp-send-btn" id="lp-send-btn" onclick="sendLandingPenny()">Send</button>
+  </div>
+</div>
+
 <div id="app">
   <header class="app-header">
     <div class="hdr-left">
@@ -2650,6 +2652,7 @@ function showApp(isNewUser=false){
   updateGrid(); renderHistory(); renderListNav(); renderPresets();
   if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
   applyLang();
+  document.getElementById('landing-penny-fab').style.display='flex';
 }
 
 // ────────────────────────────────────────────────
@@ -2667,6 +2670,7 @@ function goTab(name){
     if(name==='penny') el.style.flexDirection='column';
   }
   document.getElementById(`nt-${name}`)?.classList.add('active');
+  document.getElementById('landing-penny-fab').style.display = name==='compare' ? 'flex' : 'none';
   if(name==='profile') renderProfileTab();
   if(name==='grocery'){ renderListNav(); renderGroceryContent(); }
   if(name==='penny'){
@@ -4841,8 +4845,10 @@ function pennyHandlePaste(e){
 let _pennyDragCounter = 0;
 function pennyDragOver(e){
   e.preventDefault(); e.stopPropagation();
-  const hasImage = Array.from(e.dataTransfer.items||[]).some(i=>i.kind==='file'&&i.type.startsWith('image/'));
-  if(!hasImage) return;
+  // During dragover, browsers don't expose file types — check for any file drag
+  const hasFile = Array.from(e.dataTransfer.items||[]).some(i=>i.kind==='file')
+    || Array.from(e.dataTransfer.types||[]).includes('Files');
+  if(!hasFile) return;
   e.dataTransfer.dropEffect = 'copy';
   _pennyDragCounter++;
   document.getElementById('pennyMessages')?.classList.add('penny-drag-active');
@@ -5093,7 +5099,7 @@ async function sendLandingPenny(){
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:350,
-        system: buildLandingSys(),
+        system: localStorage.getItem('bp_session') ? buildSys() : buildLandingSys(),
         messages: _lpHistory
       })
     });
@@ -5264,6 +5270,7 @@ window.onload=()=>{
   } else {
     document.getElementById('auth-screen').style.display='flex';
     document.getElementById('app').style.display='none';
+    document.getElementById('landing-penny-fab').style.display='flex';
   }
 };
 </script>
