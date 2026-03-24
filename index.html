@@ -1854,7 +1854,7 @@ const TRANSLATIONS = {
     profileBudget:'Weekly Budget',
     profilePreferredStores:'Preferred Stores',
     profileEmailNote:'Updating your email also updates your login credentials.',
-    people:'people',
+    people:'people',person:'person',
     pennyTypeList:'Type List',
     pennyPhotoScan:'Photo / Scan',
     pennyMyLists:'My Lists',
@@ -2006,7 +2006,7 @@ const TRANSLATIONS = {
     profileBudget:'Presupuesto semanal',
     profilePreferredStores:'Tiendas preferidas',
     profileEmailNote:'Actualizar tu correo también actualiza tus credenciales de inicio de sesión.',
-    people:'personas',
+    people:'personas',person:'persona',
     pennyTypeList:'Escribir lista',
     pennyPhotoScan:'Foto / Escanear',
     pennyMyLists:'Mis listas',
@@ -2158,7 +2158,7 @@ const TRANSLATIONS = {
     profileBudget:'Orçamento semanal',
     profilePreferredStores:'Lojas preferidas',
     profileEmailNote:'Atualizar seu e-mail também atualiza suas credenciais de login.',
-    people:'pessoas',
+    people:'pessoas',person:'pessoa',
     pennyTypeList:'Digitar lista',
     pennyPhotoScan:'Foto / Escanear',
     pennyMyLists:'Minhas listas',
@@ -2425,6 +2425,18 @@ function applyLang(){
   if(tailorBadgeSpan) tailorBadgeSpan.textContent = lang==='es'?'Para Mejorar Tus Resultados':lang==='pt'?'Para Melhorar Seus Resultados':'To Enhance Your Results';
   const tailorSub = document.querySelector('.onboard-tailor-sub');
   if(tailorSub) tailorSub.textContent = lang==='es'?'Responde unas preguntas para personalizar todo para ti.':lang==='pt'?'Responda algumas perguntas para personalizarmos tudo para você.':'Answer a few quick questions so we can tailor everything for you.';
+  // Update onboarding step titles and subs
+  for(let s=1;s<=5;s++){
+    const stepEl=document.getElementById(`ob-step-${s}`);
+    if(!stepEl) continue;
+    const titleEl=stepEl.querySelector('.onboard-title');
+    const subEl=stepEl.querySelector('.onboard-sub');
+    if(titleEl && t[`onboardTitle${s}`]) titleEl.textContent=t[`onboardTitle${s}`];
+    if(subEl && t[`onboardSub${s}`]) subEl.textContent=t[`onboardSub${s}`];
+  }
+  // Update hh-label to current language
+  const hhLbl=document.getElementById('hh-label');
+  if(hhLbl){ const hh=parseInt(document.getElementById('household-val')?.innerText)||obHousehold; hhLbl.textContent=hh===1?(t.person||'person'):(t.people||'people'); }
 
   setQ('#tab-profile .tab-title', t.profileTitle||'My Profile');
   setQ('#tab-profile .prof-lbl-account',    t.profileAccountInfo||'Account Info');
@@ -2745,7 +2757,7 @@ function adjustHousehold(d){
   obHousehold = Math.max(1, Math.min(15, obHousehold + d));
   document.getElementById('household-val').innerText = obHousehold;
   const lbl = document.getElementById('hh-label');
-  if(lbl) lbl.textContent = obHousehold === 1 ? 'person' : 'people';
+  if(lbl){ const t=T(); lbl.textContent = obHousehold === 1 ? (t.person||'person') : (t.people||'people'); }
 }
 function adjustBudget(d){
   obBudget = Math.max(50, Math.min(2000, obBudget + d));
@@ -2804,7 +2816,7 @@ function obContinueStores(){
 }
 function tryFinishOnboarding(){
   const zipVal = (document.getElementById('ob-zip')?.value || '').trim();
-  if(zipVal && zipVal.length !== 5){
+  if(!zipVal || zipVal.length !== 5){
     const errEl = document.getElementById('ob-zip-err');
     if(errEl) errEl.style.display = 'flex';
     const zipInput = document.getElementById('ob-zip');
@@ -3481,22 +3493,24 @@ function playCaChing(){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     const t=ctx.currentTime;
-    function tone(freq,start,dur,vol,type='sine'){
+    // "Ka" — mechanical drawer thump (noise burst)
+    const buf=ctx.createBuffer(1,ctx.sampleRate*0.06,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    const ns=ctx.createBufferSource(); ns.buffer=buf;
+    const ng=ctx.createGain(); ng.gain.setValueAtTime(0.55,t); ng.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+    ns.connect(ng); ng.connect(ctx.destination); ns.start(t);
+    // "Ching" — bright coin bell (layered sine partials, long decay)
+    [[2637,0.6],[3951,0.35],[5274,0.2],[7902,0.12]].forEach(([freq,vol])=>{
       const o=ctx.createOscillator(),g=ctx.createGain();
-      o.type=type; o.frequency.setValueAtTime(freq,t+start);
-      g.gain.setValueAtTime(0,t+start);
-      g.gain.linearRampToValueAtTime(vol,t+start+0.005);
-      g.gain.exponentialRampToValueAtTime(0.001,t+start+dur);
+      o.type='sine'; o.frequency.setValueAtTime(freq,t+0.025);
+      g.gain.setValueAtTime(0,t+0.025);
+      g.gain.linearRampToValueAtTime(vol,t+0.032);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.025+0.9*(vol+0.3));
       o.connect(g); g.connect(ctx.destination);
-      o.start(t+start); o.stop(t+start+dur);
-    }
-    tone(1200,0,.018,.35,'square');
-    tone(900,0.02,.012,.2,'square');
-    tone(1600,0.03,.22,.28,'sine');
-    tone(1900,0.03,.18,.18,'sine');
-    tone(2200,0.05,.14,.12,'sine');
-    tone(1400,0.08,.30,.10,'sine');
-    setTimeout(()=>ctx.close(),700);
+      o.start(t+0.025); o.stop(t+1.1);
+    });
+    setTimeout(()=>ctx.close(),1200);
   }catch(e){}
 }
 
