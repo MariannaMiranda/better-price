@@ -870,9 +870,13 @@ body.dark .penny-textarea{background:#162535;color:#eef2ff;border-color:#2a4060;
 body.dark .penny-textarea:focus{border-color:#4d8fcc;}
 body.dark .penny-attach-btn{color:#7a9fc0;}
 /* Penny drag-drop zone */
-.penny-drop-overlay{position:absolute;inset:0;z-index:20;border-radius:inherit;background:rgba(13,71,161,.13);border:2.5px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;}
-.penny-drop-overlay span{background:var(--brand);color:#fff;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:600;font-family:var(--font-d);}
+.penny-drop-overlay{position:absolute;inset:0;z-index:20;background:rgba(var(--brand-rgb,13,71,161),.08);border:3px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;flex-direction:column;gap:14px;}
+.penny-drop-overlay .pdrop-icon{width:72px;height:72px;background:var(--white);border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;color:var(--brand);}
+.penny-drop-overlay .pdrop-label{font-size:16px;font-weight:700;color:var(--brand);font-family:var(--font-d);}
 .penny-drag-active .penny-drop-overlay{display:flex;}
+body.dark .penny-drop-overlay{background:rgba(78,149,255,.08);border-color:#4d8fcc;}
+body.dark .penny-drop-overlay .pdrop-icon{background:#162535;box-shadow:0 4px 20px rgba(0,0,0,.4);color:#7ec8f8;}
+body.dark .penny-drop-overlay .pdrop-label{color:#7ec8f8;}
 .lp-drop-overlay{position:absolute;inset:0;z-index:30;border-radius:inherit;background:rgba(13,71,161,.13);border:2.5px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;}
 .lp-drop-overlay span{background:var(--brand);color:#fff;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:600;font-family:var(--font-d);}
 .lp-drag-active .lp-drop-overlay{display:flex;}
@@ -1247,7 +1251,14 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         <div class="penny-session-list" id="pennySessionList"></div>
       </div>
       
-      <div class="penny-main">
+      <div class="penny-main" style="position:relative;"
+        ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
+        <div class="penny-drop-overlay">
+          <div class="pdrop-icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </div>
+          <div class="pdrop-label">Drop files here to add to chat</div>
+        </div>
         <div class="penny-chat-header">
           <button class="penny-sidebar-toggle" onclick="togglePennySidebar()" title="Chats">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1313,9 +1324,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           </button>
         </div>
 
-        <div class="penny-messages" id="pennyMessages" style="position:relative;"
-          ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
-          <div class="penny-drop-overlay"><span>Drop image here</span></div>
+        <div class="penny-messages" id="pennyMessages">
           <div class="penny-welcome">
             <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
             <div class="penny-welcome-text" id="pennyWelcomeText">Hey! I'm Penny, your AI shopping advisor.</div>
@@ -1328,8 +1337,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           </div>
         </div>
         
-        <div class="penny-input-area"
-          ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
+        <div class="penny-input-area">
           
           <div class="penny-attach-strip" id="pennyAttachStrip" style="display:none;"></div>
           <div class="penny-input-row">
@@ -4838,20 +4846,21 @@ function pennyHandlePaste(e){
   }
 }
 function _hasFileDrag(e){ return Array.from(e.dataTransfer.items||[]).some(i=>i.kind==='file')||Array.from(e.dataTransfer.types||[]).includes('Files'); }
+function _pennyMain(){return document.querySelector('#tab-penny .penny-main');}
 function pennyDragEnter(e){
   e.preventDefault(); e.stopPropagation();
   if(!_hasFileDrag(e)) return;
-  document.getElementById('pennyMessages')?.classList.add('penny-drag-active');
+  _pennyMain()?.classList.add('penny-drag-active');
 }
 function pennyDragOver(e){
   e.preventDefault(); e.stopPropagation();
   if(!_hasFileDrag(e)) return;
   e.dataTransfer.dropEffect = 'copy';
-  document.getElementById('pennyMessages')?.classList.add('penny-drag-active');
+  _pennyMain()?.classList.add('penny-drag-active');
 }
 function pennyDragLeave(e){
   e.preventDefault(); e.stopPropagation();
-  const container = document.getElementById('pennyMessages');
+  const container = _pennyMain();
   if(container && !container.contains(e.relatedTarget)){
     container.classList.remove('penny-drag-active');
   }
@@ -4866,7 +4875,7 @@ function _showPennyImgToast(n){
 }
 function pennyDrop(e){
   e.preventDefault(); e.stopPropagation();
-  document.getElementById('pennyMessages')?.classList.remove('penny-drag-active');
+  _pennyMain()?.classList.remove('penny-drag-active');
   const files = Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));
   let loaded = 0;
   files.forEach(file => {
