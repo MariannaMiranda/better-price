@@ -381,9 +381,9 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .hdr-btn:hover{background:rgba(255,255,255,.22);}
 @media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}}
 
-.nav-tabs{display:flex;justify-content:center;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
+.nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
 .nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{flex:0 0 auto;min-width:88px;padding:14px 18px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
+.nav-tab{flex:1;min-width:72px;padding:14px 8px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
 .nav-tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .nav-tab.active{color:var(--brand);border-bottom-color:var(--brand);}
 
@@ -402,9 +402,9 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 
 /* ── PRODUCT CARDS ── */
 .products-wrap{padding:0 20px 20px;max-width:1300px;margin:0 auto;}
-.products-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));}
-@media(max-width:680px){.products-grid{grid-template-columns:1fr;}.products-wrap{padding:0 14px 20px;}}
-@media(min-width:681px) and (max-width:1000px){.products-grid{grid-template-columns:repeat(2,1fr);}}
+.products-grid{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;}
+.product-card{flex:0 1 320px;}
+@media(max-width:680px){.product-card{flex:1 1 100%;}.products-wrap{padding:0 14px 20px;}}
 
 .product-card{background:var(--white);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);border:2px solid var(--border);transition:box-shadow .2s,border-color .2s,background .3s;position:relative;}
 .product-card:hover{box-shadow:var(--shadow-lg);}
@@ -3554,51 +3554,38 @@ function playCaChing(){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     const now=ctx.currentTime;
-    const master=ctx.createGain(); master.gain.setValueAtTime(0.9,now); master.connect(ctx.destination);
+    const master=ctx.createGain(); master.gain.setValueAtTime(0.85,now); master.connect(ctx.destination);
 
-    // ── Phase 1: electronic register beep (the "ca") ──
-    // Square wave chirp — short, punchy, like a modern register scan tone
-    const beep=ctx.createOscillator(); const beepG=ctx.createGain();
-    beep.type='square'; beep.frequency.setValueAtTime(1200,now);
-    beepG.gain.setValueAtTime(0,now);
-    beepG.gain.linearRampToValueAtTime(0.28,now+0.004);
-    beepG.gain.setValueAtTime(0.28,now+0.060);
-    beepG.gain.exponentialRampToValueAtTime(0.001,now+0.085);
-    beep.connect(beepG); beepG.connect(master);
-    beep.start(now); beep.stop(now+0.09);
+    function coinHit(t,f1,f2,amp,dec){
+      // Two inharmonic sine partials — gives each coin its own metallic pitch
+      [[f1,1.0],[f2,0.45],[f1*2.73,0.18]].forEach(([freq,rel])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sine'; o.frequency.setValueAtTime(freq,now+t);
+        g.gain.setValueAtTime(0,now+t);
+        g.gain.linearRampToValueAtTime(amp*rel*0.38,now+t+0.002);
+        g.gain.exponentialRampToValueAtTime(0.001,now+t+dec*rel);
+        o.connect(g); g.connect(master); o.start(now+t); o.stop(now+t+dec+0.03);
+      });
+      // Metallic strike noise (very short, highpassed)
+      const nlen=Math.floor(ctx.sampleRate*0.009);
+      const nb=ctx.createBuffer(1,nlen,ctx.sampleRate);
+      const nd=nb.getChannelData(0);
+      for(let i=0;i<nlen;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/nlen,3);
+      const ns=ctx.createBufferSource(); ns.buffer=nb;
+      const nhp=ctx.createBiquadFilter(); nhp.type='highpass'; nhp.frequency.value=3500;
+      const ng=ctx.createGain(); ng.gain.setValueAtTime(amp*0.22,now+t);
+      ns.connect(nhp); nhp.connect(ng); ng.connect(master); ns.start(now+t);
+    }
 
-    // ── Phase 2: bell ring (the "ching") — long ~2s decay ──
-    // Two slightly-detuned fundamentals that beat against each other,
-    // creating the wavering shimmer seen in the Zott820 waveform
-    const r=0.082;
-    [[2050,1.0,2.1],[2155,0.88,2.0]].forEach(([freq,amp,dec])=>{
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.type='sine'; o.frequency.setValueAtTime(freq,now+r);
-      g.gain.setValueAtTime(0,now+r);
-      g.gain.linearRampToValueAtTime(amp*0.42,now+r+0.005);
-      g.gain.exponentialRampToValueAtTime(0.001,now+r+dec);
-      o.connect(g); g.connect(master); o.start(now+r); o.stop(now+r+dec+0.05);
-    });
-    // Upper inharmonic partials (decay faster, add brightness on strike)
-    [[3180,0.32,1.2],[4950,0.16,0.75],[7100,0.09,0.45]].forEach(([freq,amp,dec])=>{
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.type='sine'; o.frequency.setValueAtTime(freq,now+r);
-      g.gain.setValueAtTime(0,now+r);
-      g.gain.linearRampToValueAtTime(amp*0.42,now+r+0.004);
-      g.gain.exponentialRampToValueAtTime(0.001,now+r+dec);
-      o.connect(g); g.connect(master); o.start(now+r); o.stop(now+r+dec+0.05);
-    });
-    // Metallic noise transient on the bell strike
-    const nlen=Math.floor(ctx.sampleRate*0.016);
-    const nbuf=ctx.createBuffer(1,nlen,ctx.sampleRate);
-    const nd=nbuf.getChannelData(0);
-    for(let i=0;i<nlen;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/nlen,3);
-    const ns=ctx.createBufferSource(); ns.buffer=nbuf;
-    const nhp=ctx.createBiquadFilter(); nhp.type='highpass'; nhp.frequency.setValueAtTime(2400,now+r);
-    const ng=ctx.createGain(); ng.gain.setValueAtTime(0.22,now+r);
-    ns.connect(nhp); nhp.connect(ng); ng.connect(master); ns.start(now+r);
+    // Handful of coins hitting at slightly staggered times
+    // t=offset, f1=fundamental Hz, f2=2nd partial, amp, decay
+    coinHit(0.00, 3900, 6600, 0.95, 0.38); // quarter
+    coinHit(0.04, 5300, 8200, 0.75, 0.28); // dime
+    coinHit(0.07, 2950, 4900, 0.85, 0.34); // nickel
+    coinHit(0.11, 6200, 9400, 0.60, 0.22); // penny
+    coinHit(0.05, 4500, 7100, 0.70, 0.31); // another coin mid-jingle
 
-    setTimeout(()=>ctx.close(),2500);
+    setTimeout(()=>ctx.close(),700);
   }catch(e){}
 }
 
