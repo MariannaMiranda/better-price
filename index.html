@@ -1138,7 +1138,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 </button>
 <div id="landing-penny-popup">
   <div class="lp-header">
-    <div class="lp-avatar">✨</div>
+  <div class="lp-avatar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
     <div class="lp-header-info">
       <div class="lp-header-name">Penny</div>
       <div class="lp-header-sub">AI Shopping Advisor</div>
@@ -4923,9 +4923,9 @@ function buildSys(){
   const activeListName = activeList ? activeList.name : (groceryLists[0]?.name || 'My Weekly Essentials');
   const listContext = groceryLists.map(l => {
     const its = groceryItems.filter(gi => gi.listId === l.id);
-    const sample = its.slice(0,6).map(i=>i.name).join(', ');
-    return `"${l.name}" (${its.length} items${its.length ? ': ' + sample + (its.length > 6 ? '...' : '') : ''})`;
-  }).join(' | ') || 'none yet';
+    const allNames = its.map(i=>i.name).join(', ');
+    return `"${l.name}" (${its.length} items${its.length ? ': ' + allNames : ''})`;
+  }).join('\n') || 'none yet';
 
   const cards=[];
   for(let i=0;i<items;i++){
@@ -4991,11 +4991,11 @@ ${lines||'(none entered yet)'}
 
 STORE PRICE COMPARISONS — When the user shares a grocery list and asks you to compare prices at local stores, give realistic 2025 US price estimates for each item at each store. Always rank stores cheapest to most expensive with total basket cost. Call out the best deal clearly. Be specific with dollar amounts. Reflect real store price differences (Aldi/Walmart typically cheapest, Whole Foods/Sprouts typically most expensive). If the user has preferred stores in their profile, prioritize those. Use their zip code for regional context.
 
-ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply on their own lines. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover — just do it.
+ACCOUNT ACTIONS — Manage grocery lists by appending command tags at the very end of your reply. Tags are invisible to the user. Each tag type may appear AT MOST ONCE per reply — never repeat the same command.
 
-Commands (append at end, multiple allowed):
+Commands (append at end of reply):
 
-Add items to a list:
+Add items to an existing list:
 ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
 
 Remove items by name (partial match ok):
@@ -5016,43 +5016,29 @@ CLEARCHECKED:{"list":"List Name"}
 Move items from one list to another:
 MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
 
-ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover.
+CONVERSATION RULES — follow these STRICTLY. Always gather all needed info BEFORE executing any action.
 
-Commands (append at end of reply, multiple allowed):
+RULE 1 — CREATING A LIST (always multi-step unless user gives everything upfront):
+  a. No name given → ask for a name first. Do NOT create yet.
+  b. Have name → ask what items to add (if any), or if they want an empty list.
+  c. Only after you have name AND item decisions → output CREATELIST exactly once.
+  Exception: if the user's message contains both name and items ("make a list called Party with chips and drinks"), create immediately.
 
-Add items to existing list:
-ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+RULE 2 — ADDING ITEMS (always confirm before acting):
+  NEVER add items to any list without first confirming with the user — even if there is only one list.
+  Ask: "I'll add [item] to your [list name] — does that sound right?" and wait for confirmation.
+  If no list was specified, ask which list by name. Never guess based on item category.
+  Only add after the user says yes or confirms.
 
-Remove items by name (partial match ok):
-REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
+RULE 3 — DUPLICATE DETECTION:
+  Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
+  Never add a duplicate without explicit confirmation.
 
-Create a new list (optionally pre-filled):
-CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
+RULE 4 — ONE COMMAND PER REPLY:
+  Output each command tag at most once per message. No repeated ADDLIST, CREATELIST, etc.
 
-Delete an entire list:
-DELETELIST:{"name":"List Name"}
-
-Rename a list:
-RENAMELIST:{"from":"Old Name","to":"New Name"}
-
-Clear all checked-off items from a list:
-CLEARCHECKED:{"list":"List Name"}
-
-Move items from one list to another:
-MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
-
-CONVERSATION RULES — follow these exactly:
-
-1. CREATING A NEW LIST: Never auto-create a list without asking for a name first. If the user wants a new list, ask: what would you like to name it? Then once they reply with a name, create it with CREATELIST. Exception: if the user explicitly says the name in their message (e.g. "make a list called Party"), create it immediately.
-
-2. ADDING ITEMS: Before adding items to a new list, ask if they want any extra notes per item (store preference, brand, size) or if they want you to recommend quantities based on their household size. Keep this quick — one friendly sentence. Then add immediately after they respond (or if they say "just add them" skip the question and add right away).
-
-3. EXISTING LISTS: When adding to an existing list by name, just do it — no need to ask.
-
-4. RECOMMENDATIONS: Always offer a brief helpful tip after completing an action (e.g. best store for those items, bulk buying suggestion, estimated cost).
-
-5. Keep replies warm, brief, conversational. 150 words max. No bullet points. No command tags visible.
-- Use the active list "${activeListName}" when no list name is specified and the user wants to add to an existing list.`;
+RULE 5 — Warm, brief, conversational. 150 words max. No bullet points in chat.
+- Default to active list "${activeListName}" when context is clear — but still confirm before acting.`;
 }
 
 // ── Landing Page Penny Widget ──
