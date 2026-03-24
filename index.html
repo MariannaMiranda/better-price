@@ -1105,7 +1105,8 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="other-store-row" id="ob-other-row">
         <input type="text" class="other-store-input" id="ob-other-text" placeholder="Type your store name (e.g. H-E-B, Wegmans)">
       </div>
-      <button class="onboard-next" onclick="obGoStep(5)" style="margin-top:12px;">Continue &#8594;</button>
+      <div id="ob-store-err" style="display:none;color:var(--danger);font-size:13px;text-align:center;margin-bottom:8px;font-weight:500;">Please select at least one store, or tap "Skip for now".</div>
+      <button class="onboard-next" onclick="obContinueStores()" style="margin-top:12px;">Continue &#8594;</button>
       <span class="onboard-skip" onclick="obSkipStep(4)">Skip for now</span>
     </div>
 
@@ -1321,7 +1322,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           <div class="penny-drop-overlay"><span>Drop image to send</span></div>
           <div class="penny-welcome">
             <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
-            <div class="penny-welcome-text">Hi! I am Penny, your AI shopping advisor.</div>
+            <div class="penny-welcome-text" id="pennyWelcomeText">Hey! I'm Penny, your AI shopping advisor.</div>
             <div class="penny-welcome-sub">Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.</div>
             <div class="penny-suggestions">
               <button class="penny-sug" onclick="pennyQuickSend('Which store has the best prices for a family of 4?')">Best stores for families</button>
@@ -2444,7 +2445,11 @@ function applyLang(){
   if(pSidebarTitle) pSidebarTitle.textContent = lang==='es'?'Chats':lang==='pt'?'Chats':'Chats';
   // Penny welcome texts
   const pwText = document.querySelector('.penny-welcome-text');
-  if(pwText) pwText.textContent = lang==='es'?'Hola, soy Penny, tu asesora de compras con IA.':lang==='pt'?'Olá! Sou Penny, sua consultora de compras com IA.':'Hi! I am Penny, your AI shopping advisor.';
+  if(pwText){
+    const _s=JSON.parse(localStorage.getItem('bp_session')||'{}');
+    const _f=_s.firstName||_s.name?.split(' ')[0]||'';
+    pwText.textContent = lang==='es'?(_f?`Hola, ${_f}! Soy Penny, tu asesora de compras con IA.`:'Hola, soy Penny, tu asesora de compras con IA.'):lang==='pt'?(_f?`Olá, ${_f}! Sou Penny, sua consultora de compras com IA.`:'Olá! Sou Penny, sua consultora de compras com IA.'):(_f?`Hey, ${_f}! I'm Penny, your AI shopping advisor.`:"Hey! I'm Penny, your AI shopping advisor.");
+  }
   const pwSub = document.querySelector('.penny-welcome-sub');
   if(pwSub) pwSub.textContent = lang==='es'?'Pregúntame lo que quieras o toca "Agregar comparación" para compartir tus productos actuales.':lang==='pt'?'Pergunte-me qualquer coisa ou toque em "Adicionar comparação" para compartilhar seus produtos atuais.':'Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.';
 
@@ -2825,6 +2830,7 @@ function toggleStore(el, name){
   el.classList.toggle('selected');
   const idx = obStores.indexOf(name);
   if(idx >= 0) obStores.splice(idx, 1); else obStores.push(name);
+  document.getElementById('ob-store-err').style.display='none';
 }
 function toggleObOtherStore(el){
   el.classList.toggle('selected');
@@ -2846,6 +2852,18 @@ function obSkipStep(fromStep){
   obSkipped[fromStep] = true;
   if(fromStep < 5) obGoStep(fromStep + 1);
   else finishOnboarding();
+}
+function obContinueStores(){
+  const otherChip = document.getElementById('ob-other-chip');
+  const otherSelected = otherChip && otherChip.classList.contains('selected');
+  const otherText = (document.getElementById('ob-other-text')?.value||'').trim();
+  const totalSelected = obStores.length + (otherSelected && otherText ? 1 : 0);
+  if(totalSelected === 0){
+    document.getElementById('ob-store-err').style.display='block';
+    return;
+  }
+  document.getElementById('ob-store-err').style.display='none';
+  obGoStep(5);
 }
 function tryFinishOnboarding(){
   const zipVal = (document.getElementById('ob-zip')?.value || '').trim();
@@ -4429,7 +4447,9 @@ function renderPennyMessages(){
   if(!area) return;
   if(!pennyActiveSession || !pennyActiveSession.messages.length){
     const t2 = T();
-    const welcomeText = lang==='es'?'Hola, soy Penny, tu asesora de compras con IA.':lang==='pt'?'Olá! Sou Penny, sua consultora de compras com IA.':'Hi! I am Penny, your AI shopping advisor.';
+    const _sess=JSON.parse(localStorage.getItem('bp_session')||'{}');
+    const _fn=_sess.firstName||_sess.name?.split(' ')[0]||'';
+    const welcomeText = lang==='es'?(_fn?`Hola, ${_fn}! Soy Penny, tu asesora de compras con IA.`:'Hola, soy Penny, tu asesora de compras con IA.'):lang==='pt'?(_fn?`Olá, ${_fn}! Sou Penny, sua consultora de compras com IA.`:'Olá! Sou Penny, sua consultora de compras com IA.'):(_fn?`Hey, ${_fn}! I'm Penny, your AI shopping advisor.`:'Hey! I\'m Penny, your AI shopping advisor.');
     const welcomeSub  = lang==='es'?'Pregúntame lo que quieras o toca "Agregar comparación" para compartir tus productos actuales.':lang==='pt'?'Pergunte-me qualquer coisa ou toque em "Adicionar comparação" para compartilhar seus produtos atuais.':'Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.';
     const sugTexts = lang==='es'?['Mejores tiendas para familias','Ahorrar en carnes','Qué comprar al por mayor']:lang==='pt'?['Melhores lojas para famílias','Economizar em carnes','O que comprar em quantidade']:['Best stores for families','Save on meat','What to buy in bulk'];
     const sugCmds  = lang==='es'?['¿Cuál tienda tiene mejores precios para una familia de 4?','¿Cómo ahorro más en carnes?','¿Qué comestibles debo comprar al por mayor?']:lang==='pt'?['Qual loja tem os melhores preços para uma família de 4?','Como economizo mais em carnes?','Quais mantimentos devo comprar em quantidade?']:['Which store has the best prices for a family of 4?','How do I save the most on meat?','What groceries should I buy in bulk?'];
@@ -4922,6 +4942,8 @@ function resetPennyBtn(){}
 function startPenny(){ goTab('penny'); }
 
 function buildSys(){
+  const session=JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const firstName=session.firstName||session.name?.split(' ')[0]||'';
   const hh=loadU('household',2);
   const stores=loadU('preferred_stores',[]);
   const zip=loadU('zip','');
@@ -4964,6 +4986,7 @@ function buildSys(){
   }).join('\n');
 
   const contextLines=[
+    firstName?'User\'s first name: '+firstName:'',
     'Household: '+hh+' person'+(hh>1?'s':''),
     'Preferred stores: '+(stores.length?stores.join(', '):'not set'),
     'Zip: '+(zip||'not set'),
@@ -4972,6 +4995,9 @@ function buildSys(){
   ].filter(Boolean).join(' | ');
 
   return `You are Penny, a warm and knowledgeable grocery shopping advisor built into the Better Price! app — like a smart friend who knows prices inside and out. Always respond in ${ln}.
+
+${firstName?`The user's first name is ${firstName}. Use their name naturally in conversation — greet them by name when starting a new chat session, and occasionally use it to make the conversation feel personal. Don't overuse it.`:''}
+
 
 APP GUIDE — You know exactly how Better Price! works. When users ask how to do something, explain it clearly and confidently:
 
