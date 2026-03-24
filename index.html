@@ -198,6 +198,9 @@ body.dark .btn-save-no { background:#1a2f45; color:#b8cfe8; }
 
 /* Help */
 body.dark .help-h { color:#7ec8f8; border-color:#1a2f45; }
+.help-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 10px;position:sticky;top:0;background:var(--white);z-index:10;border-radius:22px 22px 0 0;}
+body.dark .help-modal-hdr{background:#111f2e;}
+.help-modal-body{padding:0 20px 24px;}
 body.dark .help-step { background:#111f2e; border-color:#2a4060; }
 body.dark .help-step-title { color:#eef2ff; }
 body.dark .help-step-desc { color:#b8cfe8; }
@@ -308,6 +311,29 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .al-user-text{font-size:13px;color:rgba(255,255,255,.6);}
 .al-user-text strong{color:#fff;}
 
+/* Landing Penny Widget */
+#landing-penny-fab{position:fixed;bottom:28px;right:28px;z-index:300;background:var(--brand);color:#fff;border:none;border-radius:50%;width:58px;height:58px;box-shadow:0 4px 22px rgba(0,100,200,.38);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;}
+#landing-penny-fab:hover{transform:scale(1.09);box-shadow:0 7px 30px rgba(0,100,200,.48);}
+#landing-penny-popup{position:fixed;bottom:100px;right:24px;z-index:301;width:330px;max-height:500px;background:var(--white);border-radius:20px;box-shadow:0 8px 44px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;border:1.5px solid var(--border);transform:translateY(12px);opacity:0;transition:opacity .2s,transform .2s;}
+#landing-penny-popup.lp-open{display:flex;transform:translateY(0);opacity:1;}
+.lp-header{background:var(--brand);color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.lp-avatar{width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.lp-header-info{flex:1;}
+.lp-header-name{font-weight:700;font-size:13.5px;}
+.lp-header-sub{font-size:11px;opacity:.82;}
+.lp-close-btn{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.75;line-height:1;font-size:15px;}
+.lp-close-btn:hover{opacity:1;}
+.lp-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;min-height:120px;}
+.lp-msg{max-width:86%;border-radius:14px;padding:9px 12px;font-size:13px;line-height:1.45;word-break:break-word;}
+.lp-msg.lp-penny{background:var(--card-bg);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
+.lp-msg.lp-user{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.lp-msg.lp-thinking{opacity:.55;font-style:italic;}
+.lp-input-row{display:flex;gap:8px;padding:9px 12px;border-top:1px solid var(--border);flex-shrink:0;}
+.lp-textarea{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px;font-size:13px;background:var(--bg);color:var(--text);outline:none;resize:none;font-family:var(--font);max-height:80px;}
+.lp-textarea:focus{border-color:var(--brand);}
+.lp-send-btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:8px 13px;cursor:pointer;font-size:13px;font-weight:600;flex-shrink:0;}
+.lp-send-btn:disabled{opacity:.45;cursor:default;}
+@media(max-width:420px){#landing-penny-popup{width:calc(100vw - 24px);right:12px;bottom:90px;}}
 .auth-right{width:100%;max-width:520px;display:flex;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg);position:relative;}
 @media(min-width:900px){.auth-right{min-width:460px;width:460px;}}
 .auth-top-bar{position:absolute;top:20px;right:20px;display:flex;align-items:center;gap:10px;}
@@ -784,7 +810,10 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg.user{flex-direction:row-reverse;}
 .pmsg-avatar{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
 .pmsg.user .pmsg-avatar{background:var(--ok);}
-.pmsg-bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.7;font-family:var(--font);white-space:pre-wrap;word-break:break-word;}
+.pmsg-bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.7;font-family:var(--font);word-break:break-word;}
+.pmsg.user .pmsg-bubble{white-space:pre-wrap;}
+.pmsg.penny .pmsg-bubble em{font-style:italic;}
+.pmsg.penny .pmsg-bubble strong{font-weight:700;}
 .pmsg.penny .pmsg-bubble{background:var(--white);color:var(--text);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
 .pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;}
 .pmsg-img{max-width:200px;max-height:200px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;}
@@ -795,6 +824,10 @@ input:checked+.slider:before{transform:translateX(20px);}
 @keyframes pDot{0%,80%,100%{transform:translateY(0);opacity:.4;}40%{transform:translateY(-5px);opacity:1;}}
 .penny-input-area{background:var(--white);border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0;}
 .penny-attach-strip{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:8px;}
+@keyframes pennyStripPop{0%{transform:scale(.94);opacity:.6}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+.penny-attach-strip.pop{animation:pennyStripPop .35s ease;}
+.penny-img-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:#0d3a6e;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;font-family:var(--font-d);box-shadow:0 4px 18px rgba(0,0,0,.22);opacity:0;pointer-events:none;z-index:9999;transition:opacity .2s,transform .2s;}
+.penny-img-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .penny-attach-thumb{position:relative;width:56px;height:56px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--input-bg);}
 .penny-attach-thumb img{width:100%;height:100%;object-fit:cover;}
 .penny-attach-thumb-del{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
@@ -835,6 +868,10 @@ body.dark .penny-input-area{background:#111f2e;border-color:#2a4060;}
 body.dark .penny-textarea{background:#162535;color:#eef2ff;border-color:#2a4060;}
 body.dark .penny-textarea:focus{border-color:#4d8fcc;}
 body.dark .penny-attach-btn{color:#7a9fc0;}
+/* Penny drag-drop zone */
+.penny-drop-overlay{position:absolute;inset:0;z-index:20;border-radius:inherit;background:rgba(13,71,161,.13);border:2.5px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;}
+.penny-drop-overlay span{background:var(--brand);color:#fff;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:600;font-family:var(--font-d);}
+.penny-drag-active .penny-drop-overlay{display:flex;}
 body.dark .penny-context-btn{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
 body.dark .penny-context-btn:hover{background:#1a3d66;color:#fff;}
 body.dark #pennyPricePanel{background:#111f2e;border-color:#4d8fcc;}
@@ -975,6 +1012,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       </div>
     </div>
   </div>
+
 </div>
 
 <!-- ══ ONBOARDING ══ -->
@@ -1071,7 +1109,8 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="other-store-row" id="ob-other-row">
         <input type="text" class="other-store-input" id="ob-other-text" placeholder="Type your store name (e.g. H-E-B, Wegmans)">
       </div>
-      <button class="onboard-next" onclick="obGoStep(5)" style="margin-top:12px;">Continue &#8594;</button>
+      <div id="ob-store-err" style="display:none;color:var(--danger);font-size:13px;text-align:center;margin-bottom:8px;font-weight:500;">Please select at least one store, or tap "Skip for now".</div>
+      <button class="onboard-next" onclick="obContinueStores()" style="margin-top:12px;">Continue &#8594;</button>
       <span class="onboard-skip" onclick="obSkipStep(4)">Skip for now</span>
     </div>
 
@@ -1100,6 +1139,29 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
   </div>
 </div>
+
+<!-- ══ FLOATING PENNY WIDGET (auth + compare) ══ -->
+<button id="landing-penny-fab" onclick="toggleLandingPenny()" title="Chat with Penny" style="display:none;">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+<div id="landing-penny-popup">
+  <div class="lp-header">
+  <div class="lp-avatar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
+    <div class="lp-header-info">
+      <div class="lp-header-name">Penny</div>
+      <div class="lp-header-sub">AI Shopping Advisor</div>
+    </div>
+    <button class="lp-close-btn" onclick="toggleLandingPenny()">&#10005;</button>
+  </div>
+  <div class="lp-msgs" id="lp-msgs">
+    <div class="lp-msg lp-penny">Hi! I'm Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!</div>
+  </div>
+  <div class="lp-input-row">
+    <textarea class="lp-textarea" id="lp-input" rows="1" placeholder="Ask Penny..." onkeydown="lpKeyDown(event)"></textarea>
+    <button class="lp-send-btn" id="lp-send-btn" onclick="sendLandingPenny()">Send</button>
+  </div>
+</div>
+
 <div id="app">
   <header class="app-header">
     <div class="hdr-left">
@@ -1132,7 +1194,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
     <div class="products-wrap"><div class="products-grid" id="grid"></div></div>
     <div class="compare-wrap"><button id="compareBtn" onclick="compare()">COMPARE</button></div>
-    <div class="analysis-wrap"><div class="analysis-row"><textarea id="analysisBox" readonly placeholder="Results will appear here..."></textarea><button class="btn-save-analysis" onclick="saveAnalysisAsPreset()"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Save to Preset</button></div></div>
+    <div class="analysis-wrap"><div class="analysis-row"><textarea id="analysisBox" readonly placeholder="Results will appear here..."></textarea><button class="btn-save-analysis" onclick="saveAnalysisAsPreset()"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span id="txt-save-preset">Save to Preset</span></button></div></div>
   </div>
 
   <!-- HISTORY TAB -->
@@ -1259,10 +1321,12 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           </button>
         </div>
 
-        <div class="penny-messages" id="pennyMessages">
+        <div class="penny-messages" id="pennyMessages" style="position:relative;"
+          ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
+          <div class="penny-drop-overlay"><span>📎 Drop image to send</span></div>
           <div class="penny-welcome">
             <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
-            <div class="penny-welcome-text">Hi! I am Penny, your AI shopping advisor.</div>
+            <div class="penny-welcome-text" id="pennyWelcomeText">Hey! I'm Penny, your AI shopping advisor.</div>
             <div class="penny-welcome-sub">Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.</div>
             <div class="penny-suggestions">
               <button class="penny-sug" onclick="pennyQuickSend('Which store has the best prices for a family of 4?')">Best stores for families</button>
@@ -1272,7 +1336,8 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           </div>
         </div>
         <!-- Input area -->
-        <div class="penny-input-area">
+        <div class="penny-input-area"
+          ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
           <!-- Image/file preview strip -->
           <div class="penny-attach-strip" id="pennyAttachStrip" style="display:none;"></div>
           <div class="penny-input-row">
@@ -1286,7 +1351,8 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             </button>
             <textarea class="penny-textarea" id="pennyInput" placeholder="Ask Penny anything..." rows="1"
               oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();pennySend();}"></textarea>
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();pennySend();}"
+              onpaste="pennyHandlePaste(event)"></textarea>
             <button class="penny-send-btn" id="pennySendBtn" onclick="pennySend()">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -1301,22 +1367,25 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
   <!-- SHOP TAB -->
   <!-- HELP MODAL -->
-  <div class="modal-box" id="helpModal" style="max-width:520px;">
-    <button class="modal-x" onclick="closeModals()">&#10005;</button>
-    <div class="modal-title">Help Guide</div>
+  <div class="modal-box" id="helpModal" style="max-width:520px;padding:0;overflow:hidden;display:none;flex-direction:column;">
+    <div class="help-modal-hdr">
+      <div class="modal-title" style="margin:0;">Help Guide</div>
+      <button class="modal-x" onclick="closeModals()" style="position:static;margin:0;flex-shrink:0;">&#10005;</button>
+    </div>
+    <div class="help-modal-body" style="overflow-y:auto;flex:1;">
 
     <!-- Compare -->
     <div class="help-section">
-      <div class="help-h">📊 Compare Tab</div>
+      <div class="help-h">Compare Tab</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Add your products</div><div class="help-step-desc">Each card = one product. Tap <strong>Scan Barcode</strong> to auto-fill the name and size, or just type them in yourself.</div></div></div>
       <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Enter the price</div><div class="help-step-desc">Type the price shown on the shelf. If the item is on sale, enter the discount amount and choose <strong>%</strong> (percent off) or <strong>$</strong> (dollars off).</div></div></div>
       <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Tap COMPARE</div><div class="help-step-desc">The best deal turns <strong style="color:var(--ok)">green</strong>. If two items are the same price per unit, both show a <strong style="color:var(--warn)">TIE</strong> badge. The result box below explains the winner.</div></div></div>
-      <div class="help-tip">💡 <strong>Tip:</strong> Go to <strong>Settings</strong> (toolbar) to change how many product cards show at once — up to 8.</div>
+      <div class="help-tip">Go to <strong>Settings</strong> (toolbar) to change how many product cards show at once — up to 8.</div>
     </div>
 
     <!-- Grocery -->
     <div class="help-section">
-      <div class="help-h">🛒 Grocery Tab</div>
+      <div class="help-h">Grocery Tab</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Create a list</div><div class="help-step-desc">Tap <strong>New List</strong> on the left sidebar and give it a name — like "Weekly Shop" or "Costco Run".</div></div></div>
       <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Add items</div><div class="help-step-desc">Use the form to add items with a quantity, price, store, and any notes (e.g. "organic only"). Or ask <strong>Penny</strong> to add items for you.</div></div></div>
       <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Shop and check off</div><div class="help-step-desc">While shopping, tap the checkbox next to each item. When done, use <strong>Clear Checked</strong> to reset the list for next time.</div></div></div>
@@ -1324,14 +1393,15 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
     <!-- Presets -->
     <div class="help-section">
-      <div class="help-h">🔖 Presets Tab</div>
+      <div class="help-h">Presets Tab</div>
+      <div class="help-tip">Presets save your entire Compare setup — all product cards with prices, sizes, and names — so you can reload any comparison in one tap.</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Save a comparison</div><div class="help-step-desc">After setting up products on the Compare tab, go to Presets and tap <strong>Save Current</strong>. Give it a name like "Peanut Butter" so you can find it later.</div></div></div>
       <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Reload anytime</div><div class="help-step-desc">Tap <strong>Load</strong> on any preset to instantly restore all the product cards. Great for items you compare every week.</div></div></div>
     </div>
 
     <!-- Penny -->
     <div class="help-section">
-      <div class="help-h">🤖 Penny (AI Advisor)</div>
+      <div class="help-h">Penny (AI Advisor)</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Ask anything</div><div class="help-step-desc">Penny knows about your household, budget, and preferred stores. Ask things like <em>"What should I buy in bulk?"</em> or <em>"Which store is cheapest for produce?"</em></div></div></div>
       <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Share your comparison</div><div class="help-step-desc">Tap <strong>Add Compare</strong> in the Penny tab to send your current product comparison to Penny and get a recommendation.</div></div></div>
       <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Manage your grocery list</div><div class="help-step-desc">Just tell Penny what to add — she can create lists, add or remove items, and even suggest quantities based on your household size.</div></div></div>
@@ -1339,14 +1409,15 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
     <!-- History -->
     <div class="help-section">
-      <div class="help-h">🕐 History Tab</div>
+      <div class="help-h">History Tab</div>
       <div class="help-tip">Every comparison you run is automatically saved here with the date, winner, and price details. Tap the trash icon to remove individual entries, or <strong>Clear All</strong> to wipe the full history.</div>
     </div>
 
     <!-- Profile -->
     <div class="help-section">
-      <div class="help-h">👤 Profile Tab</div>
+      <div class="help-h">Profile Tab</div>
       <div class="help-tip">Update your name, email, and password here. You can also update your <strong>household size</strong>, <strong>shopping frequency</strong>, <strong>weekly budget</strong>, <strong>zip code</strong>, and <strong>preferred stores</strong> — Penny uses all of this to give you better advice.</div>
+    </div>
     </div>
   </div>
 
@@ -1525,26 +1596,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
 
     <!-- Language & Appearance -->
-    <div class="profile-section">
-      <div class="profile-section-title">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="prof-lbl-appearance">Language &amp; Appearance</span>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span class="prof-lbl-langLabel" style="font-size:14px;color:var(--text);">Language</span>
-          <select class="s-select" id="profileLang" onchange="changeProfileLang()" style="min-width:140px;">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="pt">Português</option>
-          </select>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span class="prof-lbl-darkModeLabel" style="font-size:14px;color:var(--text);">Dark Mode</span>
-          <label class="switch"><input type="checkbox" id="profileThemeSwitch" onchange="toggleTheme()"><span class="slider"></span></label>
-        </div>
-      </div>
-    </div>
 
     <!-- Save button -->
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
@@ -1706,8 +1757,6 @@ function applyTheme(dark){
     ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
     : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   if(sw) sw.checked = dark;
-  const profSw = document.getElementById('profileThemeSwitch');
-  if(profSw) profSw.checked = dark;
 }
 
 // ────────────────────────────────────────────────
@@ -1773,6 +1822,19 @@ const TRANSLATIONS = {
     ht1title:'Duplicate a Card', ht1desc:'The copy icon on each product card duplicates it into the next empty slot — great for same item, different sizes.',
     ht2title:'Copy Grocery Items', ht2desc:'Each grocery item has a copy button — copy it to any list in one tap.',
     ht3title:'Compare Up to 5 Items', ht3desc:'Go to Settings and increase the item count to compare up to 5 products at once.',
+    helpPenny:'Penny (AI Advisor)', helpHistory:'History Tab', helpProfile:'Profile Tab',
+    hg1title:'Create a list', hg1desc:'Tap New List on the left sidebar and give it a name — like "Weekly Shop" or "Costco Run".',
+    hg2title:'Add items', hg2desc:'Use the form to add items with a quantity, price, store, and any notes. Or ask Penny to add items for you.',
+    hg3title:'Shop and check off', hg3desc:'While shopping, tap the checkbox next to each item. When done, use Clear Checked to reset the list for next time.',
+    hp1title:'Save a comparison', hp1desc:'After setting up products on the Compare tab, go to Presets and tap Save Current. Give it a name so you can find it later.',
+    hp2title:'Reload anytime', hp2desc:'Tap Load on any preset to instantly restore all the product cards. Great for items you compare every week.',
+    hpen1title:'Ask anything', hpen1desc:'Penny knows your household, budget, and preferred stores. Ask things like "What should I buy in bulk?" or "Which store is cheapest for produce?"',
+    hpen2title:'Share your comparison', hpen2desc:'Tap Add Compare in the Penny tab to send your current product comparison to Penny and get a recommendation.',
+    hpen3title:'Manage your grocery list', hpen3desc:'Just tell Penny what to add — she can create lists, add or remove items, and suggest quantities based on your household size.',
+    helpCompareTip:'Go to Settings (toolbar) to change how many product cards show at once — up to 8.',
+    helpHistoryTip:'Every comparison is automatically saved here with the date, winner, and price details. Tap the trash icon to remove entries, or Clear All to wipe the full history.',
+    helpProfileTip:'Update your name, email, and password here. You can also update your household size, shopping frequency, weekly budget, zip code, and preferred stores — Penny uses all of this to give you better advice.',
+    saveToPreset:'Save to Preset',
     scanCancel:'Cancel',
     errName:'Please enter your first name.', errLastName:'Please enter your last name.',
     errEmailReq:'Email is required.',
@@ -1912,6 +1974,19 @@ const TRANSLATIONS = {
     ht1title:'Duplicar una tarjeta', ht1desc:'El ícono de copia duplica la tarjeta en el siguiente espacio vacío.',
     ht2title:'Copiar artículos de la lista', ht2desc:'Cada artículo tiene un botón de copia.',
     ht3title:'Comparar hasta 5 artículos', ht3desc:'Ve a Ajustes y aumenta el número de artículos.',
+    helpPenny:'Penny (Asistente IA)', helpHistory:'Pestaña Historial', helpProfile:'Pestaña Perfil',
+    hg1title:'Crear una lista', hg1desc:'Toca "Nueva lista" en el panel izquierdo y ponle un nombre.',
+    hg2title:'Agregar artículos', hg2desc:'Usa el formulario para agregar artículos con cantidad, precio, tienda y notas. O pídele a Penny que los agregue.',
+    hg3title:'Comprar y marcar', hg3desc:'Al comprar, toca la casilla junto a cada artículo. Al terminar, usa "Desmarcar" para reiniciar la lista.',
+    hp1title:'Guardar una comparación', hp1desc:'Configura los productos en Comparar, ve a Preajustes y toca "Guardar actual".',
+    hp2title:'Cargar en cualquier momento', hp2desc:'Toca "Cargar" en cualquier preajuste para restaurar las tarjetas. Ideal para artículos que comparas cada semana.',
+    hpen1title:'Pregunta lo que quieras', hpen1desc:'Penny conoce tu hogar, presupuesto y tiendas preferidas. Pregunta como "¿Qué debo comprar al por mayor?" o "¿Cuál tienda es más barata?"',
+    hpen2title:'Comparte tu comparación', hpen2desc:'Toca "Agregar comparación" en la pestaña Penny para enviar tu comparación y obtener una recomendación.',
+    hpen3title:'Gestiona tu lista de compras', hpen3desc:'Solo dile a Penny qué agregar: puede crear listas, agregar o quitar artículos y sugerir cantidades.',
+    helpCompareTip:'Ve a Ajustes (barra de herramientas) para cambiar cuántas tarjetas se muestran — hasta 8.',
+    helpHistoryTip:'Cada comparación se guarda automáticamente con la fecha, ganador y detalles de precio. Toca el ícono de papelera para eliminar entradas o "Borrar todo" para limpiar el historial.',
+    helpProfileTip:'Actualiza tu nombre, correo y contraseña. También puedes actualizar el tamaño del hogar, frecuencia de compra, presupuesto, código postal y tiendas preferidas.',
+    saveToPreset:'Guardar como preajuste',
     scanCancel:'Cancelar',
     errName:'Por favor ingresa tu nombre.', errLastName:'Por favor ingresa tu apellido.',
     errEmailReq:'El correo es obligatorio.',
@@ -2051,6 +2126,19 @@ const TRANSLATIONS = {
     ht1title:'Duplicar um cartão', ht1desc:'O ícone de cópia duplica o cartão no próximo espaço vazio.',
     ht2title:'Copiar itens da lista', ht2desc:'Cada item tem um botão de cópia.',
     ht3title:'Comparar até 5 itens', ht3desc:'Vá em Configurações e aumente o número de itens.',
+    helpPenny:'Penny (Assistente IA)', helpHistory:'Aba Histórico', helpProfile:'Aba Perfil',
+    hg1title:'Criar uma lista', hg1desc:'Toque em "Nova lista" na barra lateral esquerda e dê um nome.',
+    hg2title:'Adicionar itens', hg2desc:'Use o formulário para adicionar itens com quantidade, preço, loja e observações. Ou peça à Penny para adicionar.',
+    hg3title:'Comprar e marcar', hg3desc:'Ao comprar, toque na caixa ao lado de cada item. Ao terminar, use "Desmarcar tudo" para reiniciar a lista.',
+    hp1title:'Salvar uma comparação', hp1desc:'Configure os produtos em Comparar, vá a Predefinições e toque em "Salvar atual".',
+    hp2title:'Recarregar a qualquer momento', hp2desc:'Toque em "Carregar" em qualquer predefinição para restaurar os cartões. Ótimo para itens comparados semanalmente.',
+    hpen1title:'Pergunte qualquer coisa', hpen1desc:'Penny conhece seu domicílio, orçamento e lojas preferidas. Pergunte como "O que devo comprar em quantidade?" ou "Qual loja é mais barata?"',
+    hpen2title:'Compartilhe sua comparação', hpen2desc:'Toque em "Adicionar comparação" na aba Penny para enviar sua comparação e obter uma recomendação.',
+    hpen3title:'Gerencie sua lista de compras', hpen3desc:'Basta dizer à Penny o que adicionar — ela pode criar listas, adicionar ou remover itens e sugerir quantidades.',
+    helpCompareTip:'Vá em Configurações (barra de ferramentas) para alterar quantos cartões são exibidos — até 8.',
+    helpHistoryTip:'Cada comparação é salva automaticamente com a data, vencedor e detalhes de preço. Toque no ícone de lixeira para remover entradas ou "Limpar tudo" para apagar o histórico.',
+    helpProfileTip:'Atualize seu nome, e-mail e senha. Você também pode atualizar o tamanho do domicílio, frequência de compras, orçamento, CEP e lojas preferidas.',
+    saveToPreset:'Salvar como predefinição',
     scanCancel:'Cancelar',
     errName:'Por favor insira seu nome.', errLastName:'Por favor insira seu sobrenome.',
     errEmailReq:'E-mail é obrigatório.',
@@ -2259,22 +2347,41 @@ function applyLang(){
   if(helpSections[0]) helpSections[0].innerText=t.helpGettingStarted;
   if(helpSections[1]) helpSections[1].innerText=t.helpFeaturesGuide;
   if(helpSections[2]) helpSections[2].innerText=t.helpTips;
-  const hStepTitles = document.querySelectorAll('#tab-help .help-step-title');
-  const hStepDescs  = document.querySelectorAll('#tab-help .help-step-desc');
-  [[0,t.hs1title,t.hs1desc],[1,t.hs2title,t.hs2desc],[2,t.hs3title,t.hs3desc],[3,t.hs4title,t.hs4desc],[4,t.ht1title,t.ht1desc],[5,t.ht2title,t.ht2desc],[6,t.ht3title,t.ht3desc]].forEach(([i,title,desc])=>{
+  if(helpSections[3]) helpSections[3].innerText=t.helpPenny;
+  if(helpSections[4]) helpSections[4].innerText=t.helpHistory;
+  if(helpSections[5]) helpSections[5].innerText=t.helpProfile;
+  const hStepTitles = document.querySelectorAll('#helpModal .help-step-title');
+  const hStepDescs  = document.querySelectorAll('#helpModal .help-step-desc');
+  // Compare[0-2], Grocery[3-5], Presets[6-7], Penny[8-10]
+  [[0,t.hs1title,t.hs1desc],[1,t.hs2title,t.hs2desc],[2,t.hs4title,t.hs4desc],
+   [3,t.hg1title,t.hg1desc],[4,t.hg2title,t.hg2desc],[5,t.hg3title,t.hg3desc],
+   [6,t.hp1title,t.hp1desc],[7,t.hp2title,t.hp2desc],
+   [8,t.hpen1title,t.hpen1desc],[9,t.hpen2title,t.hpen2desc],[10,t.hpen3title,t.hpen3desc]
+  ].forEach(([i,title,desc])=>{
     if(hStepTitles[i]) hStepTitles[i].innerText=title;
     if(hStepDescs[i])  hStepDescs[i].innerText=desc;
   });
+  // History and Profile tip blocks
+  const helpModalTips = document.querySelectorAll('#helpModal .help-tip');
+  if(helpModalTips[0]) helpModalTips[0].innerText=t.helpCompareTip;
+  if(helpModalTips[1]) helpModalTips[1].innerText=t.helpHistoryTip;
+  if(helpModalTips[2]) helpModalTips[2].innerText=t.helpProfileTip;
   const helpBadges = document.querySelectorAll('.help-badge');
-  const helpTips   = document.querySelectorAll('.help-tip');
+  const helpTips   = document.querySelectorAll('#tab-help .help-tip');
   const badgeKeys  = [t.history, t.grocery, t.presets, t.exportBtn, lang==='en'?'Per-Account Data':lang==='es'?'Datos por cuenta':'Dados por conta'];
   const tipTexts   = [t.hf1, t.hf2, t.hf3, t.hf4, t.hf6];
   helpBadges.forEach((b,i)=>{ if(badgeKeys[i]) b.innerText=badgeKeys[i]; });
   helpTips.forEach((tip,i)=>{ if(tipTexts[i]){ const badge=tip.querySelector('.help-badge'); tip.innerHTML=(badge?badge.outerHTML:'')+' '+tipTexts[i]; } });
+  setText('txt-save-preset', t.saveToPreset);
+  // Re-render history so empty state translates
+  if(typeof renderHistory === 'function') renderHistory();
+  // Re-render category pickers
+  for(let i=0;i<items;i++) catPickerInit(i);
 
   const savedCards=[]; for(let i=0;i<items;i++) savedCards.push(getCard(i));
   updateGrid();
   savedCards.forEach((d,i)=>{ if(i<items) setCard(i,d); });
+  translateStarterData(); renderListNav();
   if(activeListId) renderGroceryContent();
   renderPresets();
 
@@ -2319,6 +2426,8 @@ function applyLang(){
   const pennyZipLbl = document.getElementById('pennyPriceZipLbl');
   if(pennyZipLbl){ const zip=typeof loadU==='function'?loadU('zip',''):''; pennyZipLbl.textContent=zip?(t.pennyZipNear||'Searching near')+' '+zip:(t.pennyZipNoZip||'Enter your zip in Profile for local results'); }
   setPh('pennyInput', lang==='es'?'Pregúntale algo a Penny...':lang==='pt'?'Pergunte algo a Penny...':'Ask Penny anything...');
+  // Penny price panel list textarea placeholder
+  setPh('pennyPriceListText', lang==='es'?'Escribe artículos — uno por línea o separados por coma\np.ej. leche, huevos, pollo, arroz, jugo de naranja':lang==='pt'?'Digite itens — um por linha ou separados por vírgula\nex. leite, ovos, frango, arroz, suco de laranja':'Type items — one per line or comma separated\ne.g. milk, eggs, chicken, rice, orange juice');
   // Penny suggestion chips (only when welcome screen is visible)
   const pennyWelcome = document.querySelector('.penny-welcome');
   if(pennyWelcome){
@@ -2340,7 +2449,11 @@ function applyLang(){
   if(pSidebarTitle) pSidebarTitle.textContent = lang==='es'?'Chats':lang==='pt'?'Chats':'Chats';
   // Penny welcome texts
   const pwText = document.querySelector('.penny-welcome-text');
-  if(pwText) pwText.textContent = lang==='es'?'Hola, soy Penny, tu asesora de compras con IA.':lang==='pt'?'Olá! Sou Penny, sua consultora de compras com IA.':'Hi! I am Penny, your AI shopping advisor.';
+  if(pwText){
+    const _s=JSON.parse(localStorage.getItem('bp_session')||'{}');
+    const _f=_s.firstName||_s.name?.split(' ')[0]||'';
+    pwText.textContent = lang==='es'?(_f?`Hola, ${_f}! Soy Penny, tu asesora de compras con IA.`:'Hola, soy Penny, tu asesora de compras con IA.'):lang==='pt'?(_f?`Olá, ${_f}! Sou Penny, sua consultora de compras com IA.`:'Olá! Sou Penny, sua consultora de compras com IA.'):(_f?`Hey, ${_f}! I'm Penny, your AI shopping advisor.`:"Hey! I'm Penny, your AI shopping advisor.");
+  }
   const pwSub = document.querySelector('.penny-welcome-sub');
   if(pwSub) pwSub.textContent = lang==='es'?'Pregúntame lo que quieras o toca "Agregar comparación" para compartir tus productos actuales.':lang==='pt'?'Pergunte-me qualquer coisa ou toque em "Adicionar comparação" para compartilhar seus produtos atuais.':'Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.';
 
@@ -2384,15 +2497,6 @@ function applyLang(){
   setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
   setQ('#tab-profile .prof-lbl-stores',     t.profilePreferredStores||t.profileStores||'Preferred Stores');
   setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
-  setQ('#tab-profile .prof-lbl-appearance', t.profileAppearance||'Language & Appearance');
-  setQ('#tab-profile .prof-lbl-langLabel',  t.profileLangLabel||'Language');
-  setQ('#tab-profile .prof-lbl-darkModeLabel', t.profileDarkMode||'Dark Mode');
-  // Sync profile theme switch with current state
-  const profThemeSwitch = document.getElementById('profileThemeSwitch');
-  if(profThemeSwitch) profThemeSwitch.checked = document.body.classList.contains('dark');
-  // Sync profile lang dropdown
-  const profileLangDropdown = document.getElementById('profileLang');
-  if(profileLangDropdown) profileLangDropdown.value = lang;
   const profPeopleLbl = document.querySelector('#tab-profile .onboard-stepper span[style*="color:var(--muted)"]');
   if(profPeopleLbl) profPeopleLbl.textContent=t.people||'people';
   const profBudgetNote = document.querySelector('#tab-profile .profile-section .onboard-stepper + div');
@@ -2415,6 +2519,10 @@ function applyLang(){
   // ── Help modal ──
   const helpModalTitle = document.querySelector('#helpModal .modal-title');
   if(helpModalTitle) helpModalTitle.innerText = lang==='es'?'Guía de ayuda':lang==='pt'?'Guia de ajuda':'Help Guide';
+
+  // Re-render Penny so welcome screen and session list reflect new language
+  if(typeof renderPennyMessages === 'function') renderPennyMessages();
+  if(typeof renderPennySessions === 'function') renderPennySessions();
 }
 
 function changeLang(src){
@@ -2425,16 +2533,6 @@ function changeLang(src){
   applyLang();
 }
 
-function changeProfileLang(){
-  lang = document.getElementById('profileLang').value;
-  document.getElementById('authLang').value = lang;
-  document.getElementById('setLang').value = lang;
-  localStorage.setItem('bp_lang', lang);
-  applyLang();
-  // Re-sync after applyLang in case it overwrites the dropdown
-  const pl = document.getElementById('profileLang');
-  if(pl) pl.value = lang;
-}
 
 // ────────────────────────────────────────────────
 // AUTH
@@ -2566,7 +2664,9 @@ function showApp(isNewUser=false){
   updateGrid(); renderHistory(); renderListNav(); renderPresets();
   if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
   applyLang();
+  document.getElementById('landing-penny-fab').style.display='flex';
   if(isNewUser){
+    obSkipped = {1:false,2:false,3:false,4:false,5:false};
     obGoStep(1);
     document.getElementById('onboarding-screen').style.display='flex';
   }
@@ -2587,6 +2687,7 @@ function goTab(name){
     if(name==='penny') el.style.flexDirection='column';
   }
   document.getElementById(`nt-${name}`)?.classList.add('active');
+  document.getElementById('landing-penny-fab').style.display = name==='compare' ? 'flex' : 'none';
   if(name==='profile') renderProfileTab();
   if(name==='grocery'){ renderListNav(); renderGroceryContent(); }
   if(name==='penny'){
@@ -2733,6 +2834,7 @@ function toggleStore(el, name){
   el.classList.toggle('selected');
   const idx = obStores.indexOf(name);
   if(idx >= 0) obStores.splice(idx, 1); else obStores.push(name);
+  document.getElementById('ob-store-err').style.display='none';
 }
 function toggleObOtherStore(el){
   el.classList.toggle('selected');
@@ -2754,6 +2856,18 @@ function obSkipStep(fromStep){
   obSkipped[fromStep] = true;
   if(fromStep < 5) obGoStep(fromStep + 1);
   else finishOnboarding();
+}
+function obContinueStores(){
+  const otherChip = document.getElementById('ob-other-chip');
+  const otherSelected = otherChip && otherChip.classList.contains('selected');
+  const otherText = (document.getElementById('ob-other-text')?.value||'').trim();
+  const totalSelected = obStores.length + (otherSelected && otherText ? 1 : 0);
+  if(totalSelected === 0){
+    document.getElementById('ob-store-err').style.display='block';
+    return;
+  }
+  document.getElementById('ob-store-err').style.display='none';
+  obGoStep(5);
 }
 function tryFinishOnboarding(){
   const zipVal = (document.getElementById('ob-zip')?.value || '').trim();
@@ -2940,6 +3054,81 @@ const CAT_TREE = [
   ]},
 ];
 
+// Category label translations (keyed by English label)
+const CAT_TRANS = {
+  es:{
+    'Meats & Protein':'Carnes y proteínas','Fruits':'Frutas','Vegetables':'Verduras',
+    'Dairy & Refrigerated':'Lácteos y refrigerados','Pantry & Dry Goods':'Despensa y secos',
+    'Beverages':'Bebidas','Hygiene & Personal Care':'Higiene y cuidado personal',
+    'Household Supplies':'Artículos del hogar','Baby & Pet':'Bebé y mascotas',
+    'Chicken':'Pollo','Beef / Ground Beef':'Res / Carne molida','Pork':'Cerdo',
+    'Seafood / Fish':'Mariscos / Pescado','Eggs':'Huevos','Deli Meat':'Carnes frías',
+    'Turkey':'Pavo','Lamb':'Cordero',
+    'Bananas':'Plátanos','Apples':'Manzanas','Berries':'Frutas del bosque',
+    'Grapes':'Uvas','Oranges':'Naranjas','Avocados':'Aguacates','Other Fresh Fruit':'Otras frutas',
+    'Leafy Greens':'Verduras de hoja','Tomatoes':'Tomates','Onions / Garlic':'Cebollas / Ajo',
+    'Peppers':'Pimientos','Potatoes':'Papas','Frozen Vegetables':'Verduras congeladas',
+    'Canned Vegetables':'Verduras enlatadas','Other Fresh Veg':'Otras verduras',
+    'Milk':'Leche','Butter':'Mantequilla','Cheese':'Queso','Shredded Cheese':'Queso rallado',
+    'Block Cheese':'Queso en bloque','Cream Cheese':'Queso crema','Sliced Cheese':'Queso en lonchas',
+    'Yogurt':'Yogur','Sour Cream / Dips':'Crema agria / Dips',
+    'Bread & Bakery':'Pan y panadería','Rice & Grains':'Arroz y granos','Pasta & Noodles':'Pasta y fideos',
+    'Cereal':'Cereal','Canned Goods':'Enlatados','Canned Beans':'Frijoles enlatados',
+    'Canned Soup':'Sopa enlatada','Canned Tomatoes':'Tomates enlatados','Canned Fish':'Pescado enlatado',
+    'Snacks & Chips':'Botanas y chips','Cooking Oil':'Aceite de cocina',
+    'Condiments & Sauces':'Condimentos y salsas','Frozen Pizza':'Pizza congelada',
+    'Frozen Meals':'Comidas congeladas','Sandwich Bread':'Pan de caja','Tortillas':'Tortillas',
+    'Rolls / Buns':'Bollos / Panes',
+    'Coffee':'Café','Tea':'Té','Bottled Water':'Agua embotellada','Soda / Soft Drinks':'Refrescos',
+    'Juice':'Jugos','Energy Drinks':'Bebidas energéticas','Sports Drinks':'Bebidas deportivas',
+    'Hair Care':'Cuidado del cabello','Shampoo':'Champú','Conditioner':'Acondicionador',
+    'Body Wash / Soap':'Gel de baño / Jabón','Toothpaste':'Pasta dental','Deodorant':'Desodorante',
+    'Razors / Shaving':'Rasuradoras / Afeitar','Feminine Care':'Higiene femenina','Lotion / Skincare':'Loción / Cuidado de piel',
+    'Toilet Paper':'Papel higiénico','Paper Towels':'Papel de cocina','Laundry Detergent':'Detergente para ropa',
+    'Dish Soap':'Lavavajillas','Trash Bags':'Bolsas de basura','Cleaning Products':'Productos de limpieza',
+    'Bags / Wrap / Foil':'Bolsas / Film / Aluminio',
+    'Baby':'Bebé','Diapers':'Pañales','Baby Formula':'Fórmula infantil','Baby Food':'Comida para bebé',
+    'Pet':'Mascotas','Pet Food (Dog)':'Comida para perro','Pet Food (Cat)':'Comida para gato',
+    'Pet Treats':'Premios para mascotas','Pet Supplies':'Accesorios para mascotas',
+  },
+  pt:{
+    'Meats & Protein':'Carnes e proteínas','Fruits':'Frutas','Vegetables':'Vegetais',
+    'Dairy & Refrigerated':'Laticínios e refrigerados','Pantry & Dry Goods':'Despensa e secos',
+    'Beverages':'Bebidas','Hygiene & Personal Care':'Higiene e cuidados pessoais',
+    'Household Supplies':'Suprimentos domésticos','Baby & Pet':'Bebê e animais',
+    'Chicken':'Frango','Beef / Ground Beef':'Carne bovina / Carne moída','Pork':'Porco',
+    'Seafood / Fish':'Frutos do mar / Peixe','Eggs':'Ovos','Deli Meat':'Frios',
+    'Turkey':'Peru','Lamb':'Cordeiro',
+    'Bananas':'Bananas','Apples':'Maçãs','Berries':'Frutas vermelhas',
+    'Grapes':'Uvas','Oranges':'Laranjas','Avocados':'Abacates','Other Fresh Fruit':'Outras frutas',
+    'Leafy Greens':'Folhas verdes','Tomatoes':'Tomates','Onions / Garlic':'Cebolas / Alho',
+    'Peppers':'Pimentões','Potatoes':'Batatas','Frozen Vegetables':'Legumes congelados',
+    'Canned Vegetables':'Legumes enlatados','Other Fresh Veg':'Outros vegetais',
+    'Milk':'Leite','Butter':'Manteiga','Cheese':'Queijo','Shredded Cheese':'Queijo ralado',
+    'Block Cheese':'Queijo em bloco','Cream Cheese':'Cream cheese','Sliced Cheese':'Queijo fatiado',
+    'Yogurt':'Iogurte','Sour Cream / Dips':'Creme azedo / Patês',
+    'Bread & Bakery':'Pão e padaria','Rice & Grains':'Arroz e grãos','Pasta & Noodles':'Massa e macarrão',
+    'Cereal':'Cereal','Canned Goods':'Enlatados','Canned Beans':'Feijão enlatado',
+    'Canned Soup':'Sopa enlatada','Canned Tomatoes':'Tomate enlatado','Canned Fish':'Peixe enlatado',
+    'Snacks & Chips':'Salgadinhos e chips','Cooking Oil':'Óleo de cozinha',
+    'Condiments & Sauces':'Condimentos e molhos','Frozen Pizza':'Pizza congelada',
+    'Frozen Meals':'Refeições congeladas','Sandwich Bread':'Pão de forma','Tortillas':'Tortilhas',
+    'Rolls / Buns':'Pãezinhos / Hambúrguer',
+    'Coffee':'Café','Tea':'Chá','Bottled Water':'Água mineral','Soda / Soft Drinks':'Refrigerantes',
+    'Juice':'Sucos','Energy Drinks':'Bebidas energéticas','Sports Drinks':'Bebidas esportivas',
+    'Hair Care':'Cuidados com o cabelo','Shampoo':'Shampoo','Conditioner':'Condicionador',
+    'Body Wash / Soap':'Sabonete / Gel de banho','Toothpaste':'Pasta de dente','Deodorant':'Desodorante',
+    'Razors / Shaving':'Barbeadores / Barbear','Feminine Care':'Higiene feminina','Lotion / Skincare':'Loção / Cuidados com a pele',
+    'Toilet Paper':'Papel higiênico','Paper Towels':'Papel-toalha','Laundry Detergent':'Sabão em pó / Detergente',
+    'Dish Soap':'Detergente para louça','Trash Bags':'Sacos de lixo','Cleaning Products':'Produtos de limpeza',
+    'Bags / Wrap / Foil':'Sacos / Filme / Papel alumínio',
+    'Baby':'Bebê','Diapers':'Fraldas','Baby Formula':'Fórmula infantil','Baby Food':'Comida para bebê',
+    'Pet':'Animais','Pet Food (Dog)':'Ração para cachorro','Pet Food (Cat)':'Ração para gato',
+    'Pet Treats':'Petiscos para animais','Pet Supplies':'Acessórios para animais',
+  }
+};
+function catLabel(lbl){ return (lang!=='en' && CAT_TRANS[lang] && CAT_TRANS[lang][lbl]) ? CAT_TRANS[lang][lbl] : lbl; }
+
 // State: path per card index
 const catPickerState = {};
 
@@ -2950,12 +3139,15 @@ function catPickerInit(idx){
   if(!l1) return;
 
   // Populate level 1 with top-level categories
-  l1.innerHTML = '<option value="">— Select Category —</option>' +
-    CAT_TREE.map((n, i) => '<option value="' + i + '">' + n.label + '</option>').join('');
+  const selCat = lang==='es'?'— Seleccionar categoría —':lang==='pt'?'— Selecionar categoria —':'— Select Category —';
+  const selSub = lang==='es'?'— Seleccionar subcategoría —':lang==='pt'?'— Selecionar subcategoria —':'— Select Sub-category —';
+  const selType = lang==='es'?'— Seleccionar tipo —':lang==='pt'?'— Selecionar tipo —':'— Select Item Type —';
+  l1.innerHTML = '<option value="">' + selCat + '</option>' +
+    CAT_TREE.map((n, i) => '<option value="' + i + '">' + catLabel(n.label) + '</option>').join('');
 
   // Reset all
-  if(l2){ l2.innerHTML = '<option value="">— Select Sub-category —</option>'; l2.style.display = 'none'; }
-  if(l3){ l3.innerHTML = '<option value="">— Select Item Type —</option>'; l3.style.display = 'none'; }
+  if(l2){ l2.innerHTML = '<option value="">' + selSub + '</option>'; l2.style.display = 'none'; }
+  if(l3){ l3.innerHTML = '<option value="">' + selType + '</option>'; l3.style.display = 'none'; }
   const catEl = document.getElementById('cat-' + idx);
   if(catEl) catEl.value = '';
 }
@@ -2974,15 +3166,17 @@ function catL1Change(idx){
   catPickerClearName(idx);
 
   const ni = parseInt(l1.value);
-  if(isNaN(ni) || l1.value === ''){ l2.style.display = 'none'; l2.innerHTML = '<option value="">— Select Sub-category —</option>'; return; }
+  const selSub2 = lang==='es'?'— Seleccionar subcategoría —':lang==='pt'?'— Selecionar subcategoria —':'— Select Sub-category —';
+  const selType2 = lang==='es'?'— Seleccionar tipo —':lang==='pt'?'— Selecionar tipo —':'— Select Item Type —';
+  if(isNaN(ni) || l1.value === ''){ l2.style.display = 'none'; l2.innerHTML = '<option value="">' + selSub2 + '</option>'; return; }
 
   const node = CAT_TREE[ni];
   if(!node) return;
 
   if(node.children){
     // Has sub-categories — populate L2
-    l2.innerHTML = '<option value="">— Select Sub-category —</option>' +
-      node.children.map((c, ci) => '<option value="' + ci + '">' + c.label + '</option>').join('');
+    l2.innerHTML = '<option value="">' + selSub2 + '</option>' +
+      node.children.map((c, ci) => '<option value="' + ci + '">' + catLabel(c.label) + '</option>').join('');
     l2.style.display = 'block';
   } else {
     // Leaf at L1 (shouldn't happen in current tree but handle gracefully)
@@ -3002,7 +3196,8 @@ function catL2Change(idx){
   catEl.value = '';
   catPickerClearName(idx);
   l3.style.display = 'none';
-  l3.innerHTML = '<option value="">— Select Item Type —</option>';
+  const selType3 = lang==='es'?'— Seleccionar tipo —':lang==='pt'?'— Selecionar tipo —':'— Select Item Type —';
+  l3.innerHTML = '<option value="">' + selType3 + '</option>';
 
   const ni1 = parseInt(l1.value);
   const ni2 = parseInt(l2.value);
@@ -3013,8 +3208,8 @@ function catL2Change(idx){
 
   if(node.children){
     // Has a 3rd level
-    l3.innerHTML = '<option value="">— Select Item Type —</option>' +
-      node.children.map((c, ci) => '<option value="' + ci + '">' + c.label + '</option>').join('');
+    l3.innerHTML = '<option value="">' + selType3 + '</option>' +
+      node.children.map((c, ci) => '<option value="' + ci + '">' + catLabel(c.label) + '</option>').join('');
     l3.style.display = 'block';
   } else {
     // Leaf at L2
@@ -3050,55 +3245,110 @@ function catPickerClearName(idx){
   if(bd) bd.classList.remove('open');
 }
 
+// Translations for the auto-generated starter grocery list
+const STARTER_NAMES = {
+  listName:{ en:'My Weekly Essentials', es:'Mis productos semanales', pt:'Meus essenciais semanais' },
+  s1:{ en:'Eggs', es:'Huevos', pt:'Ovos' },
+  s2:{ en:'Milk', es:'Leche', pt:'Leite' },
+  s3:{ en:'Bread', es:'Pan', pt:'Pão' },
+  s4:{ en:'Butter', es:'Mantequilla', pt:'Manteiga' },
+  s5:{ en:'Chicken Breast', es:'Pechuga de pollo', pt:'Peito de frango' },
+  s6:{ en:'Ground Beef', es:'Carne molida', pt:'Carne moída' },
+  s7:{ en:'Bananas', es:'Plátanos', pt:'Bananas' },
+  s8:{ en:'Apples', es:'Manzanas', pt:'Maçãs' },
+  s9:{ en:'Spinach', es:'Espinacas', pt:'Espinafre' },
+  s10:{ en:'Tomatoes', es:'Tomates', pt:'Tomates' },
+  s11:{ en:'Onions', es:'Cebollas', pt:'Cebolas' },
+  s12:{ en:'Garlic', es:'Ajo', pt:'Alho' },
+  s13:{ en:'Rice', es:'Arroz', pt:'Arroz' },
+  s14:{ en:'Pasta', es:'Pasta', pt:'Macarrão' },
+  s15:{ en:'Pasta Sauce', es:'Salsa para pasta', pt:'Molho para macarrão' },
+  s16:{ en:'Canned Beans', es:'Frijoles enlatados', pt:'Feijão enlatado' },
+  s17:{ en:'Olive Oil', es:'Aceite de oliva', pt:'Azeite de oliva' },
+  s18:{ en:'Shredded Cheese', es:'Queso rallado', pt:'Queijo ralado' },
+  s19:{ en:'Yogurt', es:'Yogur', pt:'Iogurte' },
+  s20:{ en:'Orange Juice', es:'Jugo de naranja', pt:'Suco de laranja' },
+  s21:{ en:'Laundry Detergent', es:'Detergente para ropa', pt:'Sabão em pó' },
+  s22:{ en:'Dish Soap', es:'Lavavajillas', pt:'Detergente para louça' },
+  s23:{ en:'Toilet Paper', es:'Papel higiénico', pt:'Papel higiênico' },
+  s24:{ en:'Paper Towels', es:'Papel de cocina', pt:'Papel-toalha' },
+};
+
+function translateStarterData(){
+  const l = lang||'en';
+  let changed = false;
+  groceryLists.forEach(list => {
+    if(list.starterList && STARTER_NAMES.listName[l] && list.name !== STARTER_NAMES.listName[l]){
+      list.name = STARTER_NAMES.listName[l]; changed = true;
+    }
+  });
+  groceryItems.forEach(item => {
+    if(item.starterKey && STARTER_NAMES[item.starterKey] && STARTER_NAMES[item.starterKey][l]){
+      if(item.name !== STARTER_NAMES[item.starterKey][l]){ item.name = STARTER_NAMES[item.starterKey][l]; changed = true; }
+    }
+  });
+  if(changed){ saveU('glists', groceryLists); saveU('gitems', groceryItems); }
+}
+
 function createStarterGroceryList(){
   const existing = loadU('glists', []);
   if(existing.length > 0) return; // only for brand new users
   const lid = 'list_starter_' + Date.now();
-  const list = { id: lid, name: 'My Weekly Essentials' };
+  const l = lang||'en';
+  const SN = STARTER_NAMES;
+  const list = { id: lid, name: SN.listName[l]||SN.listName.en, starterList: true };
   const starterItems = [
-    {id:'s1',listId:lid,name:'Eggs',qty:1,price:'',store:'',notes:'1 dozen',checked:false},
-    {id:'s2',listId:lid,name:'Milk',qty:1,price:'',store:'',notes:'1 gallon',checked:false},
-    {id:'s3',listId:lid,name:'Bread',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s4',listId:lid,name:'Butter',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s5',listId:lid,name:'Chicken Breast',qty:2,price:'',store:'',notes:'lbs',checked:false},
-    {id:'s6',listId:lid,name:'Ground Beef',qty:1,price:'',store:'',notes:'1 lb',checked:false},
-    {id:'s7',listId:lid,name:'Bananas',qty:1,price:'',store:'',notes:'1 bunch',checked:false},
-    {id:'s8',listId:lid,name:'Apples',qty:1,price:'',store:'',notes:'1 bag',checked:false},
-    {id:'s9',listId:lid,name:'Spinach',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s10',listId:lid,name:'Tomatoes',qty:2,price:'',store:'',notes:'',checked:false},
-    {id:'s11',listId:lid,name:'Onions',qty:1,price:'',store:'',notes:'3 lb bag',checked:false},
-    {id:'s12',listId:lid,name:'Garlic',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s13',listId:lid,name:'Rice',qty:1,price:'',store:'',notes:'5 lb bag',checked:false},
-    {id:'s14',listId:lid,name:'Pasta',qty:1,price:'',store:'',notes:'1 lb box',checked:false},
-    {id:'s15',listId:lid,name:'Pasta Sauce',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s16',listId:lid,name:'Canned Beans',qty:2,price:'',store:'',notes:'',checked:false},
-    {id:'s17',listId:lid,name:'Olive Oil',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s18',listId:lid,name:'Shredded Cheese',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s19',listId:lid,name:'Yogurt',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s20',listId:lid,name:'Orange Juice',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s21',listId:lid,name:'Laundry Detergent',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s22',listId:lid,name:'Dish Soap',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s23',listId:lid,name:'Toilet Paper',qty:1,price:'',store:'',notes:'',checked:false},
-    {id:'s24',listId:lid,name:'Paper Towels',qty:1,price:'',store:'',notes:'',checked:false},
+    {id:'s1',listId:lid,name:SN.s1[l]||SN.s1.en,qty:1,price:'',store:'',notes:'1 dozen',checked:false,starterKey:'s1'},
+    {id:'s2',listId:lid,name:SN.s2[l]||SN.s2.en,qty:1,price:'',store:'',notes:'1 gallon',checked:false,starterKey:'s2'},
+    {id:'s3',listId:lid,name:SN.s3[l]||SN.s3.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s3'},
+    {id:'s4',listId:lid,name:SN.s4[l]||SN.s4.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s4'},
+    {id:'s5',listId:lid,name:SN.s5[l]||SN.s5.en,qty:2,price:'',store:'',notes:'lbs',checked:false,starterKey:'s5'},
+    {id:'s6',listId:lid,name:SN.s6[l]||SN.s6.en,qty:1,price:'',store:'',notes:'1 lb',checked:false,starterKey:'s6'},
+    {id:'s7',listId:lid,name:SN.s7[l]||SN.s7.en,qty:1,price:'',store:'',notes:'1 bunch',checked:false,starterKey:'s7'},
+    {id:'s8',listId:lid,name:SN.s8[l]||SN.s8.en,qty:1,price:'',store:'',notes:'1 bag',checked:false,starterKey:'s8'},
+    {id:'s9',listId:lid,name:SN.s9[l]||SN.s9.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s9'},
+    {id:'s10',listId:lid,name:SN.s10[l]||SN.s10.en,qty:2,price:'',store:'',notes:'',checked:false,starterKey:'s10'},
+    {id:'s11',listId:lid,name:SN.s11[l]||SN.s11.en,qty:1,price:'',store:'',notes:'3 lb bag',checked:false,starterKey:'s11'},
+    {id:'s12',listId:lid,name:SN.s12[l]||SN.s12.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s12'},
+    {id:'s13',listId:lid,name:SN.s13[l]||SN.s13.en,qty:1,price:'',store:'',notes:'5 lb bag',checked:false,starterKey:'s13'},
+    {id:'s14',listId:lid,name:SN.s14[l]||SN.s14.en,qty:1,price:'',store:'',notes:'1 lb box',checked:false,starterKey:'s14'},
+    {id:'s15',listId:lid,name:SN.s15[l]||SN.s15.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s15'},
+    {id:'s16',listId:lid,name:SN.s16[l]||SN.s16.en,qty:2,price:'',store:'',notes:'',checked:false,starterKey:'s16'},
+    {id:'s17',listId:lid,name:SN.s17[l]||SN.s17.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s17'},
+    {id:'s18',listId:lid,name:SN.s18[l]||SN.s18.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s18'},
+    {id:'s19',listId:lid,name:SN.s19[l]||SN.s19.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s19'},
+    {id:'s20',listId:lid,name:SN.s20[l]||SN.s20.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s20'},
+    {id:'s21',listId:lid,name:SN.s21[l]||SN.s21.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s21'},
+    {id:'s22',listId:lid,name:SN.s22[l]||SN.s22.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s22'},
+    {id:'s23',listId:lid,name:SN.s23[l]||SN.s23.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s23'},
+    {id:'s24',listId:lid,name:SN.s24[l]||SN.s24.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s24'},
   ];
   saveU('glists', [list]);
   saveU('gitems', starterItems);
 }
 function onNameInput(idx){
+  if(_brandSelected) return;
   const cat=document.getElementById(`cat-${idx}`)?.value;
   const val=document.getElementById(`n-${idx}`).value.trim().toLowerCase();
   const bd=document.getElementById(`bd-${idx}`);
   if(!bd) return;
   // Only show brands for the selected category — never dump all brands
   const brands = cat && BRAND_DATA[cat] ? BRAND_DATA[cat] : [];
+  // Don't reopen if the exact brand name is already entered
+  if(val && brands.some(b=>b.toLowerCase()===val)){ bd.classList.remove('open'); bd.innerHTML=''; return; }
   const filtered = val ? brands.filter(b=>b.toLowerCase().includes(val)) : brands;
   if(!filtered.length){ bd.classList.remove('open'); return; }
   bd.innerHTML=filtered.slice(0,10).map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
   bd.classList.add('open');
 }
+let _brandSelected = false;
 function selectBrand(idx, name){
+  _brandSelected = true;
   document.getElementById(`n-${idx}`).value=name;
-  document.getElementById(`bd-${idx}`).classList.remove('open');
+  const bd=document.getElementById(`bd-${idx}`);
+  bd.classList.remove('open');
+  bd.innerHTML='';
+  setTimeout(()=>{ _brandSelected=false; },250);
 }
 document.addEventListener('click', e=>{
   if(!e.target.closest('.brand-dropdown')&&!e.target.matches(`[id^="n-"]`)) document.querySelectorAll('.brand-dropdown').forEach(b=>b.classList.remove('open'));
@@ -3211,7 +3461,8 @@ function dupCard(idx){
   setCard(items-1, d);
   const newCat=document.getElementById(`cat-${items-1}`); if(newCat) newCat.value=srcCat; catPickerInit(items-1);
   if(d.n) onNameInput(items-1);
-  showToast(`Card ${idx+1} → Card ${items}`,'ok');
+  const cardWord = lang==='es'?'Tarjeta':lang==='pt'?'Cartão':'Card';
+  showToast(`${cardWord} ${idx+1} → ${cardWord} ${items}`,'ok');
 }
 
 function clearPriceErr(idx){
@@ -3464,7 +3715,7 @@ function promptDupItem(id){
   const el=document.getElementById('dupListOptions');
   el.innerHTML=groceryLists.map(l=>{
     const isCurrent = l.id===activeListId;
-    return `<button class="auth-btn" style="margin-bottom:8px;padding:12px;${isCurrent?'opacity:.75':''}" onclick="doDupItem(${l.id})">${l.name}${isCurrent?` (${t.thisListLabel})`:''}</button>`;
+    return `<button class="auth-btn" style="margin-bottom:8px;padding:12px;${isCurrent?'opacity:.75':''}" onclick="doDupItem('${l.id}')">${l.name}${isCurrent?` (${t.thisListLabel})`:''}</button>`;
   }).join('');
   openModal('dupItemModal');
 }
@@ -3486,7 +3737,7 @@ function saveEditItem(){
   const item=groceryItems.find(i=>i.id===id); if(!item)return;
   const name=document.getElementById('edit-name').value.trim();
   if(!name){ showToast(T().toastItemNameEmpty); return; }
-  item.name=name;
+  item.name=name; delete item.starterKey; // user edited — stop auto-translating
   item.qty=document.getElementById('edit-qty').value||'1';
   item.price=document.getElementById('edit-price').value;
   item.store=document.getElementById('edit-store').value.trim();
@@ -3497,12 +3748,12 @@ function saveEditItem(){
   showToast(`"${name}" ${T().toastUpdated}`,'ok');
 }
 function doDupItem(toListId){
-  const orig=groceryItems.find(i=>i.id===dupItemId); if(!orig)return;
+  const orig=groceryItems.find(i=>String(i.id)===String(dupItemId)); if(!orig)return;
   const copy={...orig,id:Date.now(),listId:toListId,done:false};
   groceryItems.push(copy); saveU('gitems',groceryItems);
   closeModals(); renderListNav();
-  if(toListId===activeListId) renderGroceryContent();
-  const destName=groceryLists.find(l=>l.id===toListId)?.name||'list';
+  if(String(toListId)===String(activeListId)) renderGroceryContent();
+  const destName=groceryLists.find(l=>String(l.id)===String(toListId))?.name||'list';
   const t=T();
   showToast(`${lang==='en'?'Copied to':lang==='es'?'Copiado a':'Copiado para'} "${destName}"`,'ok');
 }
@@ -3667,7 +3918,8 @@ function showToast(msg,type='warn'){
 }
 function openModal(id){
   document.getElementById('modalOverlay').style.display='block';
-  document.getElementById(id).style.display='block';
+  const el = document.getElementById(id);
+  el.style.display = id==='helpModal' ? 'flex' : 'block';
   if(id==='exportModal') document.getElementById('exportPre').innerText=lastAnalysis||T().exportRunFirst;
 }
 function closeModals(){ document.getElementById('modalOverlay').style.display='none'; document.querySelectorAll('.modal-box').forEach(m=>m.style.display='none'); listNameCallback=null; dupItemId=null; }
@@ -3774,9 +4026,6 @@ function renderProfileTab(){
   setQ('#tab-profile .prof-lbl-zip',        t.profileZip||'Zip Code');
   setQ('#tab-profile .prof-lbl-stores',     t.profilePreferredStores||t.profileStores||'Preferred Stores');
   setQ('#tab-profile .prof-btn-save',       t.profileSave||'Save Changes');
-  setQ('#tab-profile .prof-lbl-appearance', t.profileAppearance||'Language & Appearance');
-  setQ('#tab-profile .prof-lbl-langLabel',  t.profileLangLabel||'Language');
-  setQ('#tab-profile .prof-lbl-darkModeLabel', t.profileDarkMode||'Dark Mode');
   setQ('#tab-profile .prof-lbl-danger',     t.dangerZone||'Danger Zone');
   setQ('#tab-profile .prof-btn-delete',     t.deleteAccount||'Delete Account');
   setQ('#tab-profile .prof-lbl-deleteNote', t.deleteNote||'This permanently removes your account and all data. You can sign up again with the same email.');
@@ -3902,12 +4151,6 @@ function renderProfileTab(){
   const msg = document.getElementById('profile-saved-msg');
   if(msg) msg.style.display = 'none';
 
-  // Sync language dropdown
-  const profileLangEl = document.getElementById('profileLang');
-  if(profileLangEl) profileLangEl.value = lang;
-  // Sync theme switch
-  const profThemeSw = document.getElementById('profileThemeSwitch');
-  if(profThemeSw) profThemeSw.checked = document.body.classList.contains('dark');
 }
 
 function confirmDeleteAccount(){
@@ -4192,7 +4435,8 @@ function renderPennySessions(){
   const list = document.getElementById('pennySessionList');
   if(!list) return;
   if(!pennySessions.length){
-    list.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">No chats yet</div>';
+    const noChatsText = lang==='es'?'Sin chats aún':lang==='pt'?'Sem chats ainda':'No chats yet';
+    list.innerHTML = `<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">${noChatsText}</div>`;
     return;
   }
   list.innerHTML = [...pennySessions].reverse().map(s => `
@@ -4206,14 +4450,21 @@ function renderPennyMessages(){
   const area = document.getElementById('pennyMessages');
   if(!area) return;
   if(!pennyActiveSession || !pennyActiveSession.messages.length){
+    const t2 = T();
+    const _sess=JSON.parse(localStorage.getItem('bp_session')||'{}');
+    const _fn=_sess.firstName||_sess.name?.split(' ')[0]||'';
+    const welcomeText = lang==='es'?(_fn?`Hola, ${_fn}! Soy Penny, tu asesora de compras con IA.`:'Hola, soy Penny, tu asesora de compras con IA.'):lang==='pt'?(_fn?`Olá, ${_fn}! Sou Penny, sua consultora de compras com IA.`:'Olá! Sou Penny, sua consultora de compras com IA.'):(_fn?`Hey, ${_fn}! I'm Penny, your AI shopping advisor.`:'Hey! I\'m Penny, your AI shopping advisor.');
+    const welcomeSub  = lang==='es'?'Pregúntame lo que quieras o toca "Agregar comparación" para compartir tus productos actuales.':lang==='pt'?'Pergunte-me qualquer coisa ou toque em "Adicionar comparação" para compartilhar seus produtos atuais.':'Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.';
+    const sugTexts = lang==='es'?['Mejores tiendas para familias','Ahorrar en carnes','Qué comprar al por mayor']:lang==='pt'?['Melhores lojas para famílias','Economizar em carnes','O que comprar em quantidade']:['Best stores for families','Save on meat','What to buy in bulk'];
+    const sugCmds  = lang==='es'?['¿Cuál tienda tiene mejores precios para una familia de 4?','¿Cómo ahorro más en carnes?','¿Qué comestibles debo comprar al por mayor?']:lang==='pt'?['Qual loja tem os melhores preços para uma família de 4?','Como economizo mais em carnes?','Quais mantimentos devo comprar em quantidade?']:['Which store has the best prices for a family of 4?','How do I save the most on meat?','What groceries should I buy in bulk?'];
     area.innerHTML = `<div class="penny-welcome">
       <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
-      <div class="penny-welcome-text">Hi! I am Penny, your AI shopping advisor.</div>
-      <div class="penny-welcome-sub">Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.</div>
+      <div class="penny-welcome-text">${welcomeText}</div>
+      <div class="penny-welcome-sub">${welcomeSub}</div>
       <div class="penny-suggestions">
-        <button class="penny-sug" onclick="pennyQuickSend('Which store has the best prices for a family of 4?')">Best stores for families</button>
-        <button class="penny-sug" onclick="pennyQuickSend('How do I save the most on meat?')">Save on meat</button>
-        <button class="penny-sug" onclick="pennyQuickSend('What groceries should I buy in bulk?')">What to buy in bulk</button>
+        <button class="penny-sug" onclick="pennyQuickSend('${sugCmds[0].replace(/'/g,"\\'")}')">${sugTexts[0]}</button>
+        <button class="penny-sug" onclick="pennyQuickSend('${sugCmds[1].replace(/'/g,"\\'")}')">${sugTexts[1]}</button>
+        <button class="penny-sug" onclick="pennyQuickSend('${sugCmds[2].replace(/'/g,"\\'")}')">${sugTexts[2]}</button>
       </div>
     </div>`;
     return;
@@ -4226,7 +4477,10 @@ function renderPennyMessages(){
       ? `<div class="pmsg-avatar">${initials}</div>`
       : `<div class="pmsg-avatar" style="background:var(--brand);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>`;
     const imgHtml = m.image ? `<img class="pmsg-img" src="${m.image}" alt="attached">` : '';
-    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${m.content}</div></div>`;
+    const bubbleContent = isUser
+      ? (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      : pennyMd(m.content||'');
+    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
@@ -4605,6 +4859,72 @@ function takePhoto(){
 
 // Generate a short meaningful chat title from the first exchange using AI
 
+function pennyHandlePaste(e){
+  const items = e.clipboardData?.items;
+  if(!items) return;
+  for(const item of Array.from(items)){
+    if(item.type.startsWith('image/')){
+      e.preventDefault();
+      const blob = item.getAsFile();
+      if(!blob) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        pennyPendingImages.push({ dataUrl: ev.target.result, name: 'pasted-image.png', mimeType: item.type });
+        renderPennyAttachStrip();
+      };
+      reader.readAsDataURL(blob);
+      return;
+    }
+  }
+}
+function _hasFileDrag(e){ return Array.from(e.dataTransfer.items||[]).some(i=>i.kind==='file')||Array.from(e.dataTransfer.types||[]).includes('Files'); }
+function pennyDragEnter(e){
+  e.preventDefault(); e.stopPropagation();
+  if(!_hasFileDrag(e)) return;
+  document.getElementById('pennyMessages')?.classList.add('penny-drag-active');
+}
+function pennyDragOver(e){
+  e.preventDefault(); e.stopPropagation();
+  if(!_hasFileDrag(e)) return;
+  e.dataTransfer.dropEffect = 'copy';
+  document.getElementById('pennyMessages')?.classList.add('penny-drag-active');
+}
+function pennyDragLeave(e){
+  e.preventDefault(); e.stopPropagation();
+  const container = document.getElementById('pennyMessages');
+  if(container && !container.contains(e.relatedTarget)){
+    container.classList.remove('penny-drag-active');
+  }
+}
+function _showPennyImgToast(n){
+  let t = document.getElementById('penny-img-toast');
+  if(!t){ t=document.createElement('div'); t.id='penny-img-toast'; t.className='penny-img-toast'; document.body.appendChild(t); }
+  t.textContent = n===1 ? '📷 Image added — type your message and send!' : `📷 ${n} images added — type your message and send!`;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function pennyDrop(e){
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById('pennyMessages')?.classList.remove('penny-drag-active');
+  const files = Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      pennyPendingImages.push({ dataUrl: ev.target.result, name: file.name, mimeType: file.type });
+      renderPennyAttachStrip();
+      loaded++;
+      if(loaded === files.length){
+        const strip = document.getElementById('pennyAttachStrip');
+        if(strip){ strip.classList.remove('pop'); void strip.offsetWidth; strip.classList.add('pop'); }
+        _showPennyImgToast(loaded);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  if(files.length) document.getElementById('pennyInput')?.focus();
+}
 function pennyHandleFile(input){
   const file = input.files[0];
   if(!file) return;
@@ -4640,6 +4960,8 @@ function resetPennyBtn(){}
 function startPenny(){ goTab('penny'); }
 
 function buildSys(){
+  const session=JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const firstName=session.firstName||session.name?.split(' ')[0]||'';
   const hh=loadU('household',2);
   const stores=loadU('preferred_stores',[]);
   const zip=loadU('zip','');
@@ -4652,9 +4974,9 @@ function buildSys(){
   const activeListName = activeList ? activeList.name : (groceryLists[0]?.name || 'My Weekly Essentials');
   const listContext = groceryLists.map(l => {
     const its = groceryItems.filter(gi => gi.listId === l.id);
-    const sample = its.slice(0,6).map(i=>i.name).join(', ');
-    return `"${l.name}" (${its.length} items${its.length ? ': ' + sample + (its.length > 6 ? '...' : '') : ''})`;
-  }).join(' | ') || 'none yet';
+    const allNames = its.map(i=>i.name).join(', ');
+    return `"${l.name}" (${its.length} items${its.length ? ': ' + allNames : ''})`;
+  }).join('\n') || 'none yet';
 
   const cards=[];
   for(let i=0;i<items;i++){
@@ -4682,6 +5004,7 @@ function buildSys(){
   }).join('\n');
 
   const contextLines=[
+    firstName?'User\'s first name: '+firstName:'',
     'Household: '+hh+' person'+(hh>1?'s':''),
     'Preferred stores: '+(stores.length?stores.join(', '):'not set'),
     'Zip: '+(zip||'not set'),
@@ -4689,7 +5012,30 @@ function buildSys(){
     freq?'Shopping frequency: '+freq:'',
   ].filter(Boolean).join(' | ');
 
-  return `You are Penny, a warm and knowledgeable grocery shopping advisor — like a smart friend who knows prices inside and out. Always respond in ${ln}.
+  return `You are Penny, a warm and knowledgeable grocery shopping advisor built into the Better Price! app — like a smart friend who knows prices inside and out. Always respond in ${ln}.
+
+${firstName?`The user's first name is ${firstName}. Use their name naturally in conversation — greet them by name when starting a new chat session, and occasionally use it to make the conversation feel personal. Don't overuse it.`:''}
+
+
+APP GUIDE — You know exactly how Better Price! works. When users ask how to do something, explain it clearly and confidently:
+
+COMPARE TAB: The main tab. Users enter up to 6 product cards side by side. Each card has: Name (type or scan barcode to auto-fill), Price ($), Size (number + unit: oz/lb/ml/g/gal/ct/pk), Quantity (pack qty), optional Discount (% off or flat $ off), and Category (for cost-per-day estimates). The app instantly calculates unit price (cost per oz/lb/etc.) so users see the best deal highlighted. The "Save to Preset" button saves the entire setup to reuse later. The duplicate card button (two overlapping squares icon) copies a card.
+
+GROCERY TAB: Users create and manage custom shopping lists. Each item has a name, quantity, and optional notes. Check items off while shopping — checked items are crossed out. The + button adds new items. Each item has edit/delete options. Users can copy items to other lists using the copy icon. Multiple lists supported — switch between them in the list selector at the top.
+
+PRESETS TAB: Shows all saved Compare setups. Tap any preset to instantly reload all its card data into the Compare tab — no re-entering needed. Great for regular shopping trips. Presets can be renamed or deleted.
+
+HISTORY TAB: Every comparison the user runs is automatically saved here with the date, product names, and results. Tap any history entry to view details or reload it. Users can delete individual entries.
+
+PROFILE TAB: Users set: household size (affects cost-per-day estimates), preferred grocery stores, zip code (for regional pricing), and weekly budget. These personalize your recommendations.
+
+PENNY TAB (you): Users chat with you here. You can: answer questions, give price advice, recommend stores, help with meal planning, AND directly manage their grocery lists using command tags. You have full list management powers.
+
+BARCODE SCANNING: In the Compare tab, each card has a barcode/camera icon. Tapping it opens the camera to scan a product barcode — name and size auto-fill from the product database.
+
+LANGUAGE: The app supports English, Spanish (Español), and Portuguese (Português). The language selector is in the Profile tab or the login page.
+
+DARK MODE: Toggle with the sun/moon icon in the top bar.
 
 ${contextLines}
 Grocery lists: ${listContext}
@@ -4700,11 +5046,11 @@ ${lines||'(none entered yet)'}
 
 STORE PRICE COMPARISONS — When the user shares a grocery list and asks you to compare prices at local stores, give realistic 2025 US price estimates for each item at each store. Always rank stores cheapest to most expensive with total basket cost. Call out the best deal clearly. Be specific with dollar amounts. Reflect real store price differences (Aldi/Walmart typically cheapest, Whole Foods/Sprouts typically most expensive). If the user has preferred stores in their profile, prioritize those. Use their zip code for regional context.
 
-ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply on their own lines. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover — just do it.
+ACCOUNT ACTIONS — Manage grocery lists by appending command tags at the very end of your reply. Tags are invisible to the user. Each tag type may appear AT MOST ONCE per reply — never repeat the same command.
 
-Commands (append at end, multiple allowed):
+Commands (append at end of reply):
 
-Add items to a list:
+Add items to an existing list:
 ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
 
 Remove items by name (partial match ok):
@@ -4725,43 +5071,151 @@ CLEARCHECKED:{"list":"List Name"}
 Move items from one list to another:
 MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
 
-ACCOUNT ACTIONS — You have FULL ability to manage the user's grocery lists. Execute actions by appending command tags at the very end of your reply. Tags are invisible to the user and auto-processed. Never say you can't do something these commands cover.
+CONVERSATION RULES — follow these STRICTLY. Always gather all needed info BEFORE executing any action.
 
-Commands (append at end of reply, multiple allowed):
+RULE 1 — CREATING A LIST (always multi-step unless user gives everything upfront):
+  a. No name given → ask for a name first. Do NOT create yet.
+  b. Have name → ask what items to add (if any), or if they want an empty list.
+  c. Only after you have name AND item decisions → output CREATELIST exactly once.
+  Exception: if the user's message contains both name and items ("make a list called Party with chips and drinks"), create immediately.
 
-Add items to existing list:
-ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+RULE 2 — ADDING ITEMS (always confirm before acting):
+  NEVER add items to any list without first confirming with the user — even if there is only one list.
+  Ask: "I'll add [item] to your [list name] — does that sound right?" and wait for confirmation.
+  If no list was specified, ask which list by name. Never guess based on item category.
+  Only add after the user says yes or confirms.
 
-Remove items by name (partial match ok):
-REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
+RULE 3 — DUPLICATE DETECTION:
+  Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
+  Never add a duplicate without explicit confirmation.
 
-Create a new list (optionally pre-filled):
-CREATELIST:{"name":"New List","items":[{"name":"Item","qty":1,"notes":""}]}
+RULE 4 — ONE COMMAND PER REPLY:
+  Output each command tag at most once per message. No repeated ADDLIST, CREATELIST, etc.
 
-Delete an entire list:
-DELETELIST:{"name":"List Name"}
+RULE 5 — Warm, brief, conversational. 150 words max. No bullet points in chat.
+- Default to active list "${activeListName}" when context is clear — but still confirm before acting.
 
-Rename a list:
-RENAMELIST:{"from":"Old Name","to":"New Name"}
+RULE 6 — ASK ABOUT FREQUENCY & USAGE BEFORE ADVISING:
+When a user asks about a product, store, or price WITHOUT mentioning how often they buy it, ask first — naturally woven into your reply:
+- "Is this a one-time buy, or something you grab regularly?"
+- "Does your family eat/use this every day, or just sometimes?"
+- "Is this for everyday use or a specific occasion?"
+Use their answer to shape advice: daily consumers benefit from bulk; occasional buyers should skip warehouse packs. If frequency is already known from context, use it — never ask again.
 
-Clear all checked-off items from a list:
-CLEARCHECKED:{"list":"List Name"}
+RULE 7 — SMART FREQUENCY-BASED SAVINGS MATH:
+Always factor in household size (${hh} person${hh>1?'s':''}) and usage frequency when comparing prices.
+- Daily use → calculate weekly/monthly cost at each store; recommend bulk only if the family will use it before it expires
+- Occasional/one-time → recommend smallest affordable pack at cheapest store
+- Perishables → warn if bulk pack may spoil before they finish it
+- Non-perishables used daily → bulk almost always wins
+Show the math: "At 1 dozen/day for ${hh} people, a 5-dozen pack lasts ~5 days. At Sam's Club that's $X vs Walmart's $X — here's which wins long-term."
 
-Move items from one list to another:
-MOVEITEMS:{"from":"Source List","to":"Target List","items":["item name"]}
+RULE 8 — PROACTIVE FOLLOW-UPS:
+After giving advice, always end with ONE natural follow-up that deepens it:
+- Offer to run the full list through the same comparison
+- Ask if they want to factor in their budget or shopping schedule
+- Suggest saving the comparison as a preset
+Never just answer and stop — always invite the next step.
 
-CONVERSATION RULES — follow these exactly:
+RULE 9 — HOUSEHOLD CONTEXT IS ALWAYS IN PLAY:
+You already know this household: ${hh} person${hh>1?'s':''}, shops ${freq||'regularly'}${budget?', $'+budget+' weekly budget':''}.
+Reference it naturally without them repeating it: "For your family of ${hh}..." or "Since you shop ${freq||'weekly'}..."
+If frequency or household eating habits are unknown and it matters for your advice, ask once clearly and use the answer throughout the session.
 
-1. CREATING A NEW LIST: Never auto-create a list without asking for a name first. If the user wants a new list, ask: what would you like to name it? Then once they reply with a name, create it with CREATELIST. Exception: if the user explicitly says the name in their message (e.g. "make a list called Party"), create it immediately.
+RULE 10 — PROACTIVELY SURFACE CHEAPER ALTERNATIVES:
+Whenever a user mentions buying an item — especially at one of their preferred stores — check your knowledge of real US grocery prices across other major stores. If a meaningfully cheaper option exists elsewhere, volunteer it naturally AFTER answering their main question. Keep it casual, low-pressure, one sentence.
 
-2. ADDING ITEMS: Before adding items to a new list, ask if they want any extra notes per item (store preference, brand, size) or if they want you to recommend quantities based on their household size. Keep this quick — one friendly sentence. Then add immediately after they respond (or if they say "just add them" skip the question and add right away).
+Tone examples:
+- "Oh — quick heads up, I found [item] a bit cheaper at [Store]. Want me to break down the difference, or would you rather stick with your usual [Store]?"
+- "By the way — [item] tends to run cheaper at [Store] near you. Worth a look, or keep it simple?"
+- "Just spotted [Store] has [item] for around $X less — want the comparison, or are you good?"
 
-3. EXISTING LISTS: When adding to an existing list by name, just do it — no need to ask.
+Rules:
+- Only suggest stores the user could realistically visit (use their zip + preferred stores; nearby chains count even if not in their list)
+- Only flag it if savings are meaningful: at least ~$0.30/unit or ~10% cheaper — don't nitpick pennies
+- One soft offer, then wait. If they say "stick to my usual" → respect it, don't push that store again for that item
+- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency\`;
+}
 
-4. RECOMMENDATIONS: Always offer a brief helpful tip after completing an action (e.g. best store for those items, bulk buying suggestion, estimated cost).
+// ── Landing Page Penny Widget ──
+let _lpHistory = [];
+function toggleLandingPenny(){
+  const popup = document.getElementById('landing-penny-popup');
+  const isOpen = popup.classList.contains('lp-open');
+  if(isOpen){
+    popup.style.opacity='0'; popup.style.transform='translateY(12px)';
+    setTimeout(()=>{ popup.classList.remove('lp-open'); popup.style.opacity=''; popup.style.transform=''; },200);
+  } else {
+    popup.classList.add('lp-open');
+    setTimeout(()=>{ document.getElementById('lp-input')?.focus(); },80);
+  }
+}
+function lpKeyDown(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendLandingPenny(); }
+}
+function lpAddMsg(role, text, id){
+  const container = document.getElementById('lp-msgs');
+  if(!container) return;
+  const div = document.createElement('div');
+  div.className = 'lp-msg ' + (role==='user' ? 'lp-user' : 'lp-penny');
+  if(id) div.id = id;
+  if(role==='thinking') div.classList.add('lp-thinking');
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+async function sendLandingPenny(){
+  const inp = document.getElementById('lp-input');
+  const btn = document.getElementById('lp-send-btn');
+  const text = (inp?.value||'').trim();
+  if(!text) return;
+  inp.value = '';
+  lpAddMsg('user', text);
+  _lpHistory.push({role:'user', content:text});
+  btn.disabled = true;
+  lpAddMsg('thinking', '...', 'lp-typing');
+  try {
+    const res = await anthropicFetch({
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:350,
+        system: localStorage.getItem('bp_session') ? buildSys() : buildLandingSys(),
+        messages: _lpHistory
+      })
+    });
+    const data = await res.json();
+    const reply = (data.content?.[0]?.text || '').trim();
+    document.getElementById('lp-typing')?.remove();
+    lpAddMsg('penny', reply || 'Hmm, I had trouble responding. Try again!');
+    _lpHistory.push({role:'assistant', content: reply});
+  } catch(e) {
+    document.getElementById('lp-typing')?.remove();
+    lpAddMsg('penny', 'Oops, something went wrong. Try again in a moment!');
+  }
+  btn.disabled = false;
+  document.getElementById('lp-msgs').scrollTop = 9999;
+}
+function buildLandingSys(){
+  return `You are Penny, a warm and friendly AI shopping advisor for Better Price! — a free grocery price comparison web app. You help visitors understand the app and give grocery saving tips before they sign up.
 
-5. Keep replies warm, brief, conversational. 150 words max. No bullet points. No command tags visible.
-- Use the active list "${activeListName}" when no list name is specified and the user wants to add to an existing list.`;
+HOW BETTER PRICE! WORKS:
+- Compare Tab: Enter up to 6 products side by side. Fill in the name, price, size (oz/lb/ml/g/gal), quantity, and optional discount (% off or flat $ off). The app instantly calculates unit price so you can see the best deal. You can scan barcodes to auto-fill product info. Save any comparison as a "Preset" to reuse later.
+- Grocery Tab: Build and manage custom grocery lists. Add items with quantity and notes, check them off while shopping, and copy items between lists.
+- Presets Tab: Reload any saved Compare setup instantly — no need to re-enter product info each time you shop.
+- History Tab: Every comparison you run is automatically saved with date and results so you can look back anytime.
+- Profile Tab: Set your household size, preferred grocery stores, zip code, and weekly budget to personalize recommendations.
+- Penny Tab (that's me!): Once logged in, chat with me to manage your grocery lists, get price comparisons, store recommendations, budget tips, and more. I can add or remove items from your lists directly.
+
+TIPS:
+- Completely free — no subscription.
+- Works on mobile and desktop browsers.
+- Sign up takes about 10 seconds.
+- Discounts can be % off or flat dollar amount.
+- The Compare tab shows cost-per-day estimates for common grocery items.
+
+Keep replies warm, brief (under 100 words), and conversational. Encourage them to sign up and try it. If asked how to sign up, tell them to use the form on the page.`;
 }
 
 // ── Penny Account Action Engine ──
@@ -4794,14 +5248,28 @@ function pennyMakeItem(listId, item){
 
 function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
 
+function pennyMd(text){
+  // Sanitize HTML
+  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Bold **text**
+  s = s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+  // Italic *text* (not touching already-bolded spans)
+  s = s.replace(/(?<!\*)\*(?!\*)([^*\n]+)\*(?!\*)/g,'<em>$1</em>');
+  // Newlines to <br>
+  s = s.replace(/\n/g,'<br>');
+  return s;
+}
+
 function pennyExecuteActions(rawText){
-  const cmdRx = /^(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(.+)$/gm;
+  // Match commands anywhere on a line (model sometimes adds a stray char before the tag)
+  const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(\{.+\})\s*$/gm;
   const commands = [];
   let m;
   while((m = cmdRx.exec(rawText)) !== null){
     try { commands.push({ type: m[1], data: JSON.parse(m[2]) }); } catch(e){ console.warn('Penny cmd parse:', m[0], e); }
   }
-  const cleanText = rawText.replace(/^(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):.+$/gm, '').replace(/\n{3,}/g,'\n\n').trim();
+  // Strip any line that contains a command tag (handles stray leading chars too)
+  const cleanText = rawText.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
   if(!commands.length) return cleanText;
 
   const toasts = [];
@@ -4815,7 +5283,7 @@ function pennyExecuteActions(rawText){
         const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
-        if(n){ saveItms=true; toasts.push(`Added ${n} item${n!==1?'s':''} to "${list.name}"`); }
+        if(n){ saveItms=true; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
       }
       else if(cmd.type === 'CREATELIST'){
         const lid = 'list_penny_' + Date.now();
@@ -4898,6 +5366,7 @@ window.onload=()=>{
   } else {
     document.getElementById('auth-screen').style.display='flex';
     document.getElementById('app').style.display='none';
+    document.getElementById('landing-penny-fab').style.display='flex';
   }
 };
 </script>
