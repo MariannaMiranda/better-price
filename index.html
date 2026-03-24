@@ -810,7 +810,10 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg.user{flex-direction:row-reverse;}
 .pmsg-avatar{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
 .pmsg.user .pmsg-avatar{background:var(--ok);}
-.pmsg-bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.7;font-family:var(--font);white-space:pre-wrap;word-break:break-word;}
+.pmsg-bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.7;font-family:var(--font);word-break:break-word;}
+.pmsg.user .pmsg-bubble{white-space:pre-wrap;}
+.pmsg.penny .pmsg-bubble em{font-style:italic;}
+.pmsg.penny .pmsg-bubble strong{font-weight:700;}
 .pmsg.penny .pmsg-bubble{background:var(--white);color:var(--text);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
 .pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;}
 .pmsg-img{max-width:200px;max-height:200px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;}
@@ -2653,6 +2656,11 @@ function showApp(isNewUser=false){
   if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
   applyLang();
   document.getElementById('landing-penny-fab').style.display='flex';
+  if(isNewUser){
+    obSkipped = {1:false,2:false,3:false,4:false,5:false};
+    obGoStep(1);
+    document.getElementById('onboarding-screen').style.display='flex';
+  }
 }
 
 // ────────────────────────────────────────────────
@@ -4445,7 +4453,10 @@ function renderPennyMessages(){
       ? `<div class="pmsg-avatar">${initials}</div>`
       : `<div class="pmsg-avatar" style="background:var(--brand);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>`;
     const imgHtml = m.image ? `<img class="pmsg-img" src="${m.image}" alt="attached">` : '';
-    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${m.content}</div></div>`;
+    const bubbleContent = isUser
+      ? (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      : pennyMd(m.content||'');
+    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
@@ -5152,14 +5163,28 @@ function pennyMakeItem(listId, item){
 
 function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
 
+function pennyMd(text){
+  // Sanitize HTML
+  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Bold **text**
+  s = s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+  // Italic *text* (not touching already-bolded spans)
+  s = s.replace(/(?<!\*)\*(?!\*)([^*\n]+)\*(?!\*)/g,'<em>$1</em>');
+  // Newlines to <br>
+  s = s.replace(/\n/g,'<br>');
+  return s;
+}
+
 function pennyExecuteActions(rawText){
-  const cmdRx = /^(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(.+)$/gm;
+  // Match commands anywhere on a line (model sometimes adds a stray char before the tag)
+  const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(\{.+\})\s*$/gm;
   const commands = [];
   let m;
   while((m = cmdRx.exec(rawText)) !== null){
     try { commands.push({ type: m[1], data: JSON.parse(m[2]) }); } catch(e){ console.warn('Penny cmd parse:', m[0], e); }
   }
-  const cleanText = rawText.replace(/^(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):.+$/gm, '').replace(/\n{3,}/g,'\n\n').trim();
+  // Strip any line that contains a command tag (handles stray leading chars too)
+  const cleanText = rawText.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
   if(!commands.length) return cleanText;
 
   const toasts = [];
