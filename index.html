@@ -198,6 +198,9 @@ body.dark .btn-save-no { background:#1a2f45; color:#b8cfe8; }
 
 /* Help */
 body.dark .help-h { color:#7ec8f8; border-color:#1a2f45; }
+.help-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 10px;position:sticky;top:0;background:var(--white);z-index:10;border-radius:22px 22px 0 0;}
+body.dark .help-modal-hdr{background:#111f2e;}
+.help-modal-body{padding:0 20px 24px;}
 body.dark .help-step { background:#111f2e; border-color:#2a4060; }
 body.dark .help-step-title { color:#eef2ff; }
 body.dark .help-step-desc { color:#b8cfe8; }
@@ -1286,7 +1289,8 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             </button>
             <textarea class="penny-textarea" id="pennyInput" placeholder="Ask Penny anything..." rows="1"
               oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();pennySend();}"></textarea>
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();pennySend();}"
+              onpaste="pennyHandlePaste(event)"></textarea>
             <button class="penny-send-btn" id="pennySendBtn" onclick="pennySend()">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -1301,9 +1305,12 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
   <!-- SHOP TAB -->
   <!-- HELP MODAL -->
-  <div class="modal-box" id="helpModal" style="max-width:520px;">
-    <button class="modal-x" onclick="closeModals()">&#10005;</button>
-    <div class="modal-title">Help Guide</div>
+  <div class="modal-box" id="helpModal" style="max-width:520px;padding:0;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="help-modal-hdr">
+      <div class="modal-title" style="margin:0;">Help Guide</div>
+      <button class="modal-x" onclick="closeModals()" style="position:static;margin:0;flex-shrink:0;">&#10005;</button>
+    </div>
+    <div class="help-modal-body" style="overflow-y:auto;flex:1;">
 
     <!-- Compare -->
     <div class="help-section">
@@ -1325,6 +1332,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <!-- Presets -->
     <div class="help-section">
       <div class="help-h">Presets Tab</div>
+      <div class="help-tip">Presets save your entire Compare setup — all product cards with prices, sizes, and names — so you can reload any comparison in one tap.</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Save a comparison</div><div class="help-step-desc">After setting up products on the Compare tab, go to Presets and tap <strong>Save Current</strong>. Give it a name like "Peanut Butter" so you can find it later.</div></div></div>
       <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Reload anytime</div><div class="help-step-desc">Tap <strong>Load</strong> on any preset to instantly restore all the product cards. Great for items you compare every week.</div></div></div>
     </div>
@@ -1347,6 +1355,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <div class="help-section">
       <div class="help-h">Profile Tab</div>
       <div class="help-tip">Update your name, email, and password here. You can also update your <strong>household size</strong>, <strong>shopping frequency</strong>, <strong>weekly budget</strong>, <strong>zip code</strong>, and <strong>preferred stores</strong> — Penny uses all of this to give you better advice.</div>
+    </div>
     </div>
   </div>
 
@@ -3236,20 +3245,28 @@ function createStarterGroceryList(){
   saveU('gitems', starterItems);
 }
 function onNameInput(idx){
+  if(_brandSelected) return;
   const cat=document.getElementById(`cat-${idx}`)?.value;
   const val=document.getElementById(`n-${idx}`).value.trim().toLowerCase();
   const bd=document.getElementById(`bd-${idx}`);
   if(!bd) return;
   // Only show brands for the selected category — never dump all brands
   const brands = cat && BRAND_DATA[cat] ? BRAND_DATA[cat] : [];
+  // Don't reopen if the exact brand name is already entered
+  if(val && brands.some(b=>b.toLowerCase()===val)){ bd.classList.remove('open'); bd.innerHTML=''; return; }
   const filtered = val ? brands.filter(b=>b.toLowerCase().includes(val)) : brands;
   if(!filtered.length){ bd.classList.remove('open'); return; }
   bd.innerHTML=filtered.slice(0,10).map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
   bd.classList.add('open');
 }
+let _brandSelected = false;
 function selectBrand(idx, name){
+  _brandSelected = true;
   document.getElementById(`n-${idx}`).value=name;
-  document.getElementById(`bd-${idx}`).classList.remove('open');
+  const bd=document.getElementById(`bd-${idx}`);
+  bd.classList.remove('open');
+  bd.innerHTML='';
+  setTimeout(()=>{ _brandSelected=false; },250);
 }
 document.addEventListener('click', e=>{
   if(!e.target.closest('.brand-dropdown')&&!e.target.matches(`[id^="n-"]`)) document.querySelectorAll('.brand-dropdown').forEach(b=>b.classList.remove('open'));
@@ -3616,7 +3633,7 @@ function promptDupItem(id){
   const el=document.getElementById('dupListOptions');
   el.innerHTML=groceryLists.map(l=>{
     const isCurrent = l.id===activeListId;
-    return `<button class="auth-btn" style="margin-bottom:8px;padding:12px;${isCurrent?'opacity:.75':''}" onclick="doDupItem(${l.id})">${l.name}${isCurrent?` (${t.thisListLabel})`:''}</button>`;
+    return `<button class="auth-btn" style="margin-bottom:8px;padding:12px;${isCurrent?'opacity:.75':''}" onclick="doDupItem('${l.id}')">${l.name}${isCurrent?` (${t.thisListLabel})`:''}</button>`;
   }).join('');
   openModal('dupItemModal');
 }
@@ -3649,12 +3666,12 @@ function saveEditItem(){
   showToast(`"${name}" ${T().toastUpdated}`,'ok');
 }
 function doDupItem(toListId){
-  const orig=groceryItems.find(i=>i.id===dupItemId); if(!orig)return;
+  const orig=groceryItems.find(i=>String(i.id)===String(dupItemId)); if(!orig)return;
   const copy={...orig,id:Date.now(),listId:toListId,done:false};
   groceryItems.push(copy); saveU('gitems',groceryItems);
   closeModals(); renderListNav();
-  if(toListId===activeListId) renderGroceryContent();
-  const destName=groceryLists.find(l=>l.id===toListId)?.name||'list';
+  if(String(toListId)===String(activeListId)) renderGroceryContent();
+  const destName=groceryLists.find(l=>String(l.id)===String(toListId))?.name||'list';
   const t=T();
   showToast(`${lang==='en'?'Copied to':lang==='es'?'Copiado a':'Copiado para'} "${destName}"`,'ok');
 }
@@ -4754,6 +4771,24 @@ function takePhoto(){
 
 // Generate a short meaningful chat title from the first exchange using AI
 
+function pennyHandlePaste(e){
+  const items = e.clipboardData?.items;
+  if(!items) return;
+  for(const item of Array.from(items)){
+    if(item.type.startsWith('image/')){
+      e.preventDefault();
+      const blob = item.getAsFile();
+      if(!blob) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        pennyPendingImages.push({ dataUrl: ev.target.result, name: 'pasted-image.png', mimeType: item.type });
+        renderPennyAttachStrip();
+      };
+      reader.readAsDataURL(blob);
+      return;
+    }
+  }
+}
 function pennyHandleFile(input){
   const file = input.files[0];
   if(!file) return;
