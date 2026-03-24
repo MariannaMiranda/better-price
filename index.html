@@ -3474,6 +3474,30 @@ function compare(){
   lastAnalysis=log;
   document.getElementById('analysisBox').value=log;
   const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=log;
+  playCaChing();
+}
+
+function playCaChing(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const t=ctx.currentTime;
+    function tone(freq,start,dur,vol,type='sine'){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type=type; o.frequency.setValueAtTime(freq,t+start);
+      g.gain.setValueAtTime(0,t+start);
+      g.gain.linearRampToValueAtTime(vol,t+start+0.005);
+      g.gain.exponentialRampToValueAtTime(0.001,t+start+dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t+start); o.stop(t+start+dur);
+    }
+    tone(1200,0,.018,.35,'square');
+    tone(900,0.02,.012,.2,'square');
+    tone(1600,0.03,.22,.28,'sine');
+    tone(1900,0.03,.18,.18,'sine');
+    tone(2200,0.05,.14,.12,'sine');
+    tone(1400,0.08,.30,.10,'sine');
+    setTimeout(()=>ctx.close(),700);
+  }catch(e){}
 }
 
 function resetAll(){ const t=T(); showConfirm(lang==='en'?'Reset Compare':lang==='es'?'Reiniciar comparación':'Redefinir comparação', lang==='en'?'Clear all items and results?':lang==='es'?'¿Borrar todos los artículos y resultados?':'Limpar todos os itens e resultados?', ()=>{ updateGrid(); document.getElementById('analysisBox').value=''; lastAnalysis=''; const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=T().exportRunFirst; }); }
