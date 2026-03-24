@@ -311,6 +311,29 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .al-user-text{font-size:13px;color:rgba(255,255,255,.6);}
 .al-user-text strong{color:#fff;}
 
+/* Landing Penny Widget */
+#landing-penny-fab{position:fixed;bottom:28px;right:28px;z-index:300;background:var(--brand);color:#fff;border:none;border-radius:50%;width:58px;height:58px;box-shadow:0 4px 22px rgba(0,100,200,.38);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;}
+#landing-penny-fab:hover{transform:scale(1.09);box-shadow:0 7px 30px rgba(0,100,200,.48);}
+#landing-penny-popup{position:fixed;bottom:100px;right:24px;z-index:301;width:330px;max-height:500px;background:var(--white);border-radius:20px;box-shadow:0 8px 44px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;border:1.5px solid var(--border);transform:translateY(12px);opacity:0;transition:opacity .2s,transform .2s;}
+#landing-penny-popup.lp-open{display:flex;transform:translateY(0);opacity:1;}
+.lp-header{background:var(--brand);color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.lp-avatar{width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.lp-header-info{flex:1;}
+.lp-header-name{font-weight:700;font-size:13.5px;}
+.lp-header-sub{font-size:11px;opacity:.82;}
+.lp-close-btn{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.75;line-height:1;font-size:15px;}
+.lp-close-btn:hover{opacity:1;}
+.lp-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;min-height:120px;}
+.lp-msg{max-width:86%;border-radius:14px;padding:9px 12px;font-size:13px;line-height:1.45;word-break:break-word;}
+.lp-msg.lp-penny{background:var(--card-bg);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
+.lp-msg.lp-user{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.lp-msg.lp-thinking{opacity:.55;font-style:italic;}
+.lp-input-row{display:flex;gap:8px;padding:9px 12px;border-top:1px solid var(--border);flex-shrink:0;}
+.lp-textarea{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px;font-size:13px;background:var(--bg);color:var(--text);outline:none;resize:none;font-family:var(--font);max-height:80px;}
+.lp-textarea:focus{border-color:var(--brand);}
+.lp-send-btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:8px 13px;cursor:pointer;font-size:13px;font-weight:600;flex-shrink:0;}
+.lp-send-btn:disabled{opacity:.45;cursor:default;}
+@media(max-width:420px){#landing-penny-popup{width:calc(100vw - 24px);right:12px;bottom:90px;}}
 .auth-right{width:100%;max-width:520px;display:flex;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg);position:relative;}
 @media(min-width:900px){.auth-right{min-width:460px;width:460px;}}
 .auth-top-bar{position:absolute;top:20px;right:20px;display:flex;align-items:center;gap:10px;}
@@ -980,6 +1003,28 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         </div>
         <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign Up</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Floating Penny Chat Widget (landing page) -->
+  <button id="landing-penny-fab" onclick="toggleLandingPenny()" title="Chat with Penny">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+  <div id="landing-penny-popup">
+    <div class="lp-header">
+      <div class="lp-avatar">✨</div>
+      <div class="lp-header-info">
+        <div class="lp-header-name">Penny</div>
+        <div class="lp-header-sub">AI Shopping Advisor</div>
+      </div>
+      <button class="lp-close-btn" onclick="toggleLandingPenny()">&#10005;</button>
+    </div>
+    <div class="lp-msgs" id="lp-msgs">
+      <div class="lp-msg lp-penny">Hi! I'm Penny, your AI shopping advisor for Better Price! Ask me how the app works, or anything about saving on groceries.</div>
+    </div>
+    <div class="lp-input-row">
+      <textarea class="lp-textarea" id="lp-input" rows="1" placeholder="Ask Penny..." onkeydown="lpKeyDown(event)"></textarea>
+      <button class="lp-send-btn" id="lp-send-btn" onclick="sendLandingPenny()">Send</button>
     </div>
   </div>
 </div>
@@ -2605,10 +2650,6 @@ function showApp(isNewUser=false){
   updateGrid(); renderHistory(); renderListNav(); renderPresets();
   if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
   applyLang();
-  if(isNewUser){
-    obGoStep(1);
-    document.getElementById('onboarding-screen').style.display='flex';
-  }
 }
 
 // ────────────────────────────────────────────────
@@ -4912,7 +4953,27 @@ function buildSys(){
     freq?'Shopping frequency: '+freq:'',
   ].filter(Boolean).join(' | ');
 
-  return `You are Penny, a warm and knowledgeable grocery shopping advisor — like a smart friend who knows prices inside and out. Always respond in ${ln}.
+  return `You are Penny, a warm and knowledgeable grocery shopping advisor built into the Better Price! app — like a smart friend who knows prices inside and out. Always respond in ${ln}.
+
+APP GUIDE — You know exactly how Better Price! works. When users ask how to do something, explain it clearly and confidently:
+
+COMPARE TAB: The main tab. Users enter up to 6 product cards side by side. Each card has: Name (type or scan barcode to auto-fill), Price ($), Size (number + unit: oz/lb/ml/g/gal/ct/pk), Quantity (pack qty), optional Discount (% off or flat $ off), and Category (for cost-per-day estimates). The app instantly calculates unit price (cost per oz/lb/etc.) so users see the best deal highlighted. The "Save to Preset" button saves the entire setup to reuse later. The duplicate card button (two overlapping squares icon) copies a card.
+
+GROCERY TAB: Users create and manage custom shopping lists. Each item has a name, quantity, and optional notes. Check items off while shopping — checked items are crossed out. The + button adds new items. Each item has edit/delete options. Users can copy items to other lists using the copy icon. Multiple lists supported — switch between them in the list selector at the top.
+
+PRESETS TAB: Shows all saved Compare setups. Tap any preset to instantly reload all its card data into the Compare tab — no re-entering needed. Great for regular shopping trips. Presets can be renamed or deleted.
+
+HISTORY TAB: Every comparison the user runs is automatically saved here with the date, product names, and results. Tap any history entry to view details or reload it. Users can delete individual entries.
+
+PROFILE TAB: Users set: household size (affects cost-per-day estimates), preferred grocery stores, zip code (for regional pricing), and weekly budget. These personalize your recommendations.
+
+PENNY TAB (you): Users chat with you here. You can: answer questions, give price advice, recommend stores, help with meal planning, AND directly manage their grocery lists using command tags. You have full list management powers.
+
+BARCODE SCANNING: In the Compare tab, each card has a barcode/camera icon. Tapping it opens the camera to scan a product barcode — name and size auto-fill from the product database.
+
+LANGUAGE: The app supports English, Spanish (Español), and Portuguese (Português). The language selector is in the Profile tab or the login page.
+
+DARK MODE: Toggle with the sun/moon icon in the top bar.
 
 ${contextLines}
 Grocery lists: ${listContext}
@@ -4985,6 +5046,87 @@ CONVERSATION RULES — follow these exactly:
 
 5. Keep replies warm, brief, conversational. 150 words max. No bullet points. No command tags visible.
 - Use the active list "${activeListName}" when no list name is specified and the user wants to add to an existing list.`;
+}
+
+// ── Landing Page Penny Widget ──
+let _lpHistory = [];
+function toggleLandingPenny(){
+  const popup = document.getElementById('landing-penny-popup');
+  const isOpen = popup.classList.contains('lp-open');
+  if(isOpen){
+    popup.style.opacity='0'; popup.style.transform='translateY(12px)';
+    setTimeout(()=>{ popup.classList.remove('lp-open'); popup.style.opacity=''; popup.style.transform=''; },200);
+  } else {
+    popup.classList.add('lp-open');
+    setTimeout(()=>{ document.getElementById('lp-input')?.focus(); },80);
+  }
+}
+function lpKeyDown(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendLandingPenny(); }
+}
+function lpAddMsg(role, text, id){
+  const container = document.getElementById('lp-msgs');
+  if(!container) return;
+  const div = document.createElement('div');
+  div.className = 'lp-msg ' + (role==='user' ? 'lp-user' : 'lp-penny');
+  if(id) div.id = id;
+  if(role==='thinking') div.classList.add('lp-thinking');
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+async function sendLandingPenny(){
+  const inp = document.getElementById('lp-input');
+  const btn = document.getElementById('lp-send-btn');
+  const text = (inp?.value||'').trim();
+  if(!text) return;
+  inp.value = '';
+  lpAddMsg('user', text);
+  _lpHistory.push({role:'user', content:text});
+  btn.disabled = true;
+  lpAddMsg('thinking', '...', 'lp-typing');
+  try {
+    const res = await anthropicFetch({
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:350,
+        system: buildLandingSys(),
+        messages: _lpHistory
+      })
+    });
+    const data = await res.json();
+    const reply = (data.content?.[0]?.text || '').trim();
+    document.getElementById('lp-typing')?.remove();
+    lpAddMsg('penny', reply || 'Hmm, I had trouble responding. Try again!');
+    _lpHistory.push({role:'assistant', content: reply});
+  } catch(e) {
+    document.getElementById('lp-typing')?.remove();
+    lpAddMsg('penny', 'Oops, something went wrong. Try again in a moment!');
+  }
+  btn.disabled = false;
+  document.getElementById('lp-msgs').scrollTop = 9999;
+}
+function buildLandingSys(){
+  return `You are Penny, a warm and friendly AI shopping advisor for Better Price! — a free grocery price comparison web app. You help visitors understand the app and give grocery saving tips before they sign up.
+
+HOW BETTER PRICE! WORKS:
+- Compare Tab: Enter up to 6 products side by side. Fill in the name, price, size (oz/lb/ml/g/gal), quantity, and optional discount (% off or flat $ off). The app instantly calculates unit price so you can see the best deal. You can scan barcodes to auto-fill product info. Save any comparison as a "Preset" to reuse later.
+- Grocery Tab: Build and manage custom grocery lists. Add items with quantity and notes, check them off while shopping, and copy items between lists.
+- Presets Tab: Reload any saved Compare setup instantly — no need to re-enter product info each time you shop.
+- History Tab: Every comparison you run is automatically saved with date and results so you can look back anytime.
+- Profile Tab: Set your household size, preferred grocery stores, zip code, and weekly budget to personalize recommendations.
+- Penny Tab (that's me!): Once logged in, chat with me to manage your grocery lists, get price comparisons, store recommendations, budget tips, and more. I can add or remove items from your lists directly.
+
+TIPS:
+- Completely free — no subscription.
+- Works on mobile and desktop browsers.
+- Sign up takes about 10 seconds.
+- Discounts can be % off or flat dollar amount.
+- The Compare tab shows cost-per-day estimates for common grocery items.
+
+Keep replies warm, brief (under 100 words), and conversational. Encourage them to sign up and try it. If asked how to sign up, tell them to use the form on the page.`;
 }
 
 // ── Penny Account Action Engine ──
