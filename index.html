@@ -5204,7 +5204,10 @@ async function sendLandingPenny(){
   document.getElementById('lp-msgs').scrollTop = 9999;
 }
 function buildLandingSys(){
-  return `You are Penny, a warm and friendly AI shopping advisor for Better Price! — a free grocery price comparison web app. You help visitors understand the app and give grocery saving tips before they sign up.
+  const langLine = lang==='es' ? 'IMPORTANT: Always reply in Spanish, no matter what language the user writes in.\n\n'
+                 : lang==='pt' ? 'IMPORTANT: Always reply in Portuguese (Brazilian), no matter what language the user writes in.\n\n'
+                 : '';
+  return langLine + `You are Penny, a warm and friendly AI shopping advisor for Better Price! — a free grocery price comparison web app. You help visitors understand the app and give grocery saving tips before they sign up.
 
 HOW BETTER PRICE! WORKS:
 - Compare Tab: Enter up to 6 products side by side. Fill in the name, price, size (oz/lb/ml/g/gal), quantity, and optional discount (% off or flat $ off). The app instantly calculates unit price so you can see the best deal. You can scan barcodes to auto-fill product info. Save any comparison as a "Preset" to reuse later.
