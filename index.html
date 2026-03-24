@@ -3554,45 +3554,51 @@ function playCaChing(){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     const now=ctx.currentTime;
-    const master=ctx.createGain(); master.gain.setValueAtTime(1,now); master.connect(ctx.destination);
+    const master=ctx.createGain(); master.gain.setValueAtTime(0.9,now); master.connect(ctx.destination);
 
-    // --- mechanical click (the "ka") ---
-    // Low body thump
-    const thump=ctx.createOscillator(); const tg=ctx.createGain();
-    thump.frequency.setValueAtTime(180,now); thump.frequency.exponentialRampToValueAtTime(40,now+0.04);
-    tg.gain.setValueAtTime(0.9,now); tg.gain.exponentialRampToValueAtTime(0.001,now+0.07);
-    thump.connect(tg); tg.connect(master); thump.start(now); thump.stop(now+0.08);
-    // Click transient noise
-    const clen=Math.floor(ctx.sampleRate*0.008);
-    const cbuf=ctx.createBuffer(1,clen,ctx.sampleRate);
-    const cd=cbuf.getChannelData(0);
-    for(let i=0;i<clen;i++) cd[i]=(Math.random()*2-1)*Math.pow(1-i/clen,2);
-    const cs=ctx.createBufferSource(); cs.buffer=cbuf;
-    const cg=ctx.createGain(); cg.gain.setValueAtTime(0.7,now);
-    cs.connect(cg); cg.connect(master); cs.start(now);
+    // ── Phase 1: electronic register beep (the "ca") ──
+    // Square wave chirp — short, punchy, like a modern register scan tone
+    const beep=ctx.createOscillator(); const beepG=ctx.createGain();
+    beep.type='square'; beep.frequency.setValueAtTime(1200,now);
+    beepG.gain.setValueAtTime(0,now);
+    beepG.gain.linearRampToValueAtTime(0.28,now+0.004);
+    beepG.gain.setValueAtTime(0.28,now+0.060);
+    beepG.gain.exponentialRampToValueAtTime(0.001,now+0.085);
+    beep.connect(beepG); beepG.connect(master);
+    beep.start(now); beep.stop(now+0.09);
 
-    // --- register bell ring (the "ching") starts ~55ms later ---
-    // Inharmonic metal partials — tuned to sound like a real register bell
-    const ring=0.055;
-    [[2800,1.0,0.55],[4200,0.65,0.42],[5600,0.45,0.32],[7000,0.28,0.24],[9100,0.16,0.18]].forEach(([freq,amp,dec])=>{
-      const o=ctx.createOscillator(); const g=ctx.createGain();
-      o.type='sine'; o.frequency.setValueAtTime(freq,now+ring);
-      g.gain.setValueAtTime(0,now+ring);
-      g.gain.linearRampToValueAtTime(amp*0.5,now+ring+0.003);
-      g.gain.exponentialRampToValueAtTime(0.001,now+ring+dec);
-      o.connect(g); g.connect(master); o.start(now+ring); o.stop(now+ring+dec+0.02);
+    // ── Phase 2: bell ring (the "ching") — long ~2s decay ──
+    // Two slightly-detuned fundamentals that beat against each other,
+    // creating the wavering shimmer seen in the Zott820 waveform
+    const r=0.082;
+    [[2050,1.0,2.1],[2155,0.88,2.0]].forEach(([freq,amp,dec])=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(freq,now+r);
+      g.gain.setValueAtTime(0,now+r);
+      g.gain.linearRampToValueAtTime(amp*0.42,now+r+0.005);
+      g.gain.exponentialRampToValueAtTime(0.001,now+r+dec);
+      o.connect(g); g.connect(master); o.start(now+r); o.stop(now+r+dec+0.05);
     });
-    // Small noise burst on bell impact for that metallic "ping" attack
-    const blen=Math.floor(ctx.sampleRate*0.015);
-    const bbuf=ctx.createBuffer(1,blen,ctx.sampleRate);
-    const bd=bbuf.getChannelData(0);
-    for(let i=0;i<blen;i++) bd[i]=(Math.random()*2-1)*Math.pow(1-i/blen,4);
-    const bs=ctx.createBufferSource(); bs.buffer=bbuf;
-    const bg=ctx.createGain(); bg.gain.setValueAtTime(0.3,now+ring);
-    const bhp=ctx.createBiquadFilter(); bhp.type='highpass'; bhp.frequency.setValueAtTime(3000,now+ring);
-    bs.connect(bhp); bhp.connect(bg); bg.connect(master); bs.start(now+ring);
+    // Upper inharmonic partials (decay faster, add brightness on strike)
+    [[3180,0.32,1.2],[4950,0.16,0.75],[7100,0.09,0.45]].forEach(([freq,amp,dec])=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(freq,now+r);
+      g.gain.setValueAtTime(0,now+r);
+      g.gain.linearRampToValueAtTime(amp*0.42,now+r+0.004);
+      g.gain.exponentialRampToValueAtTime(0.001,now+r+dec);
+      o.connect(g); g.connect(master); o.start(now+r); o.stop(now+r+dec+0.05);
+    });
+    // Metallic noise transient on the bell strike
+    const nlen=Math.floor(ctx.sampleRate*0.016);
+    const nbuf=ctx.createBuffer(1,nlen,ctx.sampleRate);
+    const nd=nbuf.getChannelData(0);
+    for(let i=0;i<nlen;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/nlen,3);
+    const ns=ctx.createBufferSource(); ns.buffer=nbuf;
+    const nhp=ctx.createBiquadFilter(); nhp.type='highpass'; nhp.frequency.setValueAtTime(2400,now+r);
+    const ng=ctx.createGain(); ng.gain.setValueAtTime(0.22,now+r);
+    ns.connect(nhp); nhp.connect(ng); ng.connect(master); ns.start(now+r);
 
-    setTimeout(()=>ctx.close(),900);
+    setTimeout(()=>ctx.close(),2500);
   }catch(e){}
 }
 
