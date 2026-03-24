@@ -381,9 +381,9 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .hdr-btn:hover{background:rgba(255,255,255,.22);}
 @media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}}
 
-.nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
+.nav-tabs{display:flex;justify-content:center;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
 .nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{flex:1;min-width:72px;padding:14px 8px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
+.nav-tab{flex:0 0 auto;min-width:88px;padding:14px 18px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
 .nav-tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .nav-tab.active{color:var(--brand);border-bottom-color:var(--brand);}
 
@@ -1140,7 +1140,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 <button id="landing-penny-fab" onclick="toggleLandingPenny()" title="Chat with Penny" style="display:none;">
   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 </button>
-<div id="landing-penny-popup" style="position:relative;"
+<div id="landing-penny-popup"
   ondragenter="lpDragEnter(event)" ondragover="lpDragOver(event)" ondragleave="lpDragLeave(event)" ondrop="lpDrop(event)">
   <div class="lp-drop-overlay"><span>Drop image here</span></div>
   <div class="lp-header">
