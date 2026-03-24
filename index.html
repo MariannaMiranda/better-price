@@ -3492,25 +3492,46 @@ function compare(){
 function playCaChing(){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    const t=ctx.currentTime;
-    // "Ka" — mechanical drawer thump (noise burst)
-    const buf=ctx.createBuffer(1,ctx.sampleRate*0.06,ctx.sampleRate);
-    const d=buf.getChannelData(0);
-    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
-    const ns=ctx.createBufferSource(); ns.buffer=buf;
-    const ng=ctx.createGain(); ng.gain.setValueAtTime(0.55,t); ng.gain.exponentialRampToValueAtTime(0.001,t+0.06);
-    ns.connect(ng); ng.connect(ctx.destination); ns.start(t);
-    // "Ching" — bright coin bell (layered sine partials, long decay)
-    [[2637,0.6],[3951,0.35],[5274,0.2],[7902,0.12]].forEach(([freq,vol])=>{
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.type='sine'; o.frequency.setValueAtTime(freq,t+0.025);
-      g.gain.setValueAtTime(0,t+0.025);
-      g.gain.linearRampToValueAtTime(vol,t+0.032);
-      g.gain.exponentialRampToValueAtTime(0.001,t+0.025+0.9*(vol+0.3));
-      o.connect(g); g.connect(ctx.destination);
-      o.start(t+0.025); o.stop(t+1.1);
+    const now=ctx.currentTime;
+    const master=ctx.createGain(); master.gain.setValueAtTime(1,now); master.connect(ctx.destination);
+
+    // --- mechanical click (the "ka") ---
+    // Low body thump
+    const thump=ctx.createOscillator(); const tg=ctx.createGain();
+    thump.frequency.setValueAtTime(180,now); thump.frequency.exponentialRampToValueAtTime(40,now+0.04);
+    tg.gain.setValueAtTime(0.9,now); tg.gain.exponentialRampToValueAtTime(0.001,now+0.07);
+    thump.connect(tg); tg.connect(master); thump.start(now); thump.stop(now+0.08);
+    // Click transient noise
+    const clen=Math.floor(ctx.sampleRate*0.008);
+    const cbuf=ctx.createBuffer(1,clen,ctx.sampleRate);
+    const cd=cbuf.getChannelData(0);
+    for(let i=0;i<clen;i++) cd[i]=(Math.random()*2-1)*Math.pow(1-i/clen,2);
+    const cs=ctx.createBufferSource(); cs.buffer=cbuf;
+    const cg=ctx.createGain(); cg.gain.setValueAtTime(0.7,now);
+    cs.connect(cg); cg.connect(master); cs.start(now);
+
+    // --- register bell ring (the "ching") starts ~55ms later ---
+    // Inharmonic metal partials — tuned to sound like a real register bell
+    const ring=0.055;
+    [[2800,1.0,0.55],[4200,0.65,0.42],[5600,0.45,0.32],[7000,0.28,0.24],[9100,0.16,0.18]].forEach(([freq,amp,dec])=>{
+      const o=ctx.createOscillator(); const g=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(freq,now+ring);
+      g.gain.setValueAtTime(0,now+ring);
+      g.gain.linearRampToValueAtTime(amp*0.5,now+ring+0.003);
+      g.gain.exponentialRampToValueAtTime(0.001,now+ring+dec);
+      o.connect(g); g.connect(master); o.start(now+ring); o.stop(now+ring+dec+0.02);
     });
-    setTimeout(()=>ctx.close(),1200);
+    // Small noise burst on bell impact for that metallic "ping" attack
+    const blen=Math.floor(ctx.sampleRate*0.015);
+    const bbuf=ctx.createBuffer(1,blen,ctx.sampleRate);
+    const bd=bbuf.getChannelData(0);
+    for(let i=0;i<blen;i++) bd[i]=(Math.random()*2-1)*Math.pow(1-i/blen,4);
+    const bs=ctx.createBufferSource(); bs.buffer=bbuf;
+    const bg=ctx.createGain(); bg.gain.setValueAtTime(0.3,now+ring);
+    const bhp=ctx.createBiquadFilter(); bhp.type='highpass'; bhp.frequency.setValueAtTime(3000,now+ring);
+    bs.connect(bhp); bhp.connect(bg); bg.connect(master); bs.start(now+ring);
+
+    setTimeout(()=>ctx.close(),900);
   }catch(e){}
 }
 
