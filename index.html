@@ -1357,7 +1357,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
   <!-- SHOP TAB -->
   <!-- HELP MODAL -->
-  <div class="modal-box" id="helpModal" style="max-width:520px;padding:0;overflow:hidden;display:flex;flex-direction:column;">
+  <div class="modal-box" id="helpModal" style="max-width:520px;padding:0;overflow:hidden;display:none;flex-direction:column;">
     <div class="help-modal-hdr">
       <div class="modal-title" style="margin:0;">Help Guide</div>
       <button class="modal-x" onclick="closeModals()" style="position:static;margin:0;flex-shrink:0;">&#10005;</button>
@@ -3884,7 +3884,8 @@ function showToast(msg,type='warn'){
 }
 function openModal(id){
   document.getElementById('modalOverlay').style.display='block';
-  document.getElementById(id).style.display='block';
+  const el = document.getElementById(id);
+  el.style.display = id==='helpModal' ? 'flex' : 'block';
   if(id==='exportModal') document.getElementById('exportPre').innerText=lastAnalysis||T().exportRunFirst;
 }
 function closeModals(){ document.getElementById('modalOverlay').style.display='none'; document.querySelectorAll('.modal-box').forEach(m=>m.style.display='none'); listNameCallback=null; dupItemId=null; }
