@@ -958,7 +958,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         <div class="al-brand-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
         <div class="al-brand-name">Better Price!</div>
       </div>
-      <div class="al-headline">Shop smarter. <span>Save every time.</span></div>
+      <div class="al-headline">Shop smarter.<br><span>Save every time.</span></div>
       <div class="al-sub">Scan barcodes, compare unit prices instantly, build grocery lists, and never overpay again.</div>
       <div class="feature-pills">
         <div class="fp"><div class="fp-icon"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg></div><div><div class="fp-title">Instant Barcode Scanning</div><div class="fp-desc">Point camera — name and size auto-fill</div></div></div>
@@ -2209,7 +2209,7 @@ function applyLang(){
   if(headlineEl){
     const parts = t.headline.split('. ');
     if(parts.length >= 2){
-      headlineEl.innerHTML = parts.slice(0,-1).join('. ')+'. <span>'+parts[parts.length-1]+'</span>';
+      headlineEl.innerHTML = parts.slice(0,-1).join('. ')+'.<br><span>'+parts[parts.length-1]+'</span>';
     } else {
       headlineEl.innerText = t.headline;
     }
@@ -5082,12 +5082,13 @@ RULE 1 — CREATING A LIST (always multi-step unless user gives everything upfro
   c. Only after you have name AND item decisions → output CREATELIST exactly once.
   Exception: if the user's message contains both name and items ("make a list called Party with chips and drinks"), create immediately.
 
-RULE 2 — ADDING ITEMS (always confirm before acting):
-  NEVER add items to any list without first confirming with the user — even if there is only one list.
-  Ask: "I'll add [item] to your [list name] — does that sound right?" and wait for confirmation.
-  If no list was specified, ask which list by name. Never guess based on item category.
-  Only add after the user says yes or confirms.
-  CRITICAL: If the user names a specific list (e.g. "my bread list", "the dinner list"), ALWAYS use that exact list — never override it with the active list. If the user corrects your list choice, immediately confirm with the correct list before acting: "Got it — I'll add [item] to [corrected list] instead. Sound good?"
+RULE 2 — ADDING ITEMS (two-step: confirm THEN act, never both in same message):
+  Step 1 — ASK: Send a message that ONLY asks for confirmation. No command tags whatsoever in this message.
+    "I'll add [item] to your [list name] — does that sound right?"
+    If no list was specified, ask which list by name first. Never guess.
+  Step 2 — ACT: Only after the user replies with yes/yeah/sure/ok/correct/any affirmative, send the ADDLIST command tag.
+  NEVER put an ADDLIST (or any action tag) in the same message as a confirmation question. These are two separate messages.
+  CRITICAL: If the user names a specific list, ALWAYS use that exact list — never override with the active list. If the user corrects your list choice, ask again with the corrected list name before acting: "Got it — I'll add [item] to [corrected list name]. Sound good?" Then wait for yes before adding.
 
 RULE 3 — DUPLICATE DETECTION:
   Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
