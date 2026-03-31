@@ -818,6 +818,15 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg.penny .pmsg-bubble{background:var(--white);color:var(--text);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
 .pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;}
 .pmsg-img{max-width:200px;max-height:200px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;}
+.pmsg-wrap{display:flex;flex-direction:column;gap:2px;}
+.pmsg-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;padding:0 2px;}
+.pmsg-wrap:hover .pmsg-actions{opacity:1;}
+.pmsg-wrap.user .pmsg-actions{justify-content:flex-end;}
+.pmsg-wrap.penny .pmsg-actions{justify-content:flex-start;padding-left:38px;}
+.pmsg-act-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:3px;font-family:var(--font);transition:.15s;line-height:1.4;}
+.pmsg-act-btn:hover{background:var(--input-bg);color:var(--text);}
+body.dark .pmsg-act-btn{border-color:#2a4060;color:#7a9fc0;}
+body.dark .pmsg-act-btn:hover{background:#1a2f45;color:#eef2ff;}
 .pmsg-typing{display:flex;gap:5px;align-items:center;padding:4px 0;}
 .pmsg-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pDot .9s ease-in-out infinite;opacity:.5;}
 .pmsg-dot:nth-child(2){animation-delay:.2s;}
@@ -4446,18 +4455,20 @@ function renderPennyMessages(){
     </div>`;
     return;
   }
-  area.innerHTML = pennyActiveSession.messages.map(m => {
+  const sess2 = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const initials2 = ((sess2.firstName||sess2.name||'?')[0]).toUpperCase();
+  area.innerHTML = pennyActiveSession.messages.map((m, idx) => {
     const isUser = m.role === 'user';
-    const sess = JSON.parse(localStorage.getItem('bp_session')||'{}');
-    const initials = ((sess.firstName||sess.name||'?')[0]).toUpperCase();
     const avatarHtml = isUser
-      ? `<div class="pmsg-avatar">${initials}</div>`
+      ? `<div class="pmsg-avatar">${initials2}</div>`
       : `<div class="pmsg-avatar" style="background:var(--brand);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>`;
     const imgHtml = m.image ? `<img class="pmsg-img" src="${m.image}" alt="attached">` : '';
     const bubbleContent = isUser
       ? (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       : pennyMd(m.content||'');
-    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>`;
+    const editBtn = isUser ? `<button class="pmsg-act-btn" onclick="pennyEditMessage(${idx})" title="Edit"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>` : '';
+    const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteFrom(${idx})" title="Delete"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Delete</button>`;
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div><div class="pmsg-actions">${editBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
@@ -4504,6 +4515,28 @@ async function pennyGenerateTitle(session){
       if(titleEl) titleEl.textContent = title;
     }
   } catch(e){ /* silently fail — temp title stays */ }
+}
+
+function pennyDeleteFrom(idx){
+  if(!pennyActiveSession) return;
+  pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
+  savePennySessions();
+  renderPennyMessages();
+}
+
+function pennyEditMessage(idx){
+  if(!pennyActiveSession) return;
+  const msg = pennyActiveSession.messages[idx];
+  const inp = document.getElementById('pennyInput');
+  if(inp){
+    inp.value = msg.content || '';
+    inp.focus();
+    inp.style.height = 'auto';
+    inp.style.height = inp.scrollHeight + 'px';
+  }
+  pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
+  savePennySessions();
+  renderPennyMessages();
 }
 
 function pennyAddTyping(){
@@ -4976,6 +5009,7 @@ function buildSys(){
 
   const activeList = groceryLists.find(l=>String(l.id)===String(activeListId));
   const activeListName = activeList ? activeList.name : (groceryLists[0]?.name || 'My Weekly Essentials');
+  const nowStr = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
   const listContext = groceryLists.map(l => {
     const its = groceryItems.filter(gi => gi.listId === l.id);
     const allNames = its.map(i=>i.name).join(', ');
@@ -5040,9 +5074,13 @@ LANGUAGE: The app supports English, Spanish (Español), and Portuguese (Portugu�
 
 DARK MODE: Toggle with the sun/moon icon in the top bar.
 
+Current date & time: ${nowStr}
+Use this date for all advice — store hours, sales cycles, seasonal pricing. Never cite prices as "current" without noting they are estimates based on typical 2025 US retail pricing. Aldi/Walmart/Lidl run weekly sales that reset on Wednesdays; Costco/Sam's Club on Mondays — factor in the day when advising.
+
 ${contextLines}
 Grocery lists: ${listContext}
-Active list: "${activeListName}"
+Currently selected list (UI default): "${activeListName}"
+IMPORTANT — only use the above list if the user has NOT named a specific list. The moment the user says any list name (even approximately), switch to that list. If it doesn't exist, offer to create it.
 
 Products being compared:
 ${lines||'(none entered yet)'}
@@ -5104,7 +5142,7 @@ RULE 4 — ONE COMMAND PER REPLY:
   Exception: when correcting a wrong-list mistake, you may output REMOVEITEMS + ADDLIST together in one message to move the item in a single step.
 
 RULE 5 — Warm, brief, conversational. 150 words max. No bullet points in chat.
-- Default to active list "${activeListName}" when context is clear — but still confirm before acting. If the user names a different list, switch to that list immediately and never revert to the active list.
+- ONLY use "${activeListName}" as a default when the user has not named any list at all. The instant the user names any list (even loosely — "bread list", "my orange list", "the dinner one"), use THAT list. Never revert to "${activeListName}" after the user has corrected you.
 
 RULE 6 — ASK ABOUT FREQUENCY & USAGE BEFORE ADVISING:
 When a user asks about a product, store, or price WITHOUT mentioning how often they buy it, ask first — naturally woven into your reply:
@@ -5238,8 +5276,8 @@ function pennyResolveList(nameHint){
   const lower = nameHint.toLowerCase();
   return groceryLists.find(l => l.name.toLowerCase() === lower)
       || groceryLists.find(l => l.name.toLowerCase().includes(lower))
-      || groceryLists.find(l => l.id === activeListId)
-      || groceryLists[0];
+      || groceryLists.find(l => lower.includes(l.name.toLowerCase()))
+      || null; // never silently fall back to active list when a name was specified
 }
 
 function pennyEnsureList(name){
