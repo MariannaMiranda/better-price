@@ -827,6 +827,18 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg-act-btn:hover{background:var(--input-bg);color:var(--text);}
 body.dark .pmsg-act-btn{border-color:#2a4060;color:#7a9fc0;}
 body.dark .pmsg-act-btn:hover{background:#1a2f45;color:#eef2ff;}
+/* Inline message edit */
+.pmsg-edit-wrap{flex:1;max-width:82%;}
+.pmsg-edit-ta{width:100%;border:2px solid var(--brand);border-radius:12px;padding:10px 13px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;resize:none;min-height:56px;max-height:200px;line-height:1.55;box-sizing:border-box;}
+body.dark .pmsg-edit-ta{background:#162535;color:#eef2ff;border-color:#4d8fcc;}
+.pmsg-edit-footer{display:flex;align-items:flex-start;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.pmsg-edit-info{font-size:12px;color:var(--muted);flex:1;display:flex;align-items:center;gap:5px;line-height:1.45;min-width:140px;}
+.pmsg-edit-btns{display:flex;gap:8px;flex-shrink:0;}
+.pmsg-edit-cancel{padding:7px 15px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:.15s;}
+.pmsg-edit-cancel:hover{background:var(--input-bg);}
+body.dark .pmsg-edit-cancel{border-color:#2a4060;color:#eef2ff;}
+.pmsg-edit-save{padding:7px 15px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+.pmsg-edit-save:hover{background:var(--brand-h);}
 .pmsg-typing{display:flex;gap:5px;align-items:center;padding:4px 0;}
 .pmsg-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pDot .9s ease-in-out infinite;opacity:.5;}
 .pmsg-dot:nth-child(2){animation-delay:.2s;}
@@ -4360,6 +4372,7 @@ let pennyBusy      = false;
 let pennyActiveSession = null;
 let pennySessions  = [];
 let pennyPendingImages = [];
+let pennyEditingIdx = -1;
 let pennySidebarOpen = window.innerWidth >= 600;
 
 function loadPennySessions(){
@@ -4466,9 +4479,17 @@ function renderPennyMessages(){
     const bubbleContent = isUser
       ? (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       : pennyMd(m.content||'');
-    const editBtn = isUser ? `<button class="pmsg-act-btn" onclick="pennyEditMessage(${idx})" title="Edit"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>` : '';
-    const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteFrom(${idx})" title="Delete"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Delete</button>`;
-    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div><div class="pmsg-actions">${editBtn}${delBtn}</div></div>`;
+    const svgEdit = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    const svgDel = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`;
+    const svgRegen = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>`;
+    if(pennyEditingIdx === idx && isUser){
+      const escaped = (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return `<div class="pmsg-wrap user"><div class="pmsg user">${avatarHtml}<div class="pmsg-edit-wrap"><textarea class="pmsg-edit-ta" id="pmsg-edit-ta" rows="3">${escaped}</textarea><div class="pmsg-edit-footer"><div class="pmsg-edit-info"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Editing will resend from this point.</div><div class="pmsg-edit-btns"><button class="pmsg-edit-cancel" onclick="pennyEditCancel()">Cancel</button><button class="pmsg-edit-save" onclick="pennyEditSave(${idx})">Save &amp; Send</button></div></div></div></div></div>`;
+    }
+    const editBtn = isUser ? `<button class="pmsg-act-btn" onclick="pennyEditStart(${idx})">${svgEdit}Edit</button>` : '';
+    const regenBtn = !isUser ? `<button class="pmsg-act-btn" onclick="pennyRegenerate(${idx})">${svgRegen}Regenerate</button>` : '';
+    const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div><div class="pmsg-actions">${editBtn}${regenBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
@@ -4517,26 +4538,52 @@ async function pennyGenerateTitle(session){
   } catch(e){ /* silently fail — temp title stays */ }
 }
 
-function pennyDeleteFrom(idx){
-  if(!pennyActiveSession) return;
-  pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
-  savePennySessions();
+function pennyDeleteMsg(idx){
+  showConfirm('Delete message', 'Delete this message and everything after it?', () => {
+    if(!pennyActiveSession) return;
+    pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
+    savePennySessions();
+    renderPennyMessages();
+    showToast('Message deleted', 'ok');
+  });
+}
+
+function pennyEditStart(idx){
+  pennyEditingIdx = idx;
+  renderPennyMessages();
+  setTimeout(() => {
+    const ta = document.getElementById('pmsg-edit-ta');
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; }
+  }, 50);
+}
+
+function pennyEditCancel(){
+  pennyEditingIdx = -1;
   renderPennyMessages();
 }
 
-function pennyEditMessage(idx){
-  if(!pennyActiveSession) return;
-  const msg = pennyActiveSession.messages[idx];
-  const inp = document.getElementById('pennyInput');
-  if(inp){
-    inp.value = msg.content || '';
-    inp.focus();
-    inp.style.height = 'auto';
-    inp.style.height = inp.scrollHeight + 'px';
-  }
-  pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
+function pennyEditSave(idx){
+  const ta = document.getElementById('pmsg-edit-ta');
+  if(!ta || !pennyActiveSession) return;
+  const newText = ta.value.trim();
+  if(!newText) return;
+  pennyEditingIdx = -1;
+  pennyActiveSession.messages[idx].content = newText;
+  pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx + 1);
   savePennySessions();
   renderPennyMessages();
+  showToast('Message updated — resending…', 'ok');
+  pennyCallAPI();
+}
+
+function pennyRegenerate(idx){
+  showConfirm('Regenerate response', 'Remove this response and generate a new one?', () => {
+    if(!pennyActiveSession) return;
+    pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
+    savePennySessions();
+    renderPennyMessages();
+    pennyCallAPI();
+  });
 }
 
 function pennyAddTyping(){
@@ -4551,31 +4598,16 @@ function pennyAddTyping(){
 }
 function pennyRemoveTyping(){ document.getElementById('penny-typing')?.remove(); }
 
-async function pennySend(){
-  const inp = document.getElementById('pennyInput');
-  const text = inp.value.trim();
-  const hasImages = pennyPendingImages.length > 0;
-  if(!text && !hasImages) return;
-  if(pennyBusy) return;
-
-  if(!pennyActiveSession) pennyNewChat();
-
-  const imageDataUrl = hasImages ? pennyPendingImages[0].dataUrl : null;
-  inp.value = '';
-  inp.style.height = 'auto';
-  pennyPendingImages = [];
-  renderPennyAttachStrip();
-
-  pennyAddMessage('user', text || '(image attached)', imageDataUrl);
+async function pennyCallAPI(){
+  if(pennyBusy || !pennyActiveSession) return;
   pennyBusy = true;
   document.getElementById('pennySendBtn').disabled = true;
   pennyAddTyping();
 
-  const historyMsgs = pennyActiveSession.messages.slice(0, -1);
+  const allMsgs = pennyActiveSession.messages;
   const apiMessages = [];
   let lastRole = null;
-
-  for(const m of historyMsgs){
+  for(const m of allMsgs){
     const apiRole = m.role === 'penny' ? 'assistant' : 'user';
     if(apiRole === lastRole) continue;
     if(m.image) continue;
@@ -4583,15 +4615,6 @@ async function pennySend(){
     if(!content.trim()) continue;
     apiMessages.push({ role: apiRole, content });
     lastRole = apiRole;
-  }
-
-  if(imageDataUrl){
-    apiMessages.push({ role: 'user', content: [
-      { type: 'image_url', image_url: { url: imageDataUrl } },
-      { type: 'text', text: text || 'What do you see? How can this help with my grocery shopping or price comparison?' }
-    ]});
-  } else {
-    apiMessages.push({ role: 'user', content: text });
   }
 
   pennyAbortCtrl = new AbortController();
@@ -4605,23 +4628,41 @@ async function pennySend(){
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
     const txt = pennyExecuteAddList(rawTxt);
     pennyRemoveTyping();
-
     pennyAddMessage('penny', txt);
-
     const userMsgCount = pennyActiveSession.messages.filter(m => m.role === 'user').length;
     if(userMsgCount === 1) pennyGenerateTitle(pennyActiveSession);
   } catch(e) {
     pennyRemoveTyping();
-    console.error('Penny error:', e);
-    const errText = e.message || '';
     if(e.name !== 'AbortError'){
-
-      const msg = errText.includes('HTTP') ? 'Penny had trouble responding. Please try again.' : 'Could not connect. Please check your internet.';
+      const msg = (e.message||'').includes('HTTP') ? 'Penny had trouble responding. Please try again.' : 'Could not connect. Please check your internet.';
       pennyAddMessage('penny', msg);
     }
   }
   pennyBusy = false;
   document.getElementById('pennySendBtn').disabled = false;
+}
+
+async function pennySend(){
+  const inp = document.getElementById('pennyInput');
+  const text = inp.value.trim();
+  const hasImages = pennyPendingImages.length > 0;
+  if(!text && !hasImages) return;
+  if(pennyBusy) return;
+  if(!pennyActiveSession) pennyNewChat();
+  const imageDataUrl = hasImages ? pennyPendingImages[0].dataUrl : null;
+  inp.value = '';
+  inp.style.height = 'auto';
+  pennyPendingImages = [];
+  renderPennyAttachStrip();
+  if(imageDataUrl){
+    const msg = { role:'user', content: text||'(image attached)', image: imageDataUrl };
+    pennyActiveSession.messages.push(msg);
+    if(pennyActiveSession.messages.filter(m=>m.role==='user').length===1){ const tmp=text.slice(0,45)+(text.length>45?'...':''); pennyActiveSession.title=tmp; const tel=document.getElementById('pennyChatTitle'); if(tel) tel.textContent=tmp; }
+    savePennySessions(); renderPennySessions(); renderPennyMessages();
+  } else {
+    pennyAddMessage('user', text);
+  }
+  await pennyCallAPI();
 }
 
 function pennyQuickSend(text){
