@@ -4508,13 +4508,15 @@ function renderPennyMessages(){
       const escaped = (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       return `<div class="pmsg-wrap user"><div class="pmsg user">${avatarHtml}<div class="pmsg-edit-wrap"><textarea class="pmsg-edit-ta" id="pmsg-edit-ta" rows="3">${escaped}</textarea><div class="pmsg-edit-footer"><div class="pmsg-edit-info"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Editing will resend from this point.</div><div class="pmsg-edit-btns"><button class="pmsg-edit-cancel" onclick="pennyEditCancel()">Cancel</button><button class="pmsg-edit-save" onclick="pennyEditSave(${idx})">Save &amp; Send</button></div></div></div></div></div>`;
     }
+    const svgCopy = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
     const editBtn = isUser ? `<button class="pmsg-act-btn" onclick="pennyEditStart(${idx})">${svgEdit}Edit</button>` : '';
     const regenBtn = !isUser ? `<button class="pmsg-act-btn" onclick="pennyRegenerate(${idx})">${svgRegen}Regenerate</button>` : '';
+    const copyBtn = `<button class="pmsg-act-btn" id="pmsg-copy-${idx}" onclick="pennyCopyMsg(${idx},this)">${svgCopy}Copy</button>`;
     const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
     const qrHtml = (!isUser && m.quickReplies?.length)
       ? `<div class="penny-qr-wrap">${m.quickReplies.map(r=>`<button class="penny-qr-btn" onclick="pennyQuickReply(${idx},${JSON.stringify(r)})">${r.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</button>`).join('')}</div>`
       : '';
-    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${qrHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${delBtn}</div></div>`;
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${qrHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
@@ -4600,6 +4602,18 @@ function pennyEditSave(idx){
   renderPennyMessages();
   showToast('Message updated — resending…', 'ok');
   pennyCallAPI();
+}
+
+function pennyCopyMsg(idx, btn){
+  const msg = pennyActiveSession?.messages[idx];
+  if(!msg) return;
+  navigator.clipboard.writeText(msg.content || '').then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = btn.innerHTML.replace('Copy','Copied!');
+    btn.style.color = 'var(--ok)';
+    btn.style.borderColor = 'var(--ok)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.color=''; btn.style.borderColor=''; }, 1800);
+  });
 }
 
 function pennyQuickReply(msgIdx, text){
