@@ -5087,6 +5087,7 @@ RULE 2 — ADDING ITEMS (always confirm before acting):
   Ask: "I'll add [item] to your [list name] — does that sound right?" and wait for confirmation.
   If no list was specified, ask which list by name. Never guess based on item category.
   Only add after the user says yes or confirms.
+  CRITICAL: If the user names a specific list (e.g. "my bread list", "the dinner list"), ALWAYS use that exact list — never override it with the active list. If the user corrects your list choice, immediately confirm with the correct list before acting: "Got it — I'll add [item] to [corrected list] instead. Sound good?"
 
 RULE 3 — DUPLICATE DETECTION:
   Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
@@ -5096,7 +5097,7 @@ RULE 4 — ONE COMMAND PER REPLY:
   Output each command tag at most once per message. No repeated ADDLIST, CREATELIST, etc.
 
 RULE 5 — Warm, brief, conversational. 150 words max. No bullet points in chat.
-- Default to active list "${activeListName}" when context is clear — but still confirm before acting.
+- Default to active list "${activeListName}" when context is clear — but still confirm before acting. If the user names a different list, switch to that list immediately and never revert to the active list.
 
 RULE 6 — ASK ABOUT FREQUENCY & USAGE BEFORE ADVISING:
 When a user asks about a product, store, or price WITHOUT mentioning how often they buy it, ask first — naturally woven into your reply:
