@@ -818,6 +818,28 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg.penny .pmsg-bubble{background:var(--white);color:var(--text);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
 .pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;}
 .pmsg-img{max-width:200px;max-height:200px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;}
+/* Rich message formatting */
+.pmsg-bubble .pmsg-p{margin:0 0 8px;}
+.pmsg-bubble .pmsg-p:last-child{margin-bottom:0;}
+.pmsg-bubble .pmsg-ul,.pmsg-bubble .pmsg-ol{margin:6px 0 8px;padding-left:20px;}
+.pmsg-bubble .pmsg-ul li,.pmsg-bubble .pmsg-ol li{margin-bottom:3px;line-height:1.55;}
+.pmsg-bubble .pmsg-ul{list-style:disc;}
+.pmsg-bubble .pmsg-ol{list-style:decimal;}
+.pmsg-bubble .pmsg-h1{font-size:16px;font-weight:700;margin:10px 0 5px;color:inherit;}
+.pmsg-bubble .pmsg-h2{font-size:15px;font-weight:700;margin:8px 0 4px;color:inherit;}
+.pmsg-bubble .pmsg-h3{font-size:14px;font-weight:700;margin:6px 0 3px;color:inherit;}
+.pmsg-bubble .pmsg-hr{border:none;border-top:1px solid rgba(0,0,0,.12);margin:10px 0;}
+body.dark .pmsg-bubble .pmsg-hr{border-color:rgba(255,255,255,.12);}
+.pmsg-bubble .pmsg-pre{background:var(--input-bg);border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:12px;margin:6px 0;}
+body.dark .pmsg-bubble .pmsg-pre{background:#0d1824;}
+.pmsg-bubble .pmsg-code{background:var(--input-bg);border-radius:4px;padding:1px 5px;font-size:12px;font-family:monospace;}
+body.dark .pmsg-bubble .pmsg-code{background:#0d1824;}
+/* Quick-reply pill buttons */
+.penny-qr-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-left:38px;}
+.penny-qr-btn{padding:7px 14px;border:1.5px solid var(--brand);border-radius:20px;background:var(--brand-light);color:var(--brand);font-size:13px;font-family:var(--font);font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;}
+.penny-qr-btn:hover{background:var(--brand);color:#fff;}
+body.dark .penny-qr-btn{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
+body.dark .penny-qr-btn:hover{background:#1a3d66;color:#fff;}
 .pmsg-wrap{display:flex;flex-direction:column;gap:2px;}
 .pmsg-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;padding:0 2px;}
 .pmsg-wrap:hover .pmsg-actions{opacity:1;}
@@ -4489,15 +4511,19 @@ function renderPennyMessages(){
     const editBtn = isUser ? `<button class="pmsg-act-btn" onclick="pennyEditStart(${idx})">${svgEdit}Edit</button>` : '';
     const regenBtn = !isUser ? `<button class="pmsg-act-btn" onclick="pennyRegenerate(${idx})">${svgRegen}Regenerate</button>` : '';
     const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
-    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div><div class="pmsg-actions">${editBtn}${regenBtn}${delBtn}</div></div>`;
+    const qrHtml = (!isUser && m.quickReplies?.length)
+      ? `<div class="penny-qr-wrap">${m.quickReplies.map(r=>`<button class="penny-qr-btn" onclick="pennyQuickReply(${idx},${JSON.stringify(r)})">${r.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</button>`).join('')}</div>`
+      : '';
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${qrHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
 
-function pennyAddMessage(role, text, imageDataUrl){
+function pennyAddMessage(role, text, imageDataUrl, quickReplies){
   if(!pennyActiveSession) pennyNewChat();
   const msg = { role, content: text };
   if(imageDataUrl) msg.image = imageDataUrl;
+  if(quickReplies?.length) msg.quickReplies = quickReplies;
   pennyActiveSession.messages.push(msg);
 
   if(role === 'user' && pennyActiveSession.messages.filter(m => m.role === 'user').length === 1){
@@ -4576,6 +4602,15 @@ function pennyEditSave(idx){
   pennyCallAPI();
 }
 
+function pennyQuickReply(msgIdx, text){
+  // Remove quick replies from that message so buttons disappear after use
+  if(pennyActiveSession?.messages[msgIdx]) delete pennyActiveSession.messages[msgIdx].quickReplies;
+  savePennySessions();
+  const inp = document.getElementById('pennyInput');
+  if(inp) inp.value = text;
+  pennySend();
+}
+
 function pennyRegenerate(idx){
   showConfirm('Regenerate response', 'Remove this response and generate a new one?', () => {
     if(!pennyActiveSession) return;
@@ -4626,9 +4661,11 @@ async function pennyCallAPI(){
     });
     const data = await res.json();
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
-    const txt = pennyExecuteAddList(rawTxt);
+    const result = pennyExecuteAddList(rawTxt);
+    const txt = typeof result === 'object' ? result.text : result;
+    const qr = typeof result === 'object' ? result.quickReplies : null;
     pennyRemoveTyping();
-    pennyAddMessage('penny', txt);
+    pennyAddMessage('penny', txt, null, qr);
     const userMsgCount = pennyActiveSession.messages.filter(m => m.role === 'user').length;
     if(userMsgCount === 1) pennyGenerateTitle(pennyActiveSession);
   } catch(e) {
@@ -5182,8 +5219,23 @@ RULE 4 — ONE COMMAND PER REPLY:
   Output each command tag at most once per message. No repeated ADDLIST, CREATELIST, etc.
   Exception: when correcting a wrong-list mistake, you may output REMOVEITEMS + ADDLIST together in one message to move the item in a single step.
 
-RULE 5 — Warm, brief, conversational. 150 words max. No bullet points in chat.
+RULE 5 — Warm, conversational tone. Use rich formatting when it helps clarity:
+- Use **bold** for store names, prices, and key terms
+- Use bullet lists (- item) or numbered lists for comparisons, multi-item advice, or step-by-step instructions
+- Use headers (## heading) only for longer structured responses
+- Keep simple conversational replies as plain text — no forced formatting
+- 200 words max for casual replies; longer is fine for detailed comparisons or lists
 - ONLY use "${activeListName}" as a default when the user has not named any list at all. The instant the user names any list (even loosely — "bread list", "my orange list", "the dinner one"), use THAT list. Never revert to "${activeListName}" after the user has corrected you.
+
+QUICKREPLIES — When you ask a yes/no or choice question, append quick-reply options at the end of your message so the user can tap instead of type. Format:
+QUICKREPLIES:["Option 1","Option 2","Option 3"]
+
+Examples:
+- Confirming which list: QUICKREPLIES:["Yes, that list","No, a different list","Create a new list"]
+- One-time vs regular: QUICKREPLIES:["One-time buy","I buy it regularly","Not sure yet"]
+- After giving advice: QUICKREPLIES:["Show me the price breakdown","Add it to my list","Compare more stores"]
+- Confirming an add: QUICKREPLIES:["Yes, add it","No, cancel","Add to a different list"]
+Keep options short (2–5 words each), max 4 options. Only use when a choice is genuinely needed.
 
 RULE 6 — ASK ABOUT FREQUENCY & USAGE BEFORE ADVISING:
 When a user asks about a product, store, or price WITHOUT mentioning how often they buy it, ask first — naturally woven into your reply:
@@ -5340,18 +5392,51 @@ function pennyMakeItem(listId, item){
 function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
 
 function pennyMd(text){
-
-  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
+  // Strip hidden command tags before rendering
+  let s = text.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|QUICKREPLIES):[^\n]*/gm,'').trim();
+  // Escape HTML
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Code blocks ```...```
+  s = s.replace(/```([\s\S]*?)```/g,'<pre class="pmsg-pre"><code>$1</code></pre>');
+  // Inline code `...`
+  s = s.replace(/`([^`\n]+)`/g,'<code class="pmsg-code">$1</code>');
+  // Headers ### ## #
+  s = s.replace(/^###\s+(.+)$/gm,'<div class="pmsg-h3">$1</div>');
+  s = s.replace(/^##\s+(.+)$/gm,'<div class="pmsg-h2">$1</div>');
+  s = s.replace(/^#\s+(.+)$/gm,'<div class="pmsg-h1">$1</div>');
+  // Bold **text** and __text__
   s = s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
-
+  s = s.replace(/__([^_\n]+)__/g,'<strong>$1</strong>');
+  // Italic *text* and _text_
   s = s.replace(/(?<!\*)\*(?!\*)([^*\n]+)\*(?!\*)/g,'<em>$1</em>');
-
+  s = s.replace(/(?<!_)_(?!_)([^_\n]+)_(?!_)/g,'<em>$1</em>');
+  // Horizontal rule ---
+  s = s.replace(/^---+$/gm,'<hr class="pmsg-hr">');
+  // Unordered lists (lines starting with - or * or •)
+  s = s.replace(/^[ \t]*[-*•]\s+(.+)$/gm,'<li>$1</li>');
+  s = s.replace(/(<li>[\s\S]*?<\/li>)(\s*<li>)/g,'$1$2'); // keep consecutive
+  s = s.replace(/(<li>.*<\/li>)/gs, m => '<ul class="pmsg-ul">'+m+'</ul>');
+  // Numbered lists
+  s = s.replace(/^[ \t]*\d+\.\s+(.+)$/gm,'<oli>$1</oli>');
+  s = s.replace(/(<oli>.*<\/oli>)/gs, m => '<ol class="pmsg-ol">'+m.replace(/<oli>/g,'<li>').replace(/<\/oli>/g,'</li>')+'</ol>');
+  // Paragraphs: double newline → paragraph break
+  s = s.replace(/\n\n+/g,'</p><p class="pmsg-p">');
+  s = '<p class="pmsg-p">'+s+'</p>';
+  // Single newline → <br> (inside paragraphs)
   s = s.replace(/\n/g,'<br>');
+  // Clean up empty paragraphs
+  s = s.replace(/<p class="pmsg-p"><\/p>/g,'');
+  s = s.replace(/<p class="pmsg-p">(<(?:ul|ol|div|pre|hr)[^>]*>)/g,'$1');
+  s = s.replace(/(<\/(?:ul|ol|div|pre|hr)>)<\/p>/g,'$1');
   return s;
 }
 
 function pennyExecuteActions(rawText){
+
+  // Extract QUICKREPLIES:[...] tag
+  let quickReplies = null;
+  const qrMatch = rawText.match(/QUICKREPLIES:(\[.+\])\s*$/m);
+  if(qrMatch){ try { quickReplies = JSON.parse(qrMatch[1]); } catch(e){} }
 
   const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(\{.+\})\s*$/gm;
   const commands = [];
@@ -5360,8 +5445,10 @@ function pennyExecuteActions(rawText){
     try { commands.push({ type: m[1], data: JSON.parse(m[2]) }); } catch(e){ console.warn('Penny cmd parse:', m[0], e); }
   }
 
-  const cleanText = rawText.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
-  if(!commands.length) return cleanText;
+  const cleanText = rawText
+    .replace(/^[^\n]*QUICKREPLIES:\[.+\]\s*$/m,'')
+    .replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
+  if(!commands.length) return { text: cleanText, quickReplies };
 
   const toasts = [];
   let saveLists = false, saveItms = false;
@@ -5432,7 +5519,7 @@ function pennyExecuteActions(rawText){
   if(saveItms) saveU('gitems', groceryItems);
   if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
   if(toasts.length) showToast(toasts.join(' · '), 'ok');
-  return cleanText;
+  return { text: cleanText, quickReplies };
 }
 
 document.addEventListener('keydown', e=>{
