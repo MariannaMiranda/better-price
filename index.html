@@ -812,11 +812,11 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg-avatar{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
 .pmsg.user .pmsg-avatar{background:var(--ok);}
 .pmsg-bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.7;font-family:var(--font);word-break:break-word;}
-.pmsg.user .pmsg-bubble{white-space:pre-wrap;}
+.pmsg.user .pmsg-bubble{white-space:pre-wrap;background:transparent!important;box-shadow:none!important;color:var(--text)!important;font-size:14px;}
 .pmsg.penny .pmsg-bubble em{font-style:italic;}
 .pmsg.penny .pmsg-bubble strong{font-weight:700;}
 .pmsg.penny .pmsg-bubble{background:var(--white);color:var(--text);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
-.pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;}
+.pmsg.user .pmsg-bubble{background:transparent;box-shadow:none;padding:2px 0;}
 .pmsg-img{max-width:200px;max-height:200px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;}
 /* Rich message formatting */
 .pmsg-bubble .pmsg-p{margin:0 0 8px;}
@@ -834,12 +834,6 @@ body.dark .pmsg-bubble .pmsg-hr{border-color:rgba(255,255,255,.12);}
 body.dark .pmsg-bubble .pmsg-pre{background:#0d1824;}
 .pmsg-bubble .pmsg-code{background:var(--input-bg);border-radius:4px;padding:1px 5px;font-size:12px;font-family:monospace;}
 body.dark .pmsg-bubble .pmsg-code{background:#0d1824;}
-/* Quick-reply pill buttons */
-.penny-qr-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-left:38px;}
-.penny-qr-btn{padding:7px 14px;border:1.5px solid var(--brand);border-radius:20px;background:var(--brand-light);color:var(--brand);font-size:13px;font-family:var(--font);font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;}
-.penny-qr-btn:hover{background:var(--brand);color:#fff;}
-body.dark .penny-qr-btn{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
-body.dark .penny-qr-btn:hover{background:#1a3d66;color:#fff;}
 .pmsg-wrap{display:flex;flex-direction:column;gap:2px;}
 .pmsg-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;padding:0 2px;}
 .pmsg-wrap:hover .pmsg-actions{opacity:1;}
@@ -4513,19 +4507,15 @@ function renderPennyMessages(){
     const regenBtn = !isUser ? `<button class="pmsg-act-btn" onclick="pennyRegenerate(${idx})">${svgRegen}Regenerate</button>` : '';
     const copyBtn = `<button class="pmsg-act-btn" id="pmsg-copy-${idx}" onclick="pennyCopyMsg(${idx},this)">${svgCopy}Copy</button>`;
     const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
-    const qrHtml = (!isUser && m.quickReplies?.length)
-      ? `<div class="penny-qr-wrap">${m.quickReplies.map(r=>`<button class="penny-qr-btn" onclick="pennyQuickReply(${idx},${JSON.stringify(r)})">${r.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</button>`).join('')}</div>`
-      : '';
-    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${qrHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div><div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
 
-function pennyAddMessage(role, text, imageDataUrl, quickReplies){
+function pennyAddMessage(role, text, imageDataUrl){
   if(!pennyActiveSession) pennyNewChat();
   const msg = { role, content: text };
   if(imageDataUrl) msg.image = imageDataUrl;
-  if(quickReplies?.length) msg.quickReplies = quickReplies;
   pennyActiveSession.messages.push(msg);
 
   if(role === 'user' && pennyActiveSession.messages.filter(m => m.role === 'user').length === 1){
@@ -4616,14 +4606,6 @@ function pennyCopyMsg(idx, btn){
   });
 }
 
-function pennyQuickReply(msgIdx, text){
-  // Remove quick replies from that message so buttons disappear after use
-  if(pennyActiveSession?.messages[msgIdx]) delete pennyActiveSession.messages[msgIdx].quickReplies;
-  savePennySessions();
-  const inp = document.getElementById('pennyInput');
-  if(inp) inp.value = text;
-  pennySend();
-}
 
 function pennyRegenerate(idx){
   showConfirm('Regenerate response', 'Remove this response and generate a new one?', () => {
@@ -4677,9 +4659,8 @@ async function pennyCallAPI(){
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
     const result = pennyExecuteAddList(rawTxt);
     const txt = typeof result === 'object' ? result.text : result;
-    const qr = typeof result === 'object' ? result.quickReplies : null;
     pennyRemoveTyping();
-    pennyAddMessage('penny', txt, null, qr);
+    pennyAddMessage('penny', txt);
     const userMsgCount = pennyActiveSession.messages.filter(m => m.role === 'user').length;
     if(userMsgCount === 1) pennyGenerateTitle(pennyActiveSession);
   } catch(e) {
@@ -5241,15 +5222,6 @@ RULE 5 — Warm, conversational tone. Use rich formatting when it helps clarity:
 - 200 words max for casual replies; longer is fine for detailed comparisons or lists
 - ONLY use "${activeListName}" as a default when the user has not named any list at all. The instant the user names any list (even loosely — "bread list", "my orange list", "the dinner one"), use THAT list. Never revert to "${activeListName}" after the user has corrected you.
 
-QUICKREPLIES — When you ask a yes/no or choice question, append quick-reply options at the end of your message so the user can tap instead of type. Format:
-QUICKREPLIES:["Option 1","Option 2","Option 3"]
-
-Examples:
-- Confirming which list: QUICKREPLIES:["Yes, that list","No, a different list","Create a new list"]
-- One-time vs regular: QUICKREPLIES:["One-time buy","I buy it regularly","Not sure yet"]
-- After giving advice: QUICKREPLIES:["Show me the price breakdown","Add it to my list","Compare more stores"]
-- Confirming an add: QUICKREPLIES:["Yes, add it","No, cancel","Add to a different list"]
-Keep options short (2–5 words each), max 4 options. Only use when a choice is genuinely needed.
 
 RULE 6 — ASK ABOUT FREQUENCY & USAGE BEFORE ADVISING:
 When a user asks about a product, store, or price WITHOUT mentioning how often they buy it, ask first — naturally woven into your reply:
@@ -5407,7 +5379,7 @@ function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
 
 function pennyMd(text){
   // Strip hidden command tags before rendering
-  let s = text.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|QUICKREPLIES):[^\n]*/gm,'').trim();
+  let s = text.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):[^\n]*/gm,'').trim();
   // Escape HTML
   s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // Code blocks ```...```
@@ -5447,10 +5419,6 @@ function pennyMd(text){
 
 function pennyExecuteActions(rawText){
 
-  // Extract QUICKREPLIES:[...] tag
-  let quickReplies = null;
-  const qrMatch = rawText.match(/QUICKREPLIES:(\[.+\])\s*$/m);
-  if(qrMatch){ try { quickReplies = JSON.parse(qrMatch[1]); } catch(e){} }
 
   const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(\{.+\})\s*$/gm;
   const commands = [];
@@ -5460,9 +5428,8 @@ function pennyExecuteActions(rawText){
   }
 
   const cleanText = rawText
-    .replace(/^[^\n]*QUICKREPLIES:\[.+\]\s*$/m,'')
     .replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
-  if(!commands.length) return { text: cleanText, quickReplies };
+  if(!commands.length) return cleanText;
 
   const toasts = [];
   let saveLists = false, saveItms = false;
@@ -5533,7 +5500,7 @@ function pennyExecuteActions(rawText){
   if(saveItms) saveU('gitems', groceryItems);
   if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
   if(toasts.length) showToast(toasts.join(' · '), 'ok');
-  return { text: cleanText, quickReplies };
+  return cleanText;
 }
 
 document.addEventListener('keydown', e=>{
