@@ -817,6 +817,9 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg.penny .pmsg-bubble{background:var(--white);color:var(--text);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
 .pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;}
 .pmsg-img{max-width:200px;max-height:200px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;}
+.pmsg-list-links{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}
+.pmsg-list-link{padding:4px 12px;background:var(--brand-light);color:var(--brand);border:1.5px solid var(--brand);border-radius:20px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;}
+.pmsg-list-link:hover{background:var(--brand);color:#fff;}
 .pmsg-typing{display:flex;gap:5px;align-items:center;padding:4px 0;}
 .pmsg-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pDot .9s ease-in-out infinite;opacity:.5;}
 .pmsg-dot:nth-child(2){animation-delay:.2s;}
@@ -879,6 +882,8 @@ body.dark #pennyPriceListText{background:#162535;color:#eef2ff;border-color:#2a4
 body.dark #pennyPricePhotoResult{background:#162535;color:#c8ddf0;}
 body.dark .penny-new-btn{background:#1a3d66;}
 body.dark .penny-welcome-icon{background:#1a2f45;}
+body.dark .pmsg-list-link{background:#1a2f45;color:#7ec8f8;border-color:#4d8fcc;}
+body.dark .pmsg-list-link:hover{background:#4d8fcc;color:#fff;}
 .ai-wrap{max-width:700px;margin:0 auto 10px;padding:0 20px;}
 .ai-trigger-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 24px;background:linear-gradient(135deg,#1a3d66 0%,#003366 100%);color:#fff;border:none;border-radius:14px;font-family:var(--font-d);font-size:17px;font-weight:700;cursor:pointer;letter-spacing:.3px;box-shadow:0 4px 20px rgba(0,51,102,.3);transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
 .ai-trigger-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 60%);pointer-events:none;}
@@ -2657,6 +2662,7 @@ function showApp(isNewUser=false){
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   loadUserData();
   loadPennySessions();
+  loadPennyMemory();
   ['history','grocery','presets','help','profile','penny'].forEach(n=>{
     const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
   });
@@ -2697,6 +2703,7 @@ function goTab(name){
     if(sb) sb.classList.toggle('collapsed', !pennySidebarOpen);
     // Reload from storage to pick up any changes, re-sync active reference
     loadPennySessions();
+    loadPennyMemory();
     // If no active session but sessions exist, load the most recent
     if(!pennyActiveSession && pennySessions.length){
       pennyActiveSession = pennySessions[pennySessions.length - 1];
@@ -2909,6 +2916,7 @@ function finishOnboarding(){
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   loadUserData();
   loadPennySessions();
+  loadPennyMemory();
   ['history','grocery','presets','help','profile','penny'].forEach(n=>{
     const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
   });
@@ -4373,6 +4381,7 @@ let pennyBusy      = false;
 let pennyActiveSession = null; // { id, title, messages: [{role,content,image?}] }
 let pennySessions  = []; // loaded from storage
 let pennyPendingImages = []; // [{dataUrl, mimeType, name}]
+let pennyLastListActions = []; // [{id, name}] — populated by pennyExecuteActions, consumed by pennySend
 let pennySidebarOpen = window.innerWidth >= 600;
 
 function loadPennySessions(){
@@ -4388,7 +4397,66 @@ function savePennySessions(){
   saveU('penny_sessions', pennySessions);
 }
 
+// ── Penny Cross-Session Memory ──
+let pennyMemory = [];
+function loadPennyMemory(){ pennyMemory = loadU('penny_memory', []); }
+function savePennyMemory(){
+  if(pennyMemory.length > 10) pennyMemory = pennyMemory.slice(-10);
+  saveU('penny_memory', pennyMemory);
+}
+async function pennyArchiveSession(session){
+  if(!session || session.messages.length < 3) return;
+  if(pennyMemory.some(m => m.sessionId === session.id)) return;
+  const transcript = session.messages.slice(0, 12)
+    .filter(m => typeof m.content === 'string')
+    .map(m => `${m.role === 'user' ? 'User' : 'Penny'}: ${m.content.slice(0, 180)}`)
+    .join('\n');
+  try {
+    const res = await anthropicFetch({
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile', max_tokens:80,
+        system:'Extract 1-2 sentences of concrete facts from this grocery chat: what items/stores were discussed, any preferences or decisions made, or household context revealed. Reply with only the facts, no intro.',
+        messages:[{ role:'user', content: transcript }]
+      })
+    });
+    const data = await res.json();
+    const summary = (data.content?.[0]?.text || '').trim();
+    if(summary && summary.length > 10){
+      pennyMemory.push({ summary, ts: Date.now(), sessionId: session.id });
+      savePennyMemory();
+    }
+  } catch(e){ /* silently fail */ }
+}
+
+// Navigate to a specific grocery list from a Penny chat link
+function pennyGoToList(listId){
+  activeListId = listId;
+  goTab('grocery');
+  renderListNav();
+  renderGroceryContent();
+}
+
+// Fuzzy duplicate detection for grocery item names
+function pennyFuzzyDuplicate(existing, incoming){
+  const a = existing.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
+  const b = incoming.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
+  if(!a || !b) return false;
+  if(a === b) return true;
+  if(a.includes(b) || b.includes(a)) return true;
+  const tokA = a.split(/\s+/).filter(t => t.length > 2);
+  const tokB = b.split(/\s+/).filter(t => t.length > 2);
+  if(!tokA.length || !tokB.length) return false;
+  const [shorter, longer] = tokA.length <= tokB.length ? [tokA, tokB] : [tokB, tokA];
+  const matches = shorter.filter(t => longer.some(l => l.includes(t) || t.includes(l)));
+  return matches.length >= Math.ceil(shorter.length * 0.7);
+}
+
 function pennyNewChat(){
+  // Archive the current session before starting fresh
+  if(pennyActiveSession && pennyActiveSession.messages.length >= 3){
+    pennyArchiveSession(pennyActiveSession);
+  }
   const id = 'ps_' + Date.now();
   const session = { id, title: 'New Chat', messages: [], ts: Date.now() };
   pennySessions.push(session);
@@ -4480,15 +4548,21 @@ function renderPennyMessages(){
     const bubbleContent = isUser
       ? (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       : pennyMd(m.content||'');
-    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>`;
+    const listLinkHtml = (!isUser && m.listActions?.length)
+      ? '<div class="pmsg-list-links">' + [...new Map(m.listActions.map(a=>[a.id,a])).values()].map(la=>
+          `<button class="pmsg-list-link" onclick="pennyGoToList('${la.id}')">View "${la.name.replace(/'/g,'&#39;')}" →</button>`
+        ).join('') + '</div>'
+      : '';
+    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}${listLinkHtml}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
 
-function pennyAddMessage(role, text, imageDataUrl){
+function pennyAddMessage(role, text, imageDataUrl, listActions){
   if(!pennyActiveSession) pennyNewChat();
   const msg = { role, content: text };
   if(imageDataUrl) msg.image = imageDataUrl;
+  if(listActions?.length) msg.listActions = listActions;
   pennyActiveSession.messages.push(msg);
   // Temp title from first user message — shows immediately in sidebar
   if(role === 'user' && pennyActiveSession.messages.filter(m => m.role === 'user').length === 1){
@@ -4566,15 +4640,23 @@ async function pennySend(){
   const apiMessages = [];
   let lastRole = null;
 
-  // Build history (text only — images in history not supported by Groq text models)
+  // Build history — include images via vision format; api/penny auto-selects vision model when images present
   for(const m of historyMsgs){
     const apiRole = m.role === 'penny' ? 'assistant' : 'user';
     if(apiRole === lastRole) continue;
-    if(m.image) continue;
-    const content = typeof m.content === 'string' ? m.content : '';
-    if(!content.trim()) continue;
-    apiMessages.push({ role: apiRole, content });
-    lastRole = apiRole;
+    if(m.image){
+      const textPart = typeof m.content === 'string' && m.content.trim() ? m.content : '(image)';
+      apiMessages.push({ role: apiRole, content: [
+        { type: 'image_url', image_url: { url: m.image } },
+        { type: 'text', text: textPart }
+      ]});
+      lastRole = apiRole;
+    } else {
+      const content = typeof m.content === 'string' ? m.content : '';
+      if(!content.trim()) continue;
+      apiMessages.push({ role: apiRole, content });
+      lastRole = apiRole;
+    }
   }
 
   // Add current message — use image_url format for Groq vision model
@@ -4597,9 +4679,10 @@ async function pennySend(){
     const data = await res.json();
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
     const txt = pennyExecuteAddList(rawTxt);
+    const listActions = pennyLastListActions.length ? [...pennyLastListActions] : null;
     pennyRemoveTyping();
     // Save assistant message — pennyAddMessage handles save + render
-    pennyAddMessage('penny', txt);
+    pennyAddMessage('penny', txt, null, listActions);
     // After first exchange: generate a proper AI title (replaces the temp truncated one)
     const userMsgCount = pennyActiveSession.messages.filter(m => m.role === 'user').length;
     if(userMsgCount === 1) pennyGenerateTitle(pennyActiveSession);
@@ -5012,10 +5095,15 @@ function buildSys(){
     freq?'Shopping frequency: '+freq:'',
   ].filter(Boolean).join(' | ');
 
+  const memoryLines = pennyMemory.length
+    ? pennyMemory.slice(-5).map(m => `• ${m.summary}`).join('\n')
+    : '';
+
   return `You are Penny, a warm and knowledgeable grocery shopping advisor built into the Better Price! app — like a smart friend who knows prices inside and out. Always respond in ${ln}.
 
 ${firstName?`The user's first name is ${firstName}. Use their name naturally in conversation — greet them by name when starting a new chat session, and occasionally use it to make the conversation feel personal. Don't overuse it.`:''}
 
+${memoryLines?`What I remember from past chats:\n${memoryLines}\nUse this context naturally — don't recite it back, just let it inform your advice.\n`:''}
 
 APP GUIDE — You know exactly how Better Price! works. When users ask how to do something, explain it clearly and confidently:
 
@@ -5086,11 +5174,11 @@ RULE 2 — ADDING ITEMS (always confirm before acting):
   Only add after the user says yes or confirms.
 
 RULE 3 — DUPLICATE DETECTION:
-  Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
+  Before adding, check the grocery list data above using fuzzy matching — "Greek yogurt" and "yogurt" are the same item; "OJ" and "orange juice" are the same; "ground beef" and "beef" are the same. If a similar item already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
   Never add a duplicate without explicit confirmation.
 
-RULE 4 — ONE COMMAND PER REPLY:
-  Output each command tag at most once per message. No repeated ADDLIST, CREATELIST, etc.
+RULE 4 — COMMAND GROUPING:
+  You may output multiple DIFFERENT command types in one reply when they logically belong together — for example, CREATELIST followed by ADDLIST to populate it, or REMOVEITEMS followed by ADDLIST to swap items. Each command TYPE may still appear at most once per reply. Never repeat the same command type twice.
 
 RULE 5 — Warm, brief, conversational. 150 words max. No bullet points in chat.
 - Default to active list "${activeListName}" when context is clear — but still confirm before acting.
@@ -5134,7 +5222,9 @@ Rules:
 - Only suggest stores the user could realistically visit (use their zip + preferred stores; nearby chains count even if not in their list)
 - Only flag it if savings are meaningful: at least ~$0.30/unit or ~10% cheaper — don't nitpick pennies
 - One soft offer, then wait. If they say "stick to my usual" → respect it, don't push that store again for that item
-- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency\`;
+- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency
+
+RECEIPT PARSING — When a user shares an image that looks like a grocery receipt, automatically extract the store name (if visible), individual items with prices, and the total. Then offer to: (1) add those items to a grocery list, (2) identify which items were overpriced vs. cheaper alternatives, or (3) save it as a comparison preset. Ask what they'd like to do with it.\`;
 }
 
 // ── Landing Page Penny Widget ──
@@ -5261,6 +5351,7 @@ function pennyMd(text){
 }
 
 function pennyExecuteActions(rawText){
+  pennyLastListActions = []; // reset tracker for this response
   // Match commands anywhere on a line (model sometimes adds a stray char before the tag)
   const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(\{.+\})\s*$/gm;
   const commands = [];
@@ -5282,8 +5373,13 @@ function pennyExecuteActions(rawText){
         if(!groceryLists.length){ pennyEnsureList(d.list || activeListName); }
         const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
         let n = 0;
-        (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
-        if(n){ saveItms=true; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
+        (d.items || []).forEach(item => {
+          if(!item.name?.trim()) return;
+          const existingInList = groceryItems.filter(gi => gi.listId === list.id);
+          if(existingInList.some(gi => pennyFuzzyDuplicate(gi.name, item.name))) return; // skip fuzzy duplicates
+          groceryItems.push(pennyMakeItem(list.id, item)); n++;
+        });
+        if(n){ saveItms=true; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); pennyLastListActions.push({id: list.id, name: list.name}); }
       }
       else if(cmd.type === 'CREATELIST'){
         const lid = 'list_penny_' + Date.now();
@@ -5293,6 +5389,7 @@ function pennyExecuteActions(rawText){
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(lid, item)); n++; } });
         if(n) saveItms=true;
         toasts.push('Created "' + list.name + '"' + (n ? ' with ' + n + ' item' + (n!==1?'s':'') : ''));
+        pennyLastListActions.push({id: lid, name: list.name});
       }
       else if(cmd.type === 'REMOVEITEMS'){
         const list = pennyResolveList(d.list); if(!list) return;
