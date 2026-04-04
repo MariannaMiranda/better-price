@@ -5,7 +5,7 @@
 <title>Better Price!
 </title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1032,20 +1032,20 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="auth-form">
         <div id="nameWrap" style="display:flex;gap:10px;">
           <div class="input-wrap" style="flex:1">
-            <input class="auth-input" type="text" id="authFirstName" placeholder="First Name">
+            <input class="auth-input" type="text" id="authFirstName" placeholder="First Name" onkeydown="if(event.key==='Enter')handleAuth()">
             <div class="err-bubble" id="err-firstname"><span class="err-icon">!</span><span class="msg"></span></div>
           </div>
           <div class="input-wrap" style="flex:1">
-            <input class="auth-input" type="text" id="authLastName" placeholder="Last Name">
+            <input class="auth-input" type="text" id="authLastName" placeholder="Last Name" onkeydown="if(event.key==='Enter')handleAuth()">
             <div class="err-bubble" id="err-lastname"><span class="err-icon">!</span><span class="msg"></span></div>
           </div>
         </div>
         <div class="input-wrap">
-          <input class="auth-input" type="email" id="authEmail" placeholder="Email">
+          <input class="auth-input" type="email" id="authEmail" placeholder="Email" onkeydown="if(event.key==='Enter')handleAuth()">
           <div class="err-bubble" id="err-email"><span class="err-icon">!</span><span class="msg"></span></div>
         </div>
         <div class="input-wrap">
-          <input class="auth-input" type="password" id="authPass" placeholder="Password" style="padding-right:48px">
+          <input class="auth-input" type="password" id="authPass" placeholder="Password" style="padding-right:48px" onkeydown="if(event.key==='Enter')handleAuth()">
           <button class="toggle-pass" type="button" onclick="togglePass()">
             <svg viewBox="0 0 24 24" id="eyeIcon"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
