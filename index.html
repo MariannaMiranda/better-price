@@ -839,6 +839,10 @@ body.dark .pmsg-bubble .pmsg-code{background:#0d1824;}
 .pmsg-wrap.user .pmsg-actions{justify-content:flex-end;}
 .pmsg-wrap.penny .pmsg-actions{justify-content:flex-start;padding-left:38px;}
 .pmsg-act-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:3px;font-family:var(--font);transition:.15s;line-height:1.4;}
+.pmsg-list-link{display:inline-flex;align-items:center;gap:6px;margin:6px 0 2px 38px;padding:6px 12px;background:var(--brand-light);color:var(--brand);border:1.5px solid var(--brand);border-radius:20px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;text-decoration:none;}
+.pmsg-list-link:hover{background:var(--brand);color:#fff;}
+body.dark .pmsg-list-link{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
+body.dark .pmsg-list-link:hover{background:#1a3d66;color:#fff;}
 .pmsg-act-btn:hover{background:var(--input-bg);color:var(--text);}
 body.dark .pmsg-act-btn{border-color:#2a4060;color:#7a9fc0;}
 body.dark .pmsg-act-btn:hover{background:#1a2f45;color:#eef2ff;}
@@ -4403,8 +4407,17 @@ function savePennySessions(){
   saveU('penny_sessions', pennySessions);
 }
 
+function pennyGoList(listId){
+  if(listId) activeListId = listId;
+  goTab('grocery');
+}
+
 function pennyNewChat(){
   const id = 'ps_' + Date.now();
+  // Archive previous session to memory if it had real content
+  if(pennyActiveSession && pennyActiveSession.messages.length >= 4){
+    _archivePennySession(pennyActiveSession);
+  }
   const session = { id, title: 'New Chat', messages: [], ts: Date.now() };
   pennySessions.push(session);
   pennyActiveSession = session;
@@ -4414,6 +4427,46 @@ function pennyNewChat(){
   document.getElementById('pennyChatTitle').textContent = 'Penny';
   pennyPendingImages = [];
   renderPennyAttachStrip();
+}
+
+/* ── PENNY CROSS-SESSION MEMORY ── */
+function _pennyMemoryKey(){
+  const sess = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  return sess.email ? 'bp_'+sess.email+'_pmemory' : 'bp_pmemory';
+}
+function loadPennyMemory(){
+  try { return JSON.parse(localStorage.getItem(_pennyMemoryKey())||'null') || null; }
+  catch(e){ return null; }
+}
+function savePennyMemory(mem){
+  try { localStorage.setItem(_pennyMemoryKey(), JSON.stringify(mem)); } catch(e){}
+}
+async function _archivePennySession(session){
+  // Build a plain-text transcript of the session (skip images, limit length)
+  const lines = session.messages
+    .filter(m => typeof m.content === 'string' && m.content.trim())
+    .map(m => (m.role==='user'?'User: ':'Penny: ') + m.content.slice(0,300))
+    .join('\n');
+  if(lines.length < 80) return; // too short to summarize
+  try {
+    const res = await anthropicFetch({
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile', max_tokens:200,
+        system:'Summarize this shopping assistant conversation in 2-3 sentences. Focus on: what the user bought/compared, which stores/lists they used, any strong preferences or patterns, and any decisions made. Be factual and brief.',
+        messages:[{ role:'user', content: lines.slice(0,3000) }]
+      })
+    });
+    const data = await res.json();
+    const summary = (data.content?.[0]?.text||'').trim();
+    if(!summary) return;
+    const existing = loadPennyMemory() || { summaries:[], sessionCount:0 };
+    existing.summaries.unshift({ date: new Date().toLocaleDateString(), text: summary });
+    if(existing.summaries.length > 8) existing.summaries = existing.summaries.slice(0,8);
+    existing.sessionCount = (existing.sessionCount||0) + 1;
+    existing.lastUpdated = new Date().toISOString();
+    savePennyMemory(existing);
+  } catch(e){ /* silently fail */ }
 }
 
 function pennyLoadSession(id){
@@ -4506,15 +4559,17 @@ function renderPennyMessages(){
     const regenBtn = !isUser ? `<button class="pmsg-act-btn" onclick="pennyRegenerate(${idx})">${svgRegen}Regenerate</button>` : '';
     const copyBtn = `<button class="pmsg-act-btn" id="pmsg-copy-${idx}" onclick="pennyCopyMsg(${idx},this)">${svgCopy}Copy</button>`;
     const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
-    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div><div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
+    const listLinkHtml = (!isUser && m.listLink) ? `<button class="pmsg-list-link" onclick="pennyGoList(${JSON.stringify(m.listLink.id)})"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>View "${m.listLink.name}" →</button>` : '';
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${listLinkHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
 
-function pennyAddMessage(role, text, imageDataUrl){
+function pennyAddMessage(role, text, imageDataUrl, listLink){
   if(!pennyActiveSession) pennyNewChat();
   const msg = { role, content: text };
   if(imageDataUrl) msg.image = imageDataUrl;
+  if(listLink) msg.listLink = listLink;
   pennyActiveSession.messages.push(msg);
 
   if(role === 'user' && pennyActiveSession.messages.filter(m => m.role === 'user').length === 1){
@@ -4640,7 +4695,15 @@ async function pennyCallAPI(){
   for(const m of allMsgs){
     const apiRole = m.role === 'penny' ? 'assistant' : 'user';
     if(apiRole === lastRole) continue;
-    if(m.image) continue;
+    if(m.image){
+      const parts = [];
+      const txt = (m.content && m.content !== '(image attached)') ? m.content.trim() : '';
+      if(txt) parts.push({ type:'text', text: txt });
+      parts.push({ type:'image_url', image_url:{ url: m.image } });
+      apiMessages.push({ role: apiRole, content: parts });
+      lastRole = apiRole;
+      continue;
+    }
     const content = typeof m.content === 'string' ? m.content : '';
     if(!content.trim()) continue;
     apiMessages.push({ role: apiRole, content });
@@ -4658,8 +4721,9 @@ async function pennyCallAPI(){
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
     const result = pennyExecuteAddList(rawTxt);
     const txt = typeof result === 'object' ? result.text : result;
+    const listLink = typeof result === 'object' ? result.listLink : null;
     pennyRemoveTyping();
-    pennyAddMessage('penny', txt);
+    pennyAddMessage('penny', txt, null, listLink);
     const userMsgCount = pennyActiveSession.messages.filter(m => m.role === 'user').length;
     if(userMsgCount === 1) pennyGenerateTitle(pennyActiveSession);
   } catch(e) {
@@ -4680,15 +4744,22 @@ async function pennySend(){
   if(!text && !hasImages) return;
   if(pennyBusy) return;
   if(!pennyActiveSession) pennyNewChat();
-  const imageDataUrl = hasImages ? pennyPendingImages[0].dataUrl : null;
+  const images = pennyPendingImages.slice();
   inp.value = '';
   inp.style.height = 'auto';
   pennyPendingImages = [];
   renderPennyAttachStrip();
-  if(imageDataUrl){
-    const msg = { role:'user', content: text||'(image attached)', image: imageDataUrl };
-    pennyActiveSession.messages.push(msg);
-    if(pennyActiveSession.messages.filter(m=>m.role==='user').length===1){ const tmp=text.slice(0,45)+(text.length>45?'...':''); pennyActiveSession.title=tmp; const tel=document.getElementById('pennyChatTitle'); if(tel) tel.textContent=tmp; }
+  if(hasImages){
+    // Push one message per image (first image gets the text, rest get '(image attached)')
+    images.forEach((img, i) => {
+      const msgText = i === 0 ? (text || '(image attached)') : '(image attached)';
+      const msg = { role:'user', content: msgText, image: img.dataUrl };
+      pennyActiveSession.messages.push(msg);
+    });
+    if(pennyActiveSession.messages.filter(m=>m.role==='user').length === images.length){
+      const tmp = (text||'image').slice(0,45); pennyActiveSession.title=tmp;
+      const tel=document.getElementById('pennyChatTitle'); if(tel) tel.textContent=tmp;
+    }
     savePennySessions(); renderPennySessions(); renderPennyMessages();
   } else {
     pennyAddMessage('user', text);
@@ -5022,16 +5093,8 @@ function lpDrop(e){
   if(!files.length) return;
   const reader=new FileReader();
   reader.onload=ev=>{
-    // Append image as a user message in the lp chat
-    const msgs=document.getElementById('lp-msgs');
-    if(msgs){
-      const img=document.createElement('img');
-      img.src=ev.target.result; img.style.cssText='max-width:100%;max-height:180px;border-radius:8px;display:block;margin-top:4px;';
-      const wrap=document.createElement('div');
-      wrap.className='lp-msg lp-user'; wrap.appendChild(img);
-      msgs.appendChild(wrap); msgs.scrollTop=msgs.scrollHeight;
-    }
     _showPennyImgToast(1);
+    sendLandingPenny(ev.target.result);
   };
   reader.readAsDataURL(files[0]);
 }
@@ -5122,10 +5185,15 @@ function buildSys(){
     freq?'Shopping frequency: '+freq:'',
   ].filter(Boolean).join(' | ');
 
+  const mem = loadPennyMemory();
+  const memBlock = mem?.summaries?.length
+    ? `\nPAST CONVERSATION MEMORY (from previous sessions — use this to personalize and avoid re-asking things you already know):\n${mem.summaries.slice(0,4).map((s,i)=>`[${s.date}] ${s.text}`).join('\n')}\n`
+    : '';
+
   return `You are Penny, a warm and knowledgeable grocery shopping advisor built into the Better Price! app — like a smart friend who knows prices inside and out. Always respond in ${ln}.
 
 ${firstName?`The user's first name is ${firstName}. Use their name naturally in conversation — greet them by name when starting a new chat session, and occasionally use it to make the conversation feel personal. Don't overuse it.`:''}
-
+${memBlock}
 APP GUIDE — You know exactly how Better Price! works. When users ask how to do something, explain it clearly and confidently:
 
 COMPARE TAB: The main tab. Users enter up to 6 product cards side by side. Each card has: Name (type or scan barcode to auto-fill), Price ($), Size (number + unit: oz/lb/ml/g/gal/ct/pk), Quantity (pack qty), optional Discount (% off or flat $ off), and Category (for cost-per-day estimates). The app instantly calculates unit price (cost per oz/lb/etc.) so users see the best deal highlighted. The "Save to Preset" button saves the entire setup to reuse later. The duplicate card button (two overlapping squares icon) copies a card.
@@ -5209,9 +5277,10 @@ RULE 3 — DUPLICATE DETECTION:
   Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
   Never add a duplicate without explicit confirmation.
 
-RULE 4 — ONE COMMAND PER REPLY:
-  Output each command tag at most once per message. No repeated ADDLIST, CREATELIST, etc.
-  Exception: when correcting a wrong-list mistake, you may output REMOVEITEMS + ADDLIST together in one message to move the item in a single step.
+RULE 4 — BATCH COMMANDS ALLOWED:
+  You CAN output multiple different command tags in a single reply when the user asks for several actions at once (e.g. "add eggs to my weekly list and apples to my fruit list"). Each command type may appear multiple times if targeting different lists.
+  Exception to confirm-first rule: when the user explicitly asks for multiple items across multiple lists in one message, execute all at once (skip individual confirmation and do a brief summary instead).
+  Still required: REMOVEITEMS + ADDLIST together when correcting a wrong-list mistake.
 
 RULE 5 — Warm, conversational tone. Use rich formatting when it helps clarity:
 - Use **bold** for store names, prices, and key terms
@@ -5261,7 +5330,16 @@ Rules:
 - Only suggest stores the user could realistically visit (use their zip + preferred stores; nearby chains count even if not in their list)
 - Only flag it if savings are meaningful: at least ~$0.30/unit or ~10% cheaper — don't nitpick pennies
 - One soft offer, then wait. If they say "stick to my usual" → respect it, don't push that store again for that item
-- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency`;
+- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency
+
+RECEIPT & IMAGE SCANNING:
+When the user sends an image, analyze it immediately. If it looks like a grocery receipt or store shelf tag:
+  - Extract every grocery/food item you can read, with name, price, quantity, and any relevant notes (sale price, unit price, brand)
+  - State the store name and date if visible
+  - Offer to add items to a list: "I can see your receipt from [store]. Want me to add these items to a list?" Then on confirmation output ADDLIST.
+  - If it's a shelf tag or price label, identify the product, calculate unit price if possible, and compare to typical retail prices.
+  - If it's a product label, read the name, size/weight, and any relevant nutritional info the user might care about for price comparison.
+  - If the image isn't recognizable, ask the user what they'd like help with.`;
 }
 
 let _lpHistory = [];
@@ -5290,15 +5368,35 @@ function lpAddMsg(role, text, id){
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
-async function sendLandingPenny(){
+async function sendLandingPenny(imageDataUrl){
   const inp = document.getElementById('lp-input');
   const btn = document.getElementById('lp-send-btn');
   const text = (inp?.value||'').trim();
-  if(!text) return;
-  inp.value = '';
-  lpAddMsg('user', text);
-  _lpHistory.push({role:'user', content:text});
-  btn.disabled = true;
+  if(!text && !imageDataUrl) return;
+  if(inp) inp.value = '';
+  // Build user message content
+  let userContent;
+  if(imageDataUrl){
+    const parts = [];
+    if(text) parts.push({type:'text', text});
+    parts.push({type:'image_url', image_url:{url: imageDataUrl}});
+    userContent = parts;
+    // Show image preview in chat
+    const msgs = document.getElementById('lp-msgs');
+    if(msgs){
+      const imgEl = document.createElement('img');
+      imgEl.src = imageDataUrl; imgEl.style.cssText='max-width:100%;max-height:160px;border-radius:8px;display:block;margin-top:4px;';
+      const wrap = document.createElement('div');
+      wrap.className='lp-msg lp-user'; wrap.appendChild(imgEl);
+      if(text){ const t=document.createElement('div'); t.textContent=text; wrap.insertBefore(t,imgEl); }
+      msgs.appendChild(wrap); msgs.scrollTop=msgs.scrollHeight;
+    }
+  } else {
+    userContent = text;
+    lpAddMsg('user', text);
+  }
+  _lpHistory.push({role:'user', content: userContent});
+  if(btn) btn.disabled = true;
   lpAddMsg('thinking', '...', 'lp-typing');
   try {
     const res = await anthropicFetch({
@@ -5320,7 +5418,7 @@ async function sendLandingPenny(){
     document.getElementById('lp-typing')?.remove();
     lpAddMsg('penny', 'Oops, something went wrong. Try again in a moment!');
   }
-  btn.disabled = false;
+  if(btn) btn.disabled = false;
   document.getElementById('lp-msgs').scrollTop = 9999;
 }
 function buildLandingSys(){
@@ -5432,6 +5530,7 @@ function pennyExecuteActions(rawText){
 
   const toasts = [];
   let saveLists = false, saveItms = false;
+  let listLink = null; // { name, id } of last list modified — for the "View list" chip
 
   commands.forEach(cmd => {
     const d = cmd.data;
@@ -5439,9 +5538,16 @@ function pennyExecuteActions(rawText){
       if(cmd.type === 'ADDLIST'){
         if(!groceryLists.length){ pennyEnsureList(d.list || activeListName); }
         const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
-        let n = 0;
-        (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
-        if(n){ saveItms=true; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
+        let n = 0, dupes = 0;
+        (d.items || []).forEach(item => {
+          if(!item.name?.trim()) return;
+          const nm = item.name.trim();
+          const isDupe = groceryItems.some(gi => gi.listId === list.id && gi.name.toLowerCase() === nm.toLowerCase());
+          if(isDupe){ dupes++; return; }
+          groceryItems.push(pennyMakeItem(list.id, item)); n++;
+        });
+        if(n){ saveItms=true; listLink = { name: list.name, id: list.id }; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
+        if(dupes){ toasts.push(lang==='es'?`${dupes} duplicado${dupes!==1?'s':''} omitido${dupes!==1?'s':''}`:lang==='pt'?`${dupes} duplicata${dupes!==1?'s':''} ignorada${dupes!==1?'s':''}`:`${dupes} duplicate${dupes!==1?'s':''} skipped`); }
       }
       else if(cmd.type === 'CREATELIST'){
         const lid = 'list_penny_' + Date.now();
@@ -5450,6 +5556,7 @@ function pennyExecuteActions(rawText){
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(lid, item)); n++; } });
         if(n) saveItms=true;
+        listLink = { name: list.name, id: lid };
         toasts.push('Created "' + list.name + '"' + (n ? ' with ' + n + ' item' + (n!==1?'s':'') : ''));
       }
       else if(cmd.type === 'REMOVEITEMS'){
@@ -5499,7 +5606,7 @@ function pennyExecuteActions(rawText){
   if(saveItms) saveU('gitems', groceryItems);
   if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
   if(toasts.length) showToast(toasts.join(' · '), 'ok');
-  return cleanText;
+  return listLink ? { text: cleanText, listLink } : cleanText;
 }
 
 document.addEventListener('keydown', e=>{
