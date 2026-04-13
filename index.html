@@ -4559,7 +4559,7 @@ function renderPennyMessages(){
     const regenBtn = !isUser ? `<button class="pmsg-act-btn" onclick="pennyRegenerate(${idx})">${svgRegen}Regenerate</button>` : '';
     const copyBtn = `<button class="pmsg-act-btn" id="pmsg-copy-${idx}" onclick="pennyCopyMsg(${idx},this)">${svgCopy}Copy</button>`;
     const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
-    const listLinkHtml = (!isUser && m.listLink) ? `<button class="pmsg-list-link" onclick="pennyGoList(${JSON.stringify(m.listLink.id)})"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>View "${m.listLink.name}" →</button>` : '';
+    const listLinkHtml = (!isUser && m.listLink) ? `<button class="pmsg-list-link" onclick="pennyGoList('${m.listLink.id}')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>View "${m.listLink.name}" →</button>` : '';
     return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${listLinkHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
@@ -5260,18 +5260,16 @@ RULE 1 — CREATING A LIST (always multi-step unless user gives everything upfro
   c. Only after you have name AND item decisions → output CREATELIST exactly once.
   Exception: if the user's message contains both name and items ("make a list called Party with chips and drinks"), create immediately.
 
-RULE 2 — ADDING ITEMS (two-step: confirm THEN act, never both in same message):
-  Step 1 — ASK: Send a message that ONLY asks for confirmation. No command tags whatsoever in this message.
-    "I'll add [item] to your [list name] — does that sound right?"
-    If no list was specified, ask which list by name first. Never guess.
-  Step 2 — ACT: Only after the user replies with yes/yeah/sure/ok/correct/any affirmative, send the ADDLIST command tag.
-  NEVER put an ADDLIST (or any action tag) in the same message as a confirmation question. These are two separate messages.
-  CRITICAL: If the user names a specific list, ALWAYS use that exact list — never override with the active list. If the user corrects your list choice, ask again with the corrected list name before acting: "Got it — I'll add [item] to [corrected list name]. Sound good?" Then wait for yes before adding.
+RULE 2 — ADDING ITEMS (ask THEN act — NEVER in the same message):
+  Step 1 — ASK ONLY: Your message contains ONLY the confirmation question. Zero command tags. Zero actions.
+    Example: "I'll add bread to your Bread list — sound good?"
+    If the list doesn't exist: "You don't have a Bread list yet — want me to create it and add bread?" — STOP HERE. No tags.
+    If no list was specified: ask which list by name first.
+  Step 2 — ACT ONLY: User says yes/yeah/sure/ok/yep/correct/any affirmative → NOW output the command tag. No question in this message.
 
-  LIST DOESN'T EXIST → CREATE IT AUTOMATICALLY:
-  If the user refers to a list by name (e.g. "my bread list", "bread", "the dinner list") and no list with that name (or a close match) exists in their grocery lists, do NOT say it doesn't exist — instead confirm you'll create it AND add the item: "You don't have a Bread list yet — want me to create it and add [item]?" On confirmation, output CREATELIST with the item pre-filled. Do not make the user ask twice.
-
-  WRONG LIST CORRECTION — if the user says you added something to the wrong list (or you detect you used the wrong list), immediately fix it in one action message: output REMOVEITEMS for the wrong list AND ADDLIST for the correct list in the same reply. Acknowledge it briefly: "My bad! Moving [item] from [wrong list] to [correct list] now."
+  ⚠ ABSOLUTE RULE: A message that contains a question mark at the end of a confirmation sentence MUST NOT contain any command tag (ADDLIST, CREATELIST, etc.). Split them into two turns every time.
+  CRITICAL: If the user names a specific list, ALWAYS use that exact list. Never override with the active list.
+  WRONG LIST CORRECTION — if you added to the wrong list, fix in one message: REMOVEITEMS for wrong list + ADDLIST for correct list. Say: "My bad! Moving [item] from [wrong] to [correct] now."
 
 RULE 3 — DUPLICATE DETECTION:
   Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
