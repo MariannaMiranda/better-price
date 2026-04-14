@@ -5,7 +5,7 @@
 <title>Better Price!
 </title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -401,10 +401,10 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .price-err-msg{display:none;color:var(--danger);font-size:12px;font-weight:600;margin-top:5px;margin-bottom:2px;padding:6px 11px;background:#fff0f0;border-radius:7px;border:1px solid #fca5a5;align-items:center;gap:6px;}
 
 /* ── PRODUCT CARDS ── */
-.products-wrap{padding:0 20px 20px;max-width:1300px;margin:0 auto;}
-.products-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));}
-@media(max-width:680px){.products-grid{grid-template-columns:1fr;}.products-wrap{padding:0 14px 20px;}}
-@media(min-width:681px) and (max-width:1000px){.products-grid{grid-template-columns:repeat(2,1fr);}}
+.products-wrap{padding:0 20px 20px;max-width:1420px;margin:0 auto;}
+.products-grid{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;}
+.product-card{flex:0 1 320px;}
+@media(max-width:680px){.product-card{flex:1 1 100%;}.products-wrap{padding:0 14px 20px;}}
 
 .product-card{background:var(--white);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);border:2px solid var(--border);transition:box-shadow .2s,border-color .2s,background .3s;position:relative;}
 .product-card:hover{box-shadow:var(--shadow-lg);}
@@ -547,7 +547,8 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 }
 @media(max-width:680px){
   .grocery-layout{flex-direction:column;}
-  .grocery-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:12px;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;}
+  .grocery-sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:12px;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;}
+  #listNav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
   .sidebar-section-label{display:none;}
   .grocery-content{padding:16px 14px;}
 }
@@ -811,12 +812,52 @@ input:checked+.slider:before{transform:translateX(20px);}
 .pmsg-avatar{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
 .pmsg.user .pmsg-avatar{background:var(--ok);}
 .pmsg-bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.7;font-family:var(--font);word-break:break-word;}
-.pmsg.user .pmsg-bubble{white-space:pre-wrap;}
 .pmsg.penny .pmsg-bubble em{font-style:italic;}
 .pmsg.penny .pmsg-bubble strong{font-weight:700;}
 .pmsg.penny .pmsg-bubble{background:var(--white);color:var(--text);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
-.pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;}
+.pmsg.user .pmsg-bubble{background:var(--brand);color:#fff;border-radius:16px 4px 16px 16px;white-space:pre-wrap;}
 .pmsg-img{max-width:200px;max-height:200px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;}
+/* Rich message formatting */
+.pmsg-bubble .pmsg-p{margin:0 0 8px;}
+.pmsg-bubble .pmsg-p:last-child{margin-bottom:0;}
+.pmsg-bubble .pmsg-ul,.pmsg-bubble .pmsg-ol{margin:6px 0 8px;padding-left:20px;}
+.pmsg-bubble .pmsg-ul li,.pmsg-bubble .pmsg-ol li{margin-bottom:3px;line-height:1.55;}
+.pmsg-bubble .pmsg-ul{list-style:disc;}
+.pmsg-bubble .pmsg-ol{list-style:decimal;}
+.pmsg-bubble .pmsg-h1{font-size:16px;font-weight:700;margin:10px 0 5px;color:inherit;}
+.pmsg-bubble .pmsg-h2{font-size:15px;font-weight:700;margin:8px 0 4px;color:inherit;}
+.pmsg-bubble .pmsg-h3{font-size:14px;font-weight:700;margin:6px 0 3px;color:inherit;}
+.pmsg-bubble .pmsg-hr{border:none;border-top:1px solid rgba(0,0,0,.12);margin:10px 0;}
+body.dark .pmsg-bubble .pmsg-hr{border-color:rgba(255,255,255,.12);}
+.pmsg-bubble .pmsg-pre{background:var(--input-bg);border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:12px;margin:6px 0;}
+body.dark .pmsg-bubble .pmsg-pre{background:#0d1824;}
+.pmsg-bubble .pmsg-code{background:var(--input-bg);border-radius:4px;padding:1px 5px;font-size:12px;font-family:monospace;}
+body.dark .pmsg-bubble .pmsg-code{background:#0d1824;}
+.pmsg-wrap{display:flex;flex-direction:column;gap:2px;}
+.pmsg-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;padding:0 2px;}
+.pmsg-wrap:hover .pmsg-actions{opacity:1;}
+.pmsg-wrap.user .pmsg-actions{justify-content:flex-end;}
+.pmsg-wrap.penny .pmsg-actions{justify-content:flex-start;padding-left:38px;}
+.pmsg-act-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:3px;font-family:var(--font);transition:.15s;line-height:1.4;}
+.pmsg-list-link{display:inline-flex;align-items:center;gap:6px;margin:6px 0 2px 38px;padding:6px 12px;background:var(--brand-light);color:var(--brand);border:1.5px solid var(--brand);border-radius:20px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;text-decoration:none;}
+.pmsg-list-link:hover{background:var(--brand);color:#fff;}
+body.dark .pmsg-list-link{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
+body.dark .pmsg-list-link:hover{background:#1a3d66;color:#fff;}
+.pmsg-act-btn:hover{background:var(--input-bg);color:var(--text);}
+body.dark .pmsg-act-btn{border-color:#2a4060;color:#7a9fc0;}
+body.dark .pmsg-act-btn:hover{background:#1a2f45;color:#eef2ff;}
+/* Inline message edit */
+.pmsg-edit-wrap{flex:1;max-width:82%;}
+.pmsg-edit-ta{width:100%;border:2px solid var(--brand);border-radius:12px;padding:10px 13px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;resize:none;min-height:56px;max-height:200px;line-height:1.55;box-sizing:border-box;}
+body.dark .pmsg-edit-ta{background:#162535;color:#eef2ff;border-color:#4d8fcc;}
+.pmsg-edit-footer{display:flex;align-items:flex-start;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.pmsg-edit-info{font-size:12px;color:var(--muted);flex:1;display:flex;align-items:center;gap:5px;line-height:1.45;min-width:140px;}
+.pmsg-edit-btns{display:flex;gap:8px;flex-shrink:0;}
+.pmsg-edit-cancel{padding:7px 15px;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:.15s;}
+.pmsg-edit-cancel:hover{background:var(--input-bg);}
+body.dark .pmsg-edit-cancel{border-color:#2a4060;color:#eef2ff;}
+.pmsg-edit-save{padding:7px 15px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+.pmsg-edit-save:hover{background:var(--brand-h);}
 .pmsg-typing{display:flex;gap:5px;align-items:center;padding:4px 0;}
 .pmsg-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pDot .9s ease-in-out infinite;opacity:.5;}
 .pmsg-dot:nth-child(2){animation-delay:.2s;}
@@ -869,9 +910,16 @@ body.dark .penny-textarea{background:#162535;color:#eef2ff;border-color:#2a4060;
 body.dark .penny-textarea:focus{border-color:#4d8fcc;}
 body.dark .penny-attach-btn{color:#7a9fc0;}
 /* Penny drag-drop zone */
-.penny-drop-overlay{position:absolute;inset:0;z-index:20;border-radius:inherit;background:rgba(13,71,161,.13);border:2.5px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;}
-.penny-drop-overlay span{background:var(--brand);color:#fff;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:600;font-family:var(--font-d);}
+.penny-drop-overlay{position:absolute;inset:0;z-index:20;background:var(--bg);border:3px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;flex-direction:column;gap:14px;}
+.penny-drop-overlay .pdrop-icon{width:72px;height:72px;background:var(--white);border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;color:var(--brand);}
+.penny-drop-overlay .pdrop-label{font-size:16px;font-weight:700;color:var(--brand);font-family:var(--font-d);}
 .penny-drag-active .penny-drop-overlay{display:flex;}
+body.dark .penny-drop-overlay{background:#0d1824;border-color:#4d8fcc;}
+body.dark .penny-drop-overlay .pdrop-icon{background:#162535;box-shadow:0 4px 20px rgba(0,0,0,.4);color:#7ec8f8;}
+body.dark .penny-drop-overlay .pdrop-label{color:#7ec8f8;}
+.lp-drop-overlay{position:absolute;inset:0;z-index:30;border-radius:inherit;background:rgba(13,71,161,.13);border:2.5px dashed var(--brand);display:none;align-items:center;justify-content:center;pointer-events:none;}
+.lp-drop-overlay span{background:var(--brand);color:#fff;border-radius:12px;padding:12px 22px;font-size:15px;font-weight:600;font-family:var(--font-d);}
+.lp-drag-active .lp-drop-overlay{display:flex;}
 body.dark .penny-context-btn{background:#1a2f45;border-color:#4d8fcc;color:#7ec8f8;}
 body.dark .penny-context-btn:hover{background:#1a3d66;color:#fff;}
 body.dark #pennyPricePanel{background:#111f2e;border-color:#4d8fcc;}
@@ -942,7 +990,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <div id="toast"><div class="toast-dot"></div><span id="toast-txt"></span></div>
 
-<!-- ══ AUTH ══ -->
 <div id="auth-screen">
   <div class="auth-left">
     <div class="al-bg"></div><div class="al-grid"></div>
@@ -951,7 +998,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         <div class="al-brand-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
         <div class="al-brand-name">Better Price!</div>
       </div>
-      <div class="al-headline">Shop smarter.<br>Save <span>every time.</span></div>
+      <div class="al-headline">Shop smarter.<br><span>Save every time.</span></div>
       <div class="al-sub">Scan barcodes, compare unit prices instantly, build grocery lists, and never overpay again.</div>
       <div class="feature-pills">
         <div class="fp"><div class="fp-icon"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg></div><div><div class="fp-title">Instant Barcode Scanning</div><div class="fp-desc">Point camera — name and size auto-fill</div></div></div>
@@ -989,20 +1036,20 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="auth-form">
         <div id="nameWrap" style="display:flex;gap:10px;">
           <div class="input-wrap" style="flex:1">
-            <input class="auth-input" type="text" id="authFirstName" placeholder="First Name">
+            <input class="auth-input" type="text" id="authFirstName" placeholder="First Name" onkeydown="if(event.key==='Enter')handleAuth()">
             <div class="err-bubble" id="err-firstname"><span class="err-icon">!</span><span class="msg"></span></div>
           </div>
           <div class="input-wrap" style="flex:1">
-            <input class="auth-input" type="text" id="authLastName" placeholder="Last Name">
+            <input class="auth-input" type="text" id="authLastName" placeholder="Last Name" onkeydown="if(event.key==='Enter')handleAuth()">
             <div class="err-bubble" id="err-lastname"><span class="err-icon">!</span><span class="msg"></span></div>
           </div>
         </div>
         <div class="input-wrap">
-          <input class="auth-input" type="email" id="authEmail" placeholder="Email">
+          <input class="auth-input" type="email" id="authEmail" placeholder="Email" onkeydown="if(event.key==='Enter')handleAuth()">
           <div class="err-bubble" id="err-email"><span class="err-icon">!</span><span class="msg"></span></div>
         </div>
         <div class="input-wrap">
-          <input class="auth-input" type="password" id="authPass" placeholder="Password" style="padding-right:48px">
+          <input class="auth-input" type="password" id="authPass" placeholder="Password" style="padding-right:48px" onkeydown="if(event.key==='Enter')handleAuth()">
           <button class="toggle-pass" type="button" onclick="togglePass()">
             <svg viewBox="0 0 24 24" id="eyeIcon"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
@@ -1015,7 +1062,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 </div>
 
-<!-- ══ ONBOARDING ══ -->
 <div id="onboarding-screen">
   <div class="onboard-card">
     <div style="text-align:center;">
@@ -1033,7 +1079,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="onboard-dot" id="od-5"></div>
     </div>
 
-    <!-- Step 1: Household size -->
     <div class="onboard-step active" id="ob-step-1">
       <div class="onboard-eyebrow">Step 1 of 5</div>
       <div class="onboard-title">How many people do you shop for?</div>
@@ -1048,7 +1093,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <span class="onboard-skip" onclick="obSkipStep(1)">Skip for now</span>
     </div>
 
-    <!-- Step 2: Shopping frequency -->
     <div class="onboard-step" id="ob-step-2">
       <button class="onboard-back" onclick="obGoStep(1)">&#8592; Back</button>
       <div class="onboard-eyebrow">Step 2 of 5</div>
@@ -1069,7 +1113,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <span class="onboard-skip" onclick="obSkipStep(2)">Skip for now</span>
     </div>
 
-    <!-- Step 3: Budget -->
     <div class="onboard-step" id="ob-step-3">
       <button class="onboard-back" onclick="obGoStep(2)">&#8592; Back</button>
       <div class="onboard-eyebrow">Step 3 of 5</div>
@@ -1085,7 +1128,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <span class="onboard-skip" onclick="obSkipStep(3)">Skip for now</span>
     </div>
 
-    <!-- Step 4: Preferred stores -->
     <div class="onboard-step" id="ob-step-4">
       <button class="onboard-back" onclick="obGoStep(3)">&#8592; Back</button>
       <div class="onboard-eyebrow">Step 4 of 5</div>
@@ -1114,7 +1156,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <span class="onboard-skip" onclick="obSkipStep(4)">Skip for now</span>
     </div>
 
-    <!-- Step 5: Zip code -->
     <div class="onboard-step" id="ob-step-5">
       <button class="onboard-back" onclick="obGoStep(4)">&#8592; Back</button>
       <div class="onboard-eyebrow">Step 5 of 5</div>
@@ -1132,7 +1173,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             style="width:100%;padding:18px 20px;border:2px solid var(--brand);border-radius:var(--rsm);font-size:28px;font-weight:700;font-family:var(--font-m);text-align:center;background:var(--brand-light);color:var(--text);outline:none;letter-spacing:6px;"
             placeholder="- - - - -" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5);document.getElementById('ob-zip-err').style.display='none';this.style.borderColor='';">
         </div>
-        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;">US zip codes only &mdash; used to find the best nearby deals</div>
+        <div id="ob-zip-note" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;">US zip codes only &mdash; used to find the best nearby deals</div>
       </div>
       <button class="onboard-next" onclick="tryFinishOnboarding()">Get Started &#8594;</button>
       <span class="onboard-skip" onclick="obSkipped[5]=true;finishOnboarding()">Skip for now</span>
@@ -1140,21 +1181,22 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   </div>
 </div>
 
-<!-- ══ FLOATING PENNY WIDGET (auth + compare) ══ -->
 <button id="landing-penny-fab" onclick="toggleLandingPenny()" title="Chat with Penny" style="display:none;">
   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 </button>
-<div id="landing-penny-popup">
+<div id="landing-penny-popup"
+  ondragenter="lpDragEnter(event)" ondragover="lpDragOver(event)" ondragleave="lpDragLeave(event)" ondrop="lpDrop(event)">
+  <div class="lp-drop-overlay"><span>Drop image here</span></div>
   <div class="lp-header">
   <div class="lp-avatar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
     <div class="lp-header-info">
       <div class="lp-header-name">Penny</div>
-      <div class="lp-header-sub">AI Shopping Advisor</div>
+      <div class="lp-header-sub" id="lp-header-sub">AI Shopping Advisor</div>
     </div>
     <button class="lp-close-btn" onclick="toggleLandingPenny()">&#10005;</button>
   </div>
   <div class="lp-msgs" id="lp-msgs">
-    <div class="lp-msg lp-penny">Hi! I'm Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!</div>
+    <div class="lp-msg lp-penny lp-initial-msg">Hi! I'm Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!</div>
   </div>
   <div class="lp-input-row">
     <textarea class="lp-textarea" id="lp-input" rows="1" placeholder="Ask Penny..." onkeydown="lpKeyDown(event)"></textarea>
@@ -1184,7 +1226,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <button class="nav-tab" onclick="goTab('profile')" id="nt-profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
   </nav>
 
-  <!-- COMPARE TAB -->
   <div id="tab-compare">
     <div class="toolbar">
       <button class="tool-btn" onclick="openModal('settingsModal')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span id="txt-settings">Settings</span></button>
@@ -1197,7 +1238,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <div class="analysis-wrap"><div class="analysis-row"><textarea id="analysisBox" readonly placeholder="Results will appear here..."></textarea><button class="btn-save-analysis" onclick="saveAnalysisAsPreset()"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span id="txt-save-preset">Save to Preset</span></button></div></div>
   </div>
 
-  <!-- HISTORY TAB -->
   <div id="tab-history">
     <div class="tab-hdr"><div class="tab-title">Comparison History</div>
       <button class="tool-btn danger" onclick="clearHistory()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Clear All</button>
@@ -1205,7 +1245,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <div id="historyList"></div>
   </div>
 
-  <!-- GROCERY TAB -->
   <div id="tab-grocery">
     <div class="grocery-layout">
       <div class="grocery-sidebar">
@@ -1225,7 +1264,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
   </div>
 
-  <!-- PRESETS TAB -->
   <div id="tab-presets">
     <div class="tab-hdr">
       <div class="tab-title">Saved Presets</div>
@@ -1238,11 +1276,10 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <div id="presetList"></div>
   </div>
 
-  <!-- PENNY TAB — full AI chat experience -->
   <div id="tab-penny" style="display:none;height:calc(100dvh - 116px);height:calc(100vh - 116px);flex-direction:column;">
-    <!-- Chat sessions sidebar + main chat area -->
+    
     <div class="penny-layout">
-      <!-- Sessions sidebar -->
+      
       <div class="penny-sidebar" id="pennySidebar">
         <div class="penny-sidebar-top">
           <div class="penny-sidebar-title">Chats</div>
@@ -1253,8 +1290,15 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         </div>
         <div class="penny-session-list" id="pennySessionList"></div>
       </div>
-      <!-- Main chat -->
-      <div class="penny-main">
+      
+      <div class="penny-main" style="position:relative;"
+        ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
+        <div class="penny-drop-overlay">
+          <div class="pdrop-icon">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </div>
+          <div class="pdrop-label">Drop files here to add to chat</div>
+        </div>
         <div class="penny-chat-header">
           <button class="penny-sidebar-toggle" onclick="togglePennySidebar()" title="Chats">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1274,7 +1318,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           </button>
         </div>
 
-        <!-- Price search panel — slides in below header, above messages -->
         <div id="pennyPricePanel" style="display:none;background:var(--white);border-bottom:2px solid var(--brand);padding:14px 16px;flex-shrink:0;animation:slideDown .25s ease;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div style="font-size:13px;font-weight:700;color:var(--brand);display:flex;align-items:center;gap:6px;">
@@ -1283,7 +1326,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             </div>
             <button onclick="pennyTogglePricePanel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;">&#10005;</button>
           </div>
-          <!-- List input tabs -->
+          
           <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:var(--rsm);overflow:hidden;margin-bottom:10px;">
             <button class="penny-price-tab active" id="ppt-type" onclick="pennyPriceTab('type')" style="flex:1;padding:8px;background:var(--brand);color:#fff;border:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -1298,11 +1341,11 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
               My Lists
             </button>
           </div>
-          <!-- Type input -->
+          
           <div id="ppp-type">
             <textarea id="pennyPriceListText" style="width:100%;min-height:80px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:13px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;resize:none;line-height:1.6;transition:.2s;" placeholder="Type items — one per line or comma separated&#10;e.g. milk, eggs, chicken, rice, orange juice" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor=''"></textarea>
           </div>
-          <!-- Photo input -->
+          
           <div id="ppp-photo" style="display:none;">
             <label style="display:block;border:2px dashed var(--border);border-radius:var(--rsm);padding:18px;text-align:center;cursor:pointer;background:var(--input-bg);transition:.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor=''">
               <input type="file" accept="image/*" style="display:none;" onchange="pennyPriceHandlePhoto(this)">
@@ -1311,7 +1354,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             </label>
             <div id="pennyPricePhotoResult" style="display:none;margin-top:8px;font-size:13px;color:var(--text);background:var(--input-bg);border-radius:var(--rsm);padding:10px 12px;line-height:1.7;"></div>
           </div>
-          <!-- My Lists picker -->
+          
           <div id="ppp-mylist" style="display:none;">
             <div id="pennyPriceMyLists" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;"></div>
           </div>
@@ -1321,9 +1364,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           </button>
         </div>
 
-        <div class="penny-messages" id="pennyMessages" style="position:relative;"
-          ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
-          <div class="penny-drop-overlay"><span>📎 Drop image to send</span></div>
+        <div class="penny-messages" id="pennyMessages">
           <div class="penny-welcome">
             <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
             <div class="penny-welcome-text" id="pennyWelcomeText">Hey! I'm Penny, your AI shopping advisor.</div>
@@ -1335,17 +1376,16 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             </div>
           </div>
         </div>
-        <!-- Input area -->
-        <div class="penny-input-area"
-          ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
-          <!-- Image/file preview strip -->
+        
+        <div class="penny-input-area">
+          
           <div class="penny-attach-strip" id="pennyAttachStrip" style="display:none;"></div>
           <div class="penny-input-row">
-            <!-- Attach button — files & images -->
+            
             <button class="penny-attach-btn" onclick="pennyChooseFile()" title="Attach image or file">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
-            <!-- Camera button — opens camera on mobile, file picker on desktop -->
+            
             <button class="penny-attach-btn" onclick="pennyChooseCamera()" title="Take a photo">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </button>
@@ -1362,11 +1402,9 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
   </div>
 
-  <!-- HELP TAB (hidden, accessible via ? in header) -->
   <div id="tab-help" style="display:none;"></div>
 
-  <!-- SHOP TAB -->
-  <!-- HELP MODAL -->
+  
   <div class="modal-box" id="helpModal" style="max-width:520px;padding:0;overflow:hidden;display:none;flex-direction:column;">
     <div class="help-modal-hdr">
       <div class="modal-title" style="margin:0;">Help Guide</div>
@@ -1374,7 +1412,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
     <div class="help-modal-body" style="overflow-y:auto;flex:1;">
 
-    <!-- Compare -->
     <div class="help-section">
       <div class="help-h">Compare Tab</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Add your products</div><div class="help-step-desc">Each card = one product. Tap <strong>Scan Barcode</strong> to auto-fill the name and size, or just type them in yourself.</div></div></div>
@@ -1383,7 +1420,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="help-tip">Go to <strong>Settings</strong> (toolbar) to change how many product cards show at once — up to 8.</div>
     </div>
 
-    <!-- Grocery -->
     <div class="help-section">
       <div class="help-h">Grocery Tab</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Create a list</div><div class="help-step-desc">Tap <strong>New List</strong> on the left sidebar and give it a name — like "Weekly Shop" or "Costco Run".</div></div></div>
@@ -1391,7 +1427,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Shop and check off</div><div class="help-step-desc">While shopping, tap the checkbox next to each item. When done, use <strong>Clear Checked</strong> to reset the list for next time.</div></div></div>
     </div>
 
-    <!-- Presets -->
     <div class="help-section">
       <div class="help-h">Presets Tab</div>
       <div class="help-tip">Presets save your entire Compare setup — all product cards with prices, sizes, and names — so you can reload any comparison in one tap.</div>
@@ -1399,7 +1434,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Reload anytime</div><div class="help-step-desc">Tap <strong>Load</strong> on any preset to instantly restore all the product cards. Great for items you compare every week.</div></div></div>
     </div>
 
-    <!-- Penny -->
     <div class="help-section">
       <div class="help-h">Penny (AI Advisor)</div>
       <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Ask anything</div><div class="help-step-desc">Penny knows about your household, budget, and preferred stores. Ask things like <em>"What should I buy in bulk?"</em> or <em>"Which store is cheapest for produce?"</em></div></div></div>
@@ -1407,13 +1441,11 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Manage your grocery list</div><div class="help-step-desc">Just tell Penny what to add — she can create lists, add or remove items, and even suggest quantities based on your household size.</div></div></div>
     </div>
 
-    <!-- History -->
     <div class="help-section">
       <div class="help-h">History Tab</div>
       <div class="help-tip">Every comparison you run is automatically saved here with the date, winner, and price details. Tap the trash icon to remove individual entries, or <strong>Clear All</strong> to wipe the full history.</div>
     </div>
 
-    <!-- Profile -->
     <div class="help-section">
       <div class="help-h">Profile Tab</div>
       <div class="help-tip">Update your name, email, and password here. You can also update your <strong>household size</strong>, <strong>shopping frequency</strong>, <strong>weekly budget</strong>, <strong>zip code</strong>, and <strong>preferred stores</strong> — Penny uses all of this to give you better advice.</div>
@@ -1421,15 +1453,14 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
   </div>
 
-  <!-- CAMERA MODAL — uses getUserMedia for real camera access on all devices -->
   <div id="cameraModal" style="display:none;position:fixed;inset:0;z-index:2000;background:#000;flex-direction:column;">
     <div style="position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;">
       <video id="cameraVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
-      <!-- Viewfinder overlay -->
+      
       <div style="position:absolute;inset:0;pointer-events:none;">
         <div style="position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);width:min(95%,800px);height:min(75vh,500px);border:4px solid rgba(255,255,255,.9);border-radius:32px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6);"></div>
       </div>
-      <!-- Top bar -->
+      
       <div style="position:absolute;top:0;left:0;right:0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
         <button onclick="closeCameraModal()" style="background:rgba(0,0,0,.5);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#10005;</button>
         <span style="color:#fff;font-size:14px;font-weight:600;opacity:.8;">Position item in frame</span>
@@ -1438,7 +1469,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         </button>
       </div>
     </div>
-    <!-- Bottom bar -->
+    
     <div style="background:#000;padding:30px 20px 40px;display:flex;align-items:center;justify-content:center;gap:40px;">
       <button onclick="closeCameraModal()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:52px;height:52px;border-radius:50%;font-size:13px;cursor:pointer;">Cancel</button>
       <button id="camShutterBtn" onclick="takePhoto()" style="background:#fff;border:4px solid rgba(255,255,255,.4);width:72px;height:72px;border-radius:50%;cursor:pointer;transition:.15s;" onmousedown="this.style.transform='scale(.93)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(.93)'" ontouchend="this.style.transform=''"></button>
@@ -1447,13 +1478,11 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <canvas id="cameraCanvas" style="display:none;"></canvas>
   </div>
 
-  <!-- PROFILE TAB — inside #app so tabs work correctly -->
   <div id="tab-profile" style="display:none;padding:20px;max-width:600px;margin:0 auto;">
     <div class="tab-hdr" style="margin-bottom:20px;">
       <div class="tab-title">My Profile</div>
     </div>
 
-    <!-- Account Info -->
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -1474,7 +1503,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="prof-lbl-emailnote" style="font-size:11px;color:var(--muted);margin-top:5px;">Updating your email also updates your login credentials.</div>
     </div>
 
-    <!-- Change Password -->
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1511,7 +1539,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div class="prof-lbl-passnote" style="font-size:11px;color:var(--muted);margin-top:8px;">Leave new &amp; confirm blank to keep your current password.</div>
     </div>
 
-    <!-- Household size -->
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1525,7 +1552,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       </div>
     </div>
 
-    <!-- Shopping Frequency -->
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -1544,7 +1570,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       </div>
     </div>
 
-    <!-- Weekly Budget -->
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -1558,7 +1583,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       <div style="font-size:12px;color:var(--muted);text-align:center;">Adjusts in $50 increments &bull; $50 min &bull; $2,000 max</div>
     </div>
 
-    <!-- Zip code -->
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.1 12.4 7.8 13.1a.3.3 0 0 0 .4 0C12.9 22.4 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg>
@@ -1569,7 +1593,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         placeholder="- - - - -" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5)">
     </div>
 
-    <!-- Preferred stores -->
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -1595,13 +1618,11 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       </div>
     </div>
 
-    <!-- Language & Appearance -->
 
-    <!-- Save button -->
+    
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
     <div id="profile-saved-msg" class="prof-lbl-saved" style="display:none;text-align:center;margin-top:12px;color:var(--ok);font-size:14px;font-weight:600;">&#10003; Profile saved!</div>
 
-    <!-- Danger zone -->
     <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);">
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--danger);margin-bottom:10px;" class="prof-lbl-danger">Danger Zone</div>
       <button onclick="confirmDeleteAccount()" style="width:100%;padding:13px;background:none;border:2px solid var(--danger);color:var(--danger);border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.2s;" onmouseover="this.style.background='rgba(239,68,68,.08)'" onmouseout="this.style.background='none'" class="prof-btn-delete">Delete Account</button>
@@ -1609,19 +1630,16 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
   </div>
 
-</div><!-- end #app -->
+</div>
 
-<!-- SCANNER -->
 <div id="scanner-overlay">
   <div id="reader"></div>
   <div class="scan-viewport"><div class="scan-line"></div></div>
   <button class="scan-cancel" onclick="closeScanner()">Cancel</button>
 </div>
 
-<!-- MODALS -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this&&!document.getElementById('confirmModal').style.display.match('block'))closeModals()"></div>
 
-<!-- Calculator -->
 <div class="modal-box" id="calcModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Calculator</div>
@@ -1635,7 +1653,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   </div>
 </div>
 
-<!-- Settings -->
 <div class="modal-box" id="settingsModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Settings</div>
@@ -1646,7 +1663,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   <button class="auth-btn" style="margin-top:20px" onclick="applySettings()">Apply</button>
 </div>
 
-<!-- Export -->
 <div class="modal-box" id="exportModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Export Results</div>
@@ -1655,7 +1671,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   <button class="tool-btn" style="width:100%;justify-content:center" onclick="copyResults()">Copy to Clipboard</button>
 </div>
 
-<!-- New List / Rename List modal -->
 <div class="modal-box" id="listNameModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title" id="listNameModalTitle">New List</div>
@@ -1666,7 +1681,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   </div>
 </div>
 
-<!-- Duplicate item to list modal -->
 <div class="modal-box" id="dupItemModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Copy to List</div>
@@ -1674,7 +1688,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   <div id="dupListOptions"></div>
 </div>
 
-<!-- Edit Grocery Item Modal -->
 <div class="modal-box" id="editItemModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Edit Item</div>
@@ -1692,7 +1705,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
   </div>
 </div>
 
-<!-- Custom Confirm Modal -->
 <div class="modal-box" id="confirmModal">
   <div class="modal-title" id="confirmTitle">Are you sure?</div>
   <div class="confirm-msg" id="confirmMsg"></div>
@@ -1703,9 +1715,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 </div>
 
 <script>
-// ────────────────────────────────────────────────
-// STATE
-// ────────────────────────────────────────────────
+
 let items = 2;
 let scanner = null;
 let activeIdx = null;
@@ -1742,11 +1752,8 @@ let listNameCallback = null;
 let dupItemId = null;
 
 const CURR_RATES = { '$':1 };
-const UNIT_RATES = { oz:1, lb:16, g:0.035274, kg:35.274, ml:0.033814, l:33.814, gal:128, count:1, ft:1, in:0.083333, yd:3, m:3.28084 };
+const UNIT_RATES = { oz:1, lb:16, g:0.035274, kg:35.274, ml:0.033814, l:33.814, gal:128, count:1, sheets:1, ft:1, in:0.083333, yd:3, m:3.28084 };
 
-// ────────────────────────────────────────────────
-// THEME
-// ────────────────────────────────────────────────
 function initTheme(){ applyTheme(localStorage.getItem('bp_theme')==='dark'); }
 function toggleTheme(){ applyTheme(!document.body.classList.contains('dark')); }
 function applyTheme(dark){
@@ -1759,9 +1766,6 @@ function applyTheme(dark){
   if(sw) sw.checked = dark;
 }
 
-// ────────────────────────────────────────────────
-// LANG
-// ────────────────────────────────────────────────
 const TRANSLATIONS = {
   en: {
     login:'Login', signup:'Sign Up', namePh:'Full Name', emailPh:'Email', passPh:'Password',
@@ -1904,7 +1908,7 @@ const TRANSLATIONS = {
     profileBudget:'Weekly Budget',
     profilePreferredStores:'Preferred Stores',
     profileEmailNote:'Updating your email also updates your login credentials.',
-    people:'people',
+    people:'people',person:'person',
     pennyTypeList:'Type List',
     pennyPhotoScan:'Photo / Scan',
     pennyMyLists:'My Lists',
@@ -2056,7 +2060,7 @@ const TRANSLATIONS = {
     profileBudget:'Presupuesto semanal',
     profilePreferredStores:'Tiendas preferidas',
     profileEmailNote:'Actualizar tu correo también actualiza tus credenciales de inicio de sesión.',
-    people:'personas',
+    people:'personas',person:'persona',
     pennyTypeList:'Escribir lista',
     pennyPhotoScan:'Foto / Escanear',
     pennyMyLists:'Mis listas',
@@ -2208,7 +2212,7 @@ const TRANSLATIONS = {
     profileBudget:'Orçamento semanal',
     profilePreferredStores:'Lojas preferidas',
     profileEmailNote:'Atualizar seu e-mail também atualiza suas credenciais de login.',
-    people:'pessoas',
+    people:'pessoas',person:'pessoa',
     pennyTypeList:'Digitar lista',
     pennyPhotoScan:'Foto / Escanear',
     pennyMyLists:'Minhas listas',
@@ -2245,7 +2249,7 @@ function applyLang(){
   if(headlineEl){
     const parts = t.headline.split('. ');
     if(parts.length >= 2){
-      headlineEl.innerHTML = parts.slice(0,-1).join('. ')+'. <span>'+parts[parts.length-1]+'</span>';
+      headlineEl.innerHTML = parts.slice(0,-1).join('. ')+'.<br><span>'+parts[parts.length-1]+'</span>';
     } else {
       headlineEl.innerText = t.headline;
     }
@@ -2352,7 +2356,7 @@ function applyLang(){
   if(helpSections[5]) helpSections[5].innerText=t.helpProfile;
   const hStepTitles = document.querySelectorAll('#helpModal .help-step-title');
   const hStepDescs  = document.querySelectorAll('#helpModal .help-step-desc');
-  // Compare[0-2], Grocery[3-5], Presets[6-7], Penny[8-10]
+
   [[0,t.hs1title,t.hs1desc],[1,t.hs2title,t.hs2desc],[2,t.hs4title,t.hs4desc],
    [3,t.hg1title,t.hg1desc],[4,t.hg2title,t.hg2desc],[5,t.hg3title,t.hg3desc],
    [6,t.hp1title,t.hp1desc],[7,t.hp2title,t.hp2desc],
@@ -2361,7 +2365,7 @@ function applyLang(){
     if(hStepTitles[i]) hStepTitles[i].innerText=title;
     if(hStepDescs[i])  hStepDescs[i].innerText=desc;
   });
-  // History and Profile tip blocks
+
   const helpModalTips = document.querySelectorAll('#helpModal .help-tip');
   if(helpModalTips[0]) helpModalTips[0].innerText=t.helpCompareTip;
   if(helpModalTips[1]) helpModalTips[1].innerText=t.helpHistoryTip;
@@ -2373,9 +2377,9 @@ function applyLang(){
   helpBadges.forEach((b,i)=>{ if(badgeKeys[i]) b.innerText=badgeKeys[i]; });
   helpTips.forEach((tip,i)=>{ if(tipTexts[i]){ const badge=tip.querySelector('.help-badge'); tip.innerHTML=(badge?badge.outerHTML:'')+' '+tipTexts[i]; } });
   setText('txt-save-preset', t.saveToPreset);
-  // Re-render history so empty state translates
+
   if(typeof renderHistory === 'function') renderHistory();
-  // Re-render category pickers
+
   for(let i=0;i<items;i++) catPickerInit(i);
 
   const savedCards=[]; for(let i=0;i<items;i++) savedCards.push(getCard(i));
@@ -2385,50 +2389,60 @@ function applyLang(){
   if(activeListId) renderGroceryContent();
   renderPresets();
 
-  // ── Onboarding strings ──
   const obTitles = ['onboardTitle1','onboardTitle2','onboardTitle3','onboardTitle4','onboardTitle5'];
   const obSubs   = ['onboardSub1','onboardSub2','onboardSub3','onboardSub4','onboardSub5'];
   obTitles.forEach((key,i) => { const el=document.querySelector(`#ob-step-${i+1} .onboard-title`); if(el&&t[key]) el.innerText=t[key]; });
   obSubs.forEach((key,i)   => { const el=document.querySelector(`#ob-step-${i+1} .onboard-sub`);   if(el&&t[key]) el.innerText=t[key]; });
-  // Frequency chips
+
   const freqMap = [['daily',t.freqDaily],['twice_week',t.freqTwice],['weekly',t.freqWeekly],['biweekly',t.freqBiweekly],['monthly',t.freqMonthly]];
   document.querySelectorAll('.freq-chip:not(#freq-other-chip)').forEach((chip,i) => { if(freqMap[i]&&freqMap[i][1]) chip.textContent=freqMap[i][1]; });
   const freqOtherChip = document.getElementById('freq-other-chip');
   if(freqOtherChip&&t.freqOther) freqOtherChip.textContent=t.freqOther;
   if(t.budgetNote){ const bn=document.querySelector('#ob-step-3 .onboard-stepper + div'); if(bn) bn.textContent=t.budgetNote; }
-  // Store "Other" chip
+
   const obOtherChip = document.getElementById('ob-other-chip');
   if(obOtherChip&&t.storeOther) obOtherChip.textContent=t.storeOther;
-  // Zip note
-  if(t.zipNote){ const zn=document.querySelector('#ob-step-5 input + div'); if(zn) zn.textContent=t.zipNote; }
 
-  // ── Penny tab ──
+  if(t.zipNote){ const zn=document.getElementById('ob-zip-note'); if(zn) zn.textContent=t.zipNote; }
+
   const pennyNewBtn = document.querySelector('.penny-new-btn');
   if(pennyNewBtn&&t.pennyNewChat){ const svg=pennyNewBtn.querySelector('svg'); pennyNewBtn.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyNewChat; pennyNewBtn.setAttribute('onclick','pennyNewChat()'); }
-  // Update both penny-context-lbl spans (Add Compare & Find Prices)
+
   const pennyCtxLbls = document.querySelectorAll('.penny-context-lbl');
   if(pennyCtxLbls[0]&&t.pennyAddCompare) pennyCtxLbls[0].textContent=t.pennyAddCompare;
   if(pennyCtxLbls[1]&&t.pennyFindPrices) pennyCtxLbls[1].textContent=t.pennyFindPrices;
-  // Penny price panel tab labels
+
   const pptType = document.getElementById('ppt-type');
   if(pptType&&t.pennyTypeList){ const svg=pptType.querySelector('svg'); pptType.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyTypeList; pptType.setAttribute('onclick',"pennyPriceTab('type')"); }
   const pptPhoto = document.getElementById('ppt-photo');
   if(pptPhoto&&t.pennyPhotoScan){ const svg=pptPhoto.querySelector('svg'); pptPhoto.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyPhotoScan; pptPhoto.setAttribute('onclick',"pennyPriceTab('photo')"); }
   const pptMylist = document.getElementById('ppt-mylist');
   if(pptMylist&&t.pennyMyLists){ const svg=pptMylist.querySelector('svg'); pptMylist.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyMyLists; pptMylist.setAttribute('onclick',"pennyPriceTab('mylist')"); }
-  // Find Best Prices button
+
   const pennyPriceSearchBtn = document.getElementById('pennyPriceSearchBtn');
   if(pennyPriceSearchBtn&&t.pennyFindBestPrices){ const svg=pennyPriceSearchBtn.querySelector('svg'); pennyPriceSearchBtn.innerHTML=(svg?svg.outerHTML:'')+' '+t.pennyFindBestPrices; }
-  // Upload photo label
+
   const pennyUploadLbl = document.querySelector('#ppp-photo label div');
   if(pennyUploadLbl&&t.pennyUploadPhoto) pennyUploadLbl.textContent=t.pennyUploadPhoto;
-  // Penny price panel zip label (only if panel is open and zip label exists)
+
   const pennyZipLbl = document.getElementById('pennyPriceZipLbl');
   if(pennyZipLbl){ const zip=typeof loadU==='function'?loadU('zip',''):''; pennyZipLbl.textContent=zip?(t.pennyZipNear||'Searching near')+' '+zip:(t.pennyZipNoZip||'Enter your zip in Profile for local results'); }
   setPh('pennyInput', lang==='es'?'Pregúntale algo a Penny...':lang==='pt'?'Pergunte algo a Penny...':'Ask Penny anything...');
-  // Penny price panel list textarea placeholder
+
+  // Landing popup Penny UI
+  const lpSub=document.getElementById('lp-header-sub');
+  if(lpSub) lpSub.textContent=lang==='es'?'Asesora de Compras IA':lang==='pt'?'Consultora de Compras IA':'AI Shopping Advisor';
+  setPh('lp-input', lang==='es'?'Pregúntale a Penny...':lang==='pt'?'Pergunte a Penny...':'Ask Penny...');
+  const lpSendBtn=document.getElementById('lp-send-btn');
+  if(lpSendBtn) lpSendBtn.textContent=lang==='es'?'Enviar':lang==='pt'?'Enviar':'Send';
+  const lpInitial=document.querySelector('#lp-msgs .lp-initial-msg');
+  if(lpInitial) lpInitial.textContent=lang==='es'?'¡Hola! Soy Penny, tu asesora de compras con IA. ¡Pregúntame cualquier cosa sobre ahorro en compras o cómo funciona la app!':lang==='pt'?'Olá! Sou Penny, sua consultora de compras com IA. Pergunte-me qualquer coisa sobre economias em compras ou como o app funciona!':'Hi! I\'m Penny, your AI shopping advisor. Ask me anything about saving on groceries or how the app works!';
+  document.querySelectorAll('.penny-badge').forEach(el=>{
+    el.textContent=lang==='es'?'Asesora IA':lang==='pt'?'Conselheira IA':'AI Advisor';
+  });
+
   setPh('pennyPriceListText', lang==='es'?'Escribe artículos — uno por línea o separados por coma\np.ej. leche, huevos, pollo, arroz, jugo de naranja':lang==='pt'?'Digite itens — um por linha ou separados por vírgula\nex. leite, ovos, frango, arroz, suco de laranja':'Type items — one per line or comma separated\ne.g. milk, eggs, chicken, rice, orange juice');
-  // Penny suggestion chips (only when welcome screen is visible)
+
   const pennyWelcome = document.querySelector('.penny-welcome');
   if(pennyWelcome){
     const sugs = pennyWelcome.querySelectorAll('.penny-sug');
@@ -2444,10 +2458,10 @@ function applyLang(){
     ];
     sugs.forEach((s,i)=>{ s.textContent=sugTexts[i]; s.setAttribute('onclick',`pennyQuickSend('${sugCmds[i].replace(/'/g,"\\'")}')`) });
   }
-  // Penny sidebar label
+
   const pSidebarTitle = document.querySelector('.penny-sidebar-title');
   if(pSidebarTitle) pSidebarTitle.textContent = lang==='es'?'Chats':lang==='pt'?'Chats':'Chats';
-  // Penny welcome texts
+
   const pwText = document.querySelector('.penny-welcome-text');
   if(pwText){
     const _s=JSON.parse(localStorage.getItem('bp_session')||'{}');
@@ -2457,7 +2471,6 @@ function applyLang(){
   const pwSub = document.querySelector('.penny-welcome-sub');
   if(pwSub) pwSub.textContent = lang==='es'?'Pregúntame lo que quieras o toca "Agregar comparación" para compartir tus productos actuales.':lang==='pt'?'Pergunte-me qualquer coisa ou toque em "Adicionar comparação" para compartilhar seus produtos atuais.':'Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.';
 
-  // ── Onboarding buttons + placeholders ──
   document.querySelectorAll('.onboard-next').forEach(btn => {
     if(!btn.textContent.includes('Get Started') && !btn.textContent.includes('Empezar') && !btn.textContent.includes('Começar')){
       btn.innerHTML = (lang==='es'?'Continuar':lang==='pt'?'Continuar':'Continue') + ' &#8594;';
@@ -2473,13 +2486,24 @@ function applyLang(){
   });
   setPh('freq-other-text', lang==='es'?'Describe con qué frecuencia compras...':lang==='pt'?'Descreva com que frequência você faz compras...':'Describe how often you shop...');
   setPh('ob-other-text', lang==='es'?'Nombre de tu tienda (ej. H-E-B, Wegmans)':lang==='pt'?'Nome da sua loja (ex. H-E-B, Wegmans)':'Type your store name (e.g. H-E-B, Wegmans)');
-  // Tailor badge
+
   const tailorBadgeSpan = document.querySelector('.onboard-tailor-badge span');
   if(tailorBadgeSpan) tailorBadgeSpan.textContent = lang==='es'?'Para Mejorar Tus Resultados':lang==='pt'?'Para Melhorar Seus Resultados':'To Enhance Your Results';
   const tailorSub = document.querySelector('.onboard-tailor-sub');
   if(tailorSub) tailorSub.textContent = lang==='es'?'Responde unas preguntas para personalizar todo para ti.':lang==='pt'?'Responda algumas perguntas para personalizarmos tudo para você.':'Answer a few quick questions so we can tailor everything for you.';
+  // Update onboarding step titles and subs
+  for(let s=1;s<=5;s++){
+    const stepEl=document.getElementById(`ob-step-${s}`);
+    if(!stepEl) continue;
+    const titleEl=stepEl.querySelector('.onboard-title');
+    const subEl=stepEl.querySelector('.onboard-sub');
+    if(titleEl && t[`onboardTitle${s}`]) titleEl.textContent=t[`onboardTitle${s}`];
+    if(subEl && t[`onboardSub${s}`]) subEl.textContent=t[`onboardSub${s}`];
+  }
+  // Update hh-label to current language
+  const hhLbl=document.getElementById('hh-label');
+  if(hhLbl){ const hh=parseInt(document.getElementById('household-val')?.innerText)||obHousehold; hhLbl.textContent=hh===1?(t.person||'person'):(t.people||'people'); }
 
-  // ── Profile tab full labels (updated live on language change) ──
   setQ('#tab-profile .tab-title', t.profileTitle||'My Profile');
   setQ('#tab-profile .prof-lbl-account',    t.profileAccountInfo||'Account Info');
   setQ('#tab-profile .prof-lbl-firstname',  t.profileFirstName||'First Name');
@@ -2501,7 +2525,7 @@ function applyLang(){
   if(profPeopleLbl) profPeopleLbl.textContent=t.people||'people';
   const profBudgetNote = document.querySelector('#tab-profile .profile-section .onboard-stepper + div');
   if(profBudgetNote) profBudgetNote.textContent=t.budgetNote||'Adjusts in $50 increments • $50 min • $2,000 max';
-  // Profile freq chips
+
   const profFreqMap=[['daily',t.freqDaily],['twice_week',t.freqTwice],['weekly',t.freqWeekly],['biweekly',t.freqBiweekly],['monthly',t.freqMonthly]];
   document.querySelectorAll('#profile-freq-chips .freq-chip:not(#profile-freq-other-chip)').forEach((chip,i)=>{ if(profFreqMap[i]&&profFreqMap[i][1]) chip.textContent=profFreqMap[i][1]; });
   const profFreqOther=document.getElementById('profile-freq-other-chip');
@@ -2511,16 +2535,13 @@ function applyLang(){
   setPh('profile-freq-other-text', lang==='es'?'Describe con qué frecuencia compras...':lang==='pt'?'Descreva com que frequência você faz compras...':'Describe how often you shop...');
   setPh('profile-other-text', lang==='es'?'Nombre de tu tienda (ej. H-E-B, Wegmans)':lang==='pt'?'Nome da sua loja (ex. H-E-B, Wegmans)':'Type your store name (e.g. H-E-B, Wegmans)');
 
-  // ── Profile danger zone ──
   setQ('.prof-lbl-danger', t.dangerZone||'Danger Zone');
   setQ('.prof-btn-delete', t.deleteAccount||'Delete Account');
   setQ('.prof-lbl-deleteNote', t.deleteNote||'This permanently removes your account and all data. You can sign up again with the same email.');
 
-  // ── Help modal ──
   const helpModalTitle = document.querySelector('#helpModal .modal-title');
   if(helpModalTitle) helpModalTitle.innerText = lang==='es'?'Guía de ayuda':lang==='pt'?'Guia de ajuda':'Help Guide';
 
-  // Re-render Penny so welcome screen and session list reflect new language
   if(typeof renderPennyMessages === 'function') renderPennyMessages();
   if(typeof renderPennySessions === 'function') renderPennySessions();
 }
@@ -2533,10 +2554,6 @@ function changeLang(src){
   applyLang();
 }
 
-
-// ────────────────────────────────────────────────
-// AUTH
-// ────────────────────────────────────────────────
 function setMode(mode){
   authMode = mode;
   const pill = document.getElementById('tabPill');
@@ -2651,7 +2668,7 @@ function logout(){
 
 function showApp(isNewUser=false){
   document.getElementById('auth-screen').style.display='none';
-  // Always render the app first so onboarding overlay has real content to blur behind it
+
   document.getElementById('app').style.display='block';
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
@@ -2672,9 +2689,6 @@ function showApp(isNewUser=false){
   }
 }
 
-// ────────────────────────────────────────────────
-// TABS
-// ────────────────────────────────────────────────
 function goTab(name){
   ['compare','history','grocery','presets','help','profile','penny'].forEach(n=>{
     const el=document.getElementById(`tab-${n}`);
@@ -2691,13 +2705,13 @@ function goTab(name){
   if(name==='profile') renderProfileTab();
   if(name==='grocery'){ renderListNav(); renderGroceryContent(); }
   if(name==='penny'){
-    // On mobile default sidebar closed, on desktop open
+
     pennySidebarOpen = window.innerWidth >= 600;
     const sb = document.getElementById('pennySidebar');
     if(sb) sb.classList.toggle('collapsed', !pennySidebarOpen);
-    // Reload from storage to pick up any changes, re-sync active reference
+
     loadPennySessions();
-    // If no active session but sessions exist, load the most recent
+
     if(!pennyActiveSession && pennySessions.length){
       pennyActiveSession = pennySessions[pennySessions.length - 1];
     }
@@ -2710,11 +2724,8 @@ function goTab(name){
 
 function handleCurrChange(){}
 
-// ────────────────────────────────────────────────
-// BRAND / CATEGORY DATA
-// ────────────────────────────────────────────────
 const BRAND_DATA = {
-  // Meats & Protein
+
   chicken:['Tyson','Perdue','Kirkland','Foster Farms','Bell & Evans','Store Brand','Just Bare','Smart Chicken'],
   beef:['Laura\'s Lean','Angus','Kirkland','Store Brand','Nature\'s Reserve','Great Value','Certified Angus Beef'],
   pork:['Smithfield','Hormel','Kirkland','Store Brand','Oscar Mayer','Farmland','Great Value'],
@@ -2723,7 +2734,7 @@ const BRAND_DATA = {
   deli_meat:['Oscar Mayer','Boar\'s Head','Hillshire Farm','Kirkland','Land O\'Frost','Applegate','Store Brand'],
   turkey:['Butterball','Jennie-O','Kirkland','Store Brand','Honeysuckle White','Shady Brook'],
   lamb:['Store Brand','American Lamb','New Zealand Lamb','Kirkland'],
-  // Fruits
+
   banana:['Chiquita','Dole','Store Brand','Organic'],
   apple:['Honeycrisp','Gala','Fuji','Granny Smith','Pink Lady','Store Brand','Organic'],
   berries:['Driscoll\'s','Store Brand','Organic','Sunrise','Natural Delights'],
@@ -2731,7 +2742,7 @@ const BRAND_DATA = {
   orange:['Sunkist','Store Brand','Organic','Florida\'s Natural','Cuties'],
   avocado:['Organic','Store Brand','Hass','Ready Pac'],
   fresh_fruit:['Store Brand','Organic','Dole','Fresh'],
-  // Vegetables
+
   leafy_greens:['Organic Girl','Taylor Farms','Dole','Store Brand','Earthbound Farm','Fresh Express'],
   tomatoes:['Store Brand','Organic','Beefsteak','Roma','Cherry','Campari'],
   onion_garlic:['Store Brand','Organic','Christopher Ranch','Spice World'],
@@ -2740,7 +2751,7 @@ const BRAND_DATA = {
   frozen_veg:['Birds Eye','Green Giant','Kirkland','Store Brand','Cascadian Farm','Great Value'],
   canned_veg:['Del Monte','Green Giant','Store Brand','Great Value','Libby\'s','Heinz'],
   fresh_veg:['Store Brand','Organic','Fresh'],
-  // Dairy
+
   milk:['Whole Milk','2% Milk','Skim Milk','Organic Valley','Horizon Organic','Fairlife','Lactaid','Store Brand','Oat Milk','Almond Milk'],
   butter:['Land O\'Lakes','Kerrygold','Challenge','Store Brand','Organic Valley','Lurpak','Tillamook','Country Crock'],
   shredded_cheese:['Kraft','Sargento','Tillamook','Store Brand','Organic Valley','Great Value'],
@@ -2750,7 +2761,7 @@ const BRAND_DATA = {
   cheese:['Kraft','Sargento','Tillamook','Cabot','Boar\'s Head','Store Brand','Organic Valley','Borden','Velveeta'],
   yogurt:['Chobani','Fage','Oikos','Yoplait','Stonyfield','Siggi\'s','Dannon','Noosa','Store Brand','Two Good'],
   sour_cream:['Daisy','Knudsen','Store Brand','Tillamook','Breakstone\'s','Great Value'],
-  // Pantry
+
   bread:['Wonder','Nature\'s Own','Dave\'s Killer Bread','Pepperidge Farm','Arnold','Sara Lee','Oroweat','Store Brand','Martin\'s','Brownberry'],
   tortillas:['Mission','Old El Paso','La Banderita','Guerrero','Store Brand','Siete'],
   rolls:['King\'s Hawaiian','Pepperidge Farm','Store Brand','Sara Lee','Martin\'s'],
@@ -2766,7 +2777,7 @@ const BRAND_DATA = {
   condiments:['Heinz','Hellmann\'s','French\'s','Kraft','Hidden Valley','Store Brand','Sir Kensington\'s','Primal Kitchen'],
   frozen_pizza:['DiGiorno','Red Baron','Tombstone','Jack\'s','California Pizza Kitchen','Newman\'s Own','Amy\'s','Freschetta','Store Brand'],
   frozen_meals:['Lean Cuisine','Stouffer\'s','Amy\'s','Saffron Road','Healthy Choice','Bird\'s Eye','Kirkland','Store Brand'],
-  // Beverages
+
   coffee:['Folgers','Maxwell House','Starbucks','Dunkin\'','Green Mountain','Kirkland','Peet\'s','Eight O\'Clock','Death Wish','Community Coffee'],
   tea:['Lipton','Bigelow','Celestial Seasonings','Tazo','Twinings','Store Brand','Yogi','Stash'],
   water:['Dasani','Aquafina','Poland Spring','Fiji','Kirkland','Great Value','Evian','Deer Park','Smartwater','Zephyrhills'],
@@ -2774,7 +2785,7 @@ const BRAND_DATA = {
   juice:['Tropicana','Minute Maid','Simply','Dole','Ocean Spray','Florida\'s Natural','Naked','Bolthouse','Store Brand'],
   energy_drinks:['Red Bull','Monster','Celsius','Bang','Reign','Rockstar','5-hour Energy','Store Brand'],
   sports_drinks:['Gatorade','Powerade','BodyArmor','Prime','Liquid I.V.','Store Brand'],
-  // Hygiene
+
   shampoo:['Head & Shoulders','Pantene','TRESemmé','Suave','Herbal Essences','Dove','OGX','L\'Oréal','Garnier','Aveeno'],
   conditioner:['Pantene','TRESemmé','Suave','Herbal Essences','Dove','OGX','L\'Oréal','Garnier','Aveeno'],
   body_wash:['Dove','Olay','Suave','Softsoap','Irish Spring','Old Spice','Caress','Ivory','Method'],
@@ -2783,7 +2794,7 @@ const BRAND_DATA = {
   razor:['Gillette','Schick','BIC','Harry\'s','Venus','Dollar Shave Club','Wilkinson','Store Brand'],
   feminine_care:['Always','Tampax','Kotex','Playtex','Seventh Generation','U by Kotex','Store Brand'],
   lotion:['Lubriderm','Aveeno','CeraVe','Neutrogena','Jergens','Vaseline','Gold Bond','Store Brand'],
-  // Household
+
   toilet_paper:['Charmin','Cottonelle','Scott','Angel Soft','Bounty (TP)','Kirkland','Member\'s Mark','Seventh Generation','Up & Up','Great Value'],
   paper_towels:['Bounty','Viva','Brawny','Scott','Sparkle','Kirkland','Up & Up','Great Value','Seventh Generation'],
   laundry:['Tide','Gain','Persil','All','Arm & Hammer','Xtra','Kirkland','OxiClean','Woolite','Dreft'],
@@ -2791,7 +2802,7 @@ const BRAND_DATA = {
   trash_bags:['Glad','Hefty','Kirkland','Great Value','Member\'s Mark','Up & Up','Drawstring Plus','Reli'],
   cleaning:['Lysol','Clorox','Method','Mr. Clean','Pine-Sol','Seventh Generation','Store Brand','Mrs. Meyer\'s'],
   bags_wrap:['Ziploc','Hefty','Reynolds','Kirkland','Store Brand','Glad','Press\'n Seal'],
-  // Baby & Pet
+
   diapers:['Pampers','Huggies','Luvs','Kirkland','Up & Up','Parent\'s Choice','Honest','Hello Bello','Andy Pandy'],
   baby_formula:['Similac','Enfamil','Gerber','Earth\'s Best','Store Brand','Bobbie','Happy Baby','Kirkland'],
   baby_food:['Gerber','Beech-Nut','Happy Baby','Earth\'s Best','Plum Organics','Store Brand','Once Upon a Farm'],
@@ -2812,7 +2823,7 @@ function adjustHousehold(d){
   obHousehold = Math.max(1, Math.min(15, obHousehold + d));
   document.getElementById('household-val').innerText = obHousehold;
   const lbl = document.getElementById('hh-label');
-  if(lbl) lbl.textContent = obHousehold === 1 ? 'person' : 'people';
+  if(lbl){ const t=T(); lbl.textContent = obHousehold === 1 ? (t.person||'person') : (t.people||'people'); }
 }
 function adjustBudget(d){
   obBudget = Math.max(50, Math.min(2000, obBudget + d));
@@ -2871,7 +2882,7 @@ function obContinueStores(){
 }
 function tryFinishOnboarding(){
   const zipVal = (document.getElementById('ob-zip')?.value || '').trim();
-  if(zipVal && zipVal.length !== 5){
+  if(!zipVal || zipVal.length !== 5){
     const errEl = document.getElementById('ob-zip-err');
     if(errEl) errEl.style.display = 'flex';
     const zipInput = document.getElementById('ob-zip');
@@ -2923,7 +2934,6 @@ function updateBrandDropdown(idx){
   const bd=document.getElementById(`bd-${idx}`); if(bd) bd.classList.remove('open');
 }
 
-// When a category is selected via the drill-down picker, open the brand dropdown
 function onCatChange(idx){
   const cat = document.getElementById('cat-' + idx)?.value;
   const nameEl = document.getElementById('n-' + idx);
@@ -2934,17 +2944,12 @@ function onCatChange(idx){
   if(!cat) return;
   const brands = BRAND_DATA[cat] || [];
   if(brands.length){
-    bd.innerHTML = brands.map(b =>
-      '<div class="brand-opt" onmousedown="selectBrand(' + idx + ',\'' + b.replace(/'/g,"\\'") + '\')">' + b + '</div>'
-    ).join('');
+    bd.innerHTML = brands.map(b=>{const d=_xlBrand(b);return '<div class="brand-opt" onmousedown="selectBrand('+idx+',\''+d.replace(/'/g,"\\'")+'\')">'+d+'</div>';}).join('');
     bd.classList.add('open');
   }
   setTimeout(() => nameEl.focus(), 50);
 }
 
-// ────────────────────────────────────────────────
-// DRILL-DOWN CATEGORY PICKER
-// ────────────────────────────────────────────────
 const CAT_TREE = [
   { label:'Meats & Protein', children:[
     { label:'Chicken', key:'chicken' },
@@ -3054,7 +3059,6 @@ const CAT_TREE = [
   ]},
 ];
 
-// Category label translations (keyed by English label)
 const CAT_TRANS = {
   es:{
     'Meats & Protein':'Carnes y proteínas','Fruits':'Frutas','Vegetables':'Verduras',
@@ -3129,7 +3133,6 @@ const CAT_TRANS = {
 };
 function catLabel(lbl){ return (lang!=='en' && CAT_TRANS[lang] && CAT_TRANS[lang][lbl]) ? CAT_TRANS[lang][lbl] : lbl; }
 
-// State: path per card index
 const catPickerState = {};
 
 function catPickerInit(idx){
@@ -3138,14 +3141,12 @@ function catPickerInit(idx){
   const l3 = document.getElementById('cp-l3-' + idx);
   if(!l1) return;
 
-  // Populate level 1 with top-level categories
   const selCat = lang==='es'?'— Seleccionar categoría —':lang==='pt'?'— Selecionar categoria —':'— Select Category —';
   const selSub = lang==='es'?'— Seleccionar subcategoría —':lang==='pt'?'— Selecionar subcategoria —':'— Select Sub-category —';
   const selType = lang==='es'?'— Seleccionar tipo —':lang==='pt'?'— Selecionar tipo —':'— Select Item Type —';
   l1.innerHTML = '<option value="">' + selCat + '</option>' +
     CAT_TREE.map((n, i) => '<option value="' + i + '">' + catLabel(n.label) + '</option>').join('');
 
-  // Reset all
   if(l2){ l2.innerHTML = '<option value="">' + selSub + '</option>'; l2.style.display = 'none'; }
   if(l3){ l3.innerHTML = '<option value="">' + selType + '</option>'; l3.style.display = 'none'; }
   const catEl = document.getElementById('cat-' + idx);
@@ -3159,7 +3160,6 @@ function catL1Change(idx){
   const catEl = document.getElementById('cat-' + idx);
   if(!l1 || !l2) return;
 
-  // Reset downstream
   l3.style.display = 'none';
   l3.innerHTML = '<option value="">— Select Item Type —</option>';
   catEl.value = '';
@@ -3174,12 +3174,12 @@ function catL1Change(idx){
   if(!node) return;
 
   if(node.children){
-    // Has sub-categories — populate L2
+
     l2.innerHTML = '<option value="">' + selSub2 + '</option>' +
       node.children.map((c, ci) => '<option value="' + ci + '">' + catLabel(c.label) + '</option>').join('');
     l2.style.display = 'block';
   } else {
-    // Leaf at L1 (shouldn't happen in current tree but handle gracefully)
+
     l2.style.display = 'none';
     catEl.value = node.key || '';
     onCatChange(idx);
@@ -3207,12 +3207,12 @@ function catL2Change(idx){
   if(!node) return;
 
   if(node.children){
-    // Has a 3rd level
+
     l3.innerHTML = '<option value="">' + selType3 + '</option>' +
       node.children.map((c, ci) => '<option value="' + ci + '">' + catLabel(c.label) + '</option>').join('');
     l3.style.display = 'block';
   } else {
-    // Leaf at L2
+
     catEl.value = node.key || '';
     onCatChange(idx);
   }
@@ -3245,7 +3245,6 @@ function catPickerClearName(idx){
   if(bd) bd.classList.remove('open');
 }
 
-// Translations for the auto-generated starter grocery list
 const STARTER_NAMES = {
   listName:{ en:'My Weekly Essentials', es:'Mis productos semanales', pt:'Meus essenciais semanais' },
   s1:{ en:'Eggs', es:'Huevos', pt:'Ovos' },
@@ -3292,7 +3291,7 @@ function translateStarterData(){
 
 function createStarterGroceryList(){
   const existing = loadU('glists', []);
-  if(existing.length > 0) return; // only for brand new users
+  if(existing.length > 0) return;
   const lid = 'list_starter_' + Date.now();
   const l = lang||'en';
   const SN = STARTER_NAMES;
@@ -3326,19 +3325,23 @@ function createStarterGroceryList(){
   saveU('glists', [list]);
   saveU('gitems', starterItems);
 }
+function _xlBrand(b){
+  if(b!=='Store Brand') return b;
+  return lang==='es'?'Marca Propia':lang==='pt'?'Marca Própria':'Store Brand';
+}
 function onNameInput(idx){
   if(_brandSelected) return;
   const cat=document.getElementById(`cat-${idx}`)?.value;
   const val=document.getElementById(`n-${idx}`).value.trim().toLowerCase();
   const bd=document.getElementById(`bd-${idx}`);
   if(!bd) return;
-  // Only show brands for the selected category — never dump all brands
+
   const brands = cat && BRAND_DATA[cat] ? BRAND_DATA[cat] : [];
-  // Don't reopen if the exact brand name is already entered
-  if(val && brands.some(b=>b.toLowerCase()===val)){ bd.classList.remove('open'); bd.innerHTML=''; return; }
-  const filtered = val ? brands.filter(b=>b.toLowerCase().includes(val)) : brands;
+
+  if(val && brands.some(b=>_xlBrand(b).toLowerCase()===val)){ bd.classList.remove('open'); bd.innerHTML=''; return; }
+  const filtered = val ? brands.filter(b=>_xlBrand(b).toLowerCase().includes(val)||b.toLowerCase().includes(val)) : brands;
   if(!filtered.length){ bd.classList.remove('open'); return; }
-  bd.innerHTML=filtered.slice(0,10).map(b=>`<div class="brand-opt" onmousedown="selectBrand(${idx},'${b.replace(/'/g,"\\'")}')"> ${b}</div>`).join('');
+  bd.innerHTML=filtered.slice(0,10).map(b=>{const d=_xlBrand(b);return `<div class="brand-opt" onmousedown="selectBrand(${idx},'${d.replace(/'/g,"\\'")}')"> ${d}</div>`;}).join('');
   bd.classList.add('open');
 }
 let _brandSelected = false;
@@ -3403,7 +3406,7 @@ function updateGrid(){
       </div>
       <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
       <label class="card-label">${t.priceLabel}</label>
-      <input type="number" class="price-input" id="p-${i}" placeholder="0.00" oninput="clearPriceErr(${i})">
+      <input type="text" inputmode="decimal" class="price-input" id="p-${i}" placeholder="0.00" onkeydown="priceKeyDown(${i},event)" onpaste="onPricePaste(${i},event)" autocomplete="off">
       <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
       <div class="field-row" style="margin-top:10px">
         <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" class="card-input" id="dv-${i}" value="0"></div>
@@ -3413,7 +3416,7 @@ function updateGrid(){
       <div class="field-row">
         <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}">
         <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
-          <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
+          <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="sheets">sht</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
         </select>
       </div>
       <label class="card-label">${t.packLabel}</label>
@@ -3440,12 +3443,12 @@ function updateGrid(){
     </div>`;
   }
   grid.innerHTML=html;
-  // Init drill-down pickers for all cards
+
   for(let i=0;i<items;i++) catPickerInit(i);
 }
 
 function getCard(i){ return {p:document.getElementById(`p-${i}`)?.value||'',dv:document.getElementById(`dv-${i}`)?.value||'0',dt:document.getElementById(`dt-${i}`)?.value||'p',s:document.getElementById(`s-${i}`)?.value||'',u:document.getElementById(`u-${i}`)?.value||'oz',q:document.getElementById(`q-${i}`)?.value||'1',n:document.getElementById(`n-${i}`)?.value||''}; }
-function setCard(i,d){ ['p','dv','dt','s','u','q','n'].forEach(k=>{ const el=document.getElementById(`${k}-${i}`); if(el)el.value=d[k]!=null?d[k]:''; }); }
+function setCard(i,d){ ['p','dv','dt','s','u','q','n'].forEach(k=>{ const el=document.getElementById(`${k}-${i}`); if(el){ el.value=d[k]!=null?d[k]:''; if(k==='p'&&d[k]){ const c=Math.round(parseFloat(d[k])*100); el.dataset.raw=isNaN(c)?'':String(c); } } }); }
 
 function dupCard(idx){
   const t=T();
@@ -3469,6 +3472,47 @@ function clearPriceErr(idx){
   const pEl=document.getElementById(`p-${idx}`); if(pEl) pEl.style.borderColor='';
   const errEl=document.getElementById(`price-err-${idx}`); if(errEl) errEl.style.display='none';
 }
+function _priceRawFmt(raw){
+  if(!raw) return '';
+  const s=raw.padStart(3,'0');
+  return parseInt(s.slice(0,-2),10)+'.'+s.slice(-2);
+}
+function priceKeyDown(idx,e){
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(['Tab','Enter','Escape','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+  const inp=document.getElementById(`p-${idx}`);
+  if(!inp) return;
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    let raw=(inp.dataset.raw||'').replace(/\D/g,'');
+    raw=raw.slice(0,-1);
+    inp.dataset.raw=raw; inp.value=_priceRawFmt(raw);
+    clearPriceErr(idx); return;
+  }
+  if(e.key==='Delete'){
+    e.preventDefault();
+    inp.dataset.raw=''; inp.value='';
+    clearPriceErr(idx); return;
+  }
+  if(!/^\d$/.test(e.key)){ e.preventDefault(); return; }
+  e.preventDefault();
+  let raw=(inp.dataset.raw||'').replace(/\D/g,'');
+  if(raw.length>=6) return;
+  raw+=e.key;
+  inp.dataset.raw=raw; inp.value=_priceRawFmt(raw);
+  clearPriceErr(idx);
+}
+function onPricePaste(idx,e){
+  e.preventDefault();
+  const text=(e.clipboardData||window.clipboardData).getData('text').replace(/[^0-9.]/g,'');
+  const num=parseFloat(text);
+  if(isNaN(num)) return;
+  const inp=document.getElementById(`p-${idx}`);
+  if(!inp) return;
+  const raw=String(Math.round(num*100)).slice(-6);
+  inp.dataset.raw=raw; inp.value=_priceRawFmt(raw);
+  clearPriceErr(idx);
+}
 function autoUnit(i){ const u=document.getElementById(`u-${i}`),s=document.getElementById(`s-${i}`); if(u.value==='count'&&!s.value)s.value='1'; }
 
 function applySettings(){
@@ -3480,9 +3524,6 @@ function applySettings(){
   closeModals();
 }
 
-// ────────────────────────────────────────────────
-// COMPARE
-// ────────────────────────────────────────────────
 function compare(){
   const cur=document.getElementById('setCurr').value;
   const t=T();
@@ -3554,13 +3595,50 @@ function compare(){
   lastAnalysis=log;
   document.getElementById('analysisBox').value=log;
   const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=log;
+  playCaChing();
+}
+
+function playCaChing(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const now=ctx.currentTime;
+    const master=ctx.createGain(); master.gain.setValueAtTime(0.85,now); master.connect(ctx.destination);
+
+    function coinHit(t,f1,f2,amp,dec){
+      // Two inharmonic sine partials — gives each coin its own metallic pitch
+      [[f1,1.0],[f2,0.45],[f1*2.73,0.18]].forEach(([freq,rel])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sine'; o.frequency.setValueAtTime(freq,now+t);
+        g.gain.setValueAtTime(0,now+t);
+        g.gain.linearRampToValueAtTime(amp*rel*0.38,now+t+0.002);
+        g.gain.exponentialRampToValueAtTime(0.001,now+t+dec*rel);
+        o.connect(g); g.connect(master); o.start(now+t); o.stop(now+t+dec+0.03);
+      });
+      // Metallic strike noise (very short, highpassed)
+      const nlen=Math.floor(ctx.sampleRate*0.009);
+      const nb=ctx.createBuffer(1,nlen,ctx.sampleRate);
+      const nd=nb.getChannelData(0);
+      for(let i=0;i<nlen;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/nlen,3);
+      const ns=ctx.createBufferSource(); ns.buffer=nb;
+      const nhp=ctx.createBiquadFilter(); nhp.type='highpass'; nhp.frequency.value=3500;
+      const ng=ctx.createGain(); ng.gain.setValueAtTime(amp*0.22,now+t);
+      ns.connect(nhp); nhp.connect(ng); ng.connect(master); ns.start(now+t);
+    }
+
+    // Handful of coins hitting at slightly staggered times
+    // t=offset, f1=fundamental Hz, f2=2nd partial, amp, decay
+    coinHit(0.00, 3900, 6600, 0.95, 0.38); // quarter
+    coinHit(0.04, 5300, 8200, 0.75, 0.28); // dime
+    coinHit(0.07, 2950, 4900, 0.85, 0.34); // nickel
+    coinHit(0.11, 6200, 9400, 0.60, 0.22); // penny
+    coinHit(0.05, 4500, 7100, 0.70, 0.31); // another coin mid-jingle
+
+    setTimeout(()=>ctx.close(),700);
+  }catch(e){}
 }
 
 function resetAll(){ const t=T(); showConfirm(lang==='en'?'Reset Compare':lang==='es'?'Reiniciar comparación':'Redefinir comparação', lang==='en'?'Clear all items and results?':lang==='es'?'¿Borrar todos los artículos y resultados?':'Limpar todos os itens e resultados?', ()=>{ updateGrid(); document.getElementById('analysisBox').value=''; lastAnalysis=''; const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=T().exportRunFirst; }); }
 
-// ────────────────────────────────────────────────
-// HISTORY
-// ────────────────────────────────────────────────
 function renderHistory(){
   const el=document.getElementById('historyList');
   const t=T();
@@ -3571,9 +3649,6 @@ function renderHistory(){
 function delHistory(i){ showConfirm(lang==='en'?'Delete Entry':lang==='es'?'Eliminar entrada':'Excluir entrada', lang==='en'?'Remove this comparison from history?':lang==='es'?'¿Eliminar esta comparación del historial?':'Remover esta comparação do histórico?', ()=>{ compHistory.splice(i,1); saveU('history',compHistory); renderHistory(); }); }
 function clearHistory(){ showConfirm(lang==='en'?'Clear All History':lang==='es'?'Borrar todo el historial':'Limpar todo o histórico', lang==='en'?'Delete all comparison history? This cannot be undone.':lang==='es'?'¿Eliminar todo el historial? No se puede deshacer.':'Excluir todo o histórico? Isso não pode ser desfeito.', ()=>{ compHistory=[]; saveU('history',compHistory); renderHistory(); }); }
 
-// ────────────────────────────────────────────────
-// GROCERY — LISTS
-// ────────────────────────────────────────────────
 function renderListNav(){
   const nav=document.getElementById('listNav');
   const t=T();
@@ -3640,9 +3715,6 @@ function deleteList(id){
   });
 }
 
-// ────────────────────────────────────────────────
-// GROCERY — ITEMS
-// ────────────────────────────────────────────────
 function renderGroceryContent(){
   const el=document.getElementById('groceryContent');
   if(!activeListId||!groceryLists.find(l=>String(l.id)===String(activeListId))){
@@ -3737,7 +3809,7 @@ function saveEditItem(){
   const item=groceryItems.find(i=>i.id===id); if(!item)return;
   const name=document.getElementById('edit-name').value.trim();
   if(!name){ showToast(T().toastItemNameEmpty); return; }
-  item.name=name; delete item.starterKey; // user edited — stop auto-translating
+  item.name=name; delete item.starterKey;
   item.qty=document.getElementById('edit-qty').value||'1';
   item.price=document.getElementById('edit-price').value;
   item.store=document.getElementById('edit-store').value.trim();
@@ -3758,9 +3830,6 @@ function doDupItem(toListId){
   showToast(`${lang==='en'?'Copied to':lang==='es'?'Copiado a':'Copiado para'} "${destName}"`,'ok');
 }
 
-// ────────────────────────────────────────────────
-// PRESETS
-// ────────────────────────────────────────────────
 function toggleSaveForm(){ const f=document.getElementById('savePresetForm'); f.classList.toggle('open'); if(f.classList.contains('open')) document.getElementById('presetNameInput').focus(); }
 function savePreset(){
   const t=T();
@@ -3794,15 +3863,9 @@ function renderPresets(){
   el.innerHTML=savedPresets.map(p=>`<div class="preset-card"><div><div class="preset-name-txt">${esc(p.name)}</div><div class="preset-meta">${p.count} ${itemsWord} · ${p.date}</div></div><div class="preset-btns"><button class="btn-load" onclick="loadPreset(${p.id})">${loadWord}</button><button class="btn-del-p" onclick="delPreset(${p.id})">${deleteWord}</button></div></div>`).join('');
 }
 
-// ────────────────────────────────────────────────
-// EXPORT
-// ────────────────────────────────────────────────
 function shareResults(){ const t=T(); const text=lastAnalysis||document.getElementById('analysisBox').value; if(!text.trim()){ showToast(t.toastRunFirst); return; } if(navigator.share)navigator.share({title:'Better Price! Results',text}); else copyResults(); }
 function copyResults(){ const t=T(); navigator.clipboard.writeText(lastAnalysis||document.getElementById('analysisBox').value).then(()=>showToast(t.toastCopiedClip,'ok')).catch(()=>showToast(t.toastCopyFail)); }
 
-// ────────────────────────────────────────────────
-// SCANNER
-// ────────────────────────────────────────────────
 async function startScan(idx){
   activeIdx=idx; document.getElementById('scanner-overlay').style.display='block';
   if(scanner){try{await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}
@@ -3873,7 +3936,7 @@ function parseSize(text){
     'lb':'lb','lbs':'lb','pound':'lb','pounds':'lb',
     'count':'count','ct':'count','pack':'count','pk':'count',
     'pcs':'count','pc':'count','pieces':'count','piece':'count',
-    'sheets':'count','sheet':'count','rolls':'count','roll':'count',
+    'sheets':'sheets','sheet':'sheets','rolls':'count','roll':'count',
     'bars':'count','bar':'count','tabs':'count','tablets':'count','tablet':'count',
     'capsules':'count','capsule':'count','caps':'count',
     'eggs':'count','egg':'count',
@@ -3902,9 +3965,6 @@ function parseSize(text){
   return null;
 }
 
-// ────────────────────────────────────────────────
-// TOAST / MODALS / CALC
-// ────────────────────────────────────────────────
 let _toastTimer=null, _toastDismiss=null;
 function showToast(msg,type='warn'){
   const t=document.getElementById('toast'); document.getElementById('toast-txt').innerText=msg;
@@ -3950,10 +4010,6 @@ function cRes(){
   }catch(e){calcVal='Error';document.getElementById('calcDisplay').value='Error';setTimeout(cClr,1000);}
 }
 
-
-// ────────────────────────────────────────────────
-// PROFILE TAB
-// ────────────────────────────────────────────────
 let profileHousehold = 2;
 let profileStores = [];
 let profileBudget = 200;
@@ -4004,7 +4060,6 @@ function profileToggleOtherStore(el){
 function renderProfileTab(){
   const t = T();
 
-  // ── Apply translated labels ──
   const setTxt = (id, v) => { const el=document.getElementById(id); if(el) el.innerText=v; };
   const setPh  = (id, v) => { const el=document.getElementById(id); if(el) el.placeholder=v; };
   const setQ   = (sel, v) => { const el=document.querySelector(sel); if(el) el.innerText=v; };
@@ -4034,20 +4089,18 @@ function renderProfileTab(){
   setPh('profile-current-pass',t.profileCurPassPh||'Enter your current password');
   setPh('profile-new-pass',    t.profileNewPassPh||'New password (8+ chars)');
   setPh('profile-confirm-pass',t.profileConfPassPh||'Repeat new password');
-  // Load current saved values
+
   profileHousehold = loadU('household', 2);
   profileStores    = loadU('preferred_stores', []);
   profileBudget    = loadU('weekly_budget', 200);
   profileFreq      = loadU('shopping_freq', 'weekly');
   const zip        = loadU('zip', '');
 
-  // Load session for name / email
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
   const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
   const email = session.email || '';
   const acct = accounts[email] || {};
 
-  // Populate name fields
   const firstEl = document.getElementById('profile-firstname');
   const lastEl  = document.getElementById('profile-lastname');
   const emailEl = document.getElementById('profile-email');
@@ -4055,56 +4108,46 @@ function renderProfileTab(){
   if(lastEl)  lastEl.value  = acct.lastName  || session.lastName  || '';
   if(emailEl) emailEl.value = email;
 
-  // Auto-fill current password from stored hash — user already proved they know it by logging in
   const curPassEl = document.getElementById('profile-current-pass');
   if(curPassEl && acct.passHash){ try{ curPassEl.value = atob(acct.passHash); }catch(e){ curPassEl.value=''; } }
-  // Clear new/confirm fields only
+
   ['profile-new-pass','profile-confirm-pass'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value=''; el.type='password'; } });
-  // Reset all eye icons to hidden state
+
   ['eye-cur','eye-new','eye-conf'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
   });
-  // Also reset current pass field to password type
+
   if(curPassEl) curPassEl.type='password';
   const passErr = document.getElementById('profile-pass-err');
   if(passErr) passErr.style.display='none';
 
-  // Update household stepper
   const hhEl = document.getElementById('profile-household-val');
   if(hhEl) hhEl.innerText = profileHousehold;
 
-  // Update budget
   const budgetEl = document.getElementById('profile-budget-val');
   if(budgetEl) budgetEl.innerText = '$' + profileBudget;
 
-  // Translate "people" label
   const peopleLbl = document.querySelector('#tab-profile .onboard-stepper span[style*="color:var(--muted)"]');
   if(peopleLbl) peopleLbl.textContent = t.people||'people';
 
-  // Translate budget note
   const profileBudgetNote = document.querySelector('#tab-profile .profile-section .onboard-stepper + div');
   if(profileBudgetNote) profileBudgetNote.textContent = t.budgetNote||'Adjusts in $50 increments • $50 min • $2,000 max';
 
-  // Translate frequency chips
   const freqMap = [['daily',t.freqDaily],['twice_week',t.freqTwice],['weekly',t.freqWeekly],['biweekly',t.freqBiweekly],['monthly',t.freqMonthly]];
   document.querySelectorAll('#profile-freq-chips .freq-chip:not(#profile-freq-other-chip)').forEach((chip,i)=>{ if(freqMap[i]&&freqMap[i][1]) chip.textContent=freqMap[i][1]; });
   const profFreqOtherChipLbl = document.getElementById('profile-freq-other-chip');
   if(profFreqOtherChipLbl&&t.freqOther) profFreqOtherChipLbl.textContent=t.freqOther;
 
-  // Translate "Other" store chip
   const profOtherStoreChip = document.getElementById('profile-other-chip');
   if(profOtherStoreChip&&t.storeOther) profOtherStoreChip.textContent=t.storeOther;
 
-  // Translate freq other placeholder
   const profFreqOtherTxtEl = document.getElementById('profile-freq-other-text');
   if(profFreqOtherTxtEl) profFreqOtherTxtEl.placeholder = lang==='es'?'Describe con qué frecuencia compras...':lang==='pt'?'Descreva com que frequência você faz compras...':'Describe how often you shop...';
 
-  // Translate other store placeholder
   const profOtherStoreTxtEl = document.getElementById('profile-other-text');
   if(profOtherStoreTxtEl) profOtherStoreTxtEl.placeholder = lang==='es'?'Nombre de tu tienda (ej. H-E-B, Wegmans)':lang==='pt'?'Nome da sua loja (ex. H-E-B, Wegmans)':'Type your store name (e.g. H-E-B, Wegmans)';
 
-  // Update shopping frequency chips
   const freqChips = document.querySelectorAll('#profile-freq-chips .freq-chip');
   freqChips.forEach(chip => chip.classList.remove('selected'));
   const freqOtherChip = document.getElementById('profile-freq-other-chip');
@@ -4121,18 +4164,16 @@ function renderProfileTab(){
     if(freqOtherRow) freqOtherRow.style.display = 'none';
   }
 
-  // Update zip
   const zipEl = document.getElementById('profile-zip');
   if(zipEl) zipEl.value = zip;
 
-  // Update store chips (skip the Other chip — handled separately)
   const chips = document.querySelectorAll('#profile-store-chips .onboard-chip:not(#profile-other-chip)');
   chips.forEach(chip => {
     const m = chip.getAttribute('onclick').match(/'([^']+)'\)$/);
     const storeName = m ? m[1] : '';
     chip.classList.toggle('selected', profileStores.includes(storeName));
   });
-  // Handle custom "Other" store
+
   const otherChip = document.getElementById('profile-other-chip');
   const otherRow  = document.getElementById('profile-other-row');
   const otherText = document.getElementById('profile-other-text');
@@ -4147,7 +4188,6 @@ function renderProfileTab(){
     if(otherRow) otherRow.style.display = 'none';
   }
 
-  // Hide saved msg
   const msg = document.getElementById('profile-saved-msg');
   if(msg) msg.style.display = 'none';
 
@@ -4200,14 +4240,12 @@ function saveProfile(){
   const firstName = (firstEl?.value||'').trim();
   const lastName  = (lastEl?.value||'').trim();
 
-  // ── ZIP validation (independent of password) ──
   const zipEl  = document.getElementById('profile-zip');
   const zipVal = (zipEl?.value||'').trim();
   if(zipVal && zipVal.length !== 5){
     showToast(t.profileZipErr||'Zip code must be exactly 5 digits.'); return;
   }
 
-  // ── Password change (only if new pass fields are touched) ──
   const curPassEl  = document.getElementById('profile-current-pass');
   const newPassEl  = document.getElementById('profile-new-pass');
   const confPassEl = document.getElementById('profile-confirm-pass');
@@ -4220,16 +4258,13 @@ function saveProfile(){
   };
   if(passErrEl) passErrEl.style.display = 'none';
 
-  // Only validate/change password if the user typed something in new or confirm
   if(newPass || confPass){
     const acct = accounts[email];
     if(!acct){ showPassErr('Account not found.'); return; }
 
-    // Verify current password matches stored
     const curPass = curPassEl?.value || '';
     if(acct.passHash !== btoa(curPass)){ showPassErr(t.profilePassWrong||'Current password is incorrect.'); return; }
 
-    // Enforce same strength rules as signup
     const hLen = newPass.length >= 8;
     const hU   = /[A-Z]/.test(newPass);
     const hL   = /[a-z]/.test(newPass);
@@ -4247,15 +4282,13 @@ function saveProfile(){
     }
     if(newPass !== confPass){ showPassErr(t.profilePassNoMatch||'New passwords do not match.'); return; }
 
-    // Save new password
     accounts[email].passHash = btoa(newPass);
 
-    // Update current password field to reflect the new password immediately
     if(curPassEl) curPassEl.value = newPass;
-    // Clear new/confirm fields
+
     if(newPassEl)  newPassEl.value  = '';
     if(confPassEl) confPassEl.value = '';
-    // Reset their eye icons back to hidden
+
     ['eye-new','eye-conf'].forEach(id=>{
       const el=document.getElementById(id);
       if(el) el.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
@@ -4264,20 +4297,18 @@ function saveProfile(){
     if(confPassEl) confPassEl.type = 'password';
   }
 
-  // ── Save name ──
   const newName = [firstName, lastName].filter(Boolean).join(' ') || session.name || '';
 
-  // ── Handle email change ──
   const emailInputEl = document.getElementById('profile-email');
   const newEmail = (emailInputEl?.value || '').trim().toLowerCase();
   if(newEmail && newEmail !== email && newEmail.includes('@') && newEmail.split('@')[1]?.includes('.')){
-    // Move account data to new email key
+
     const acctData = { ...(accounts[email] || {}) };
     acctData.firstName = firstName; acctData.lastName = lastName; acctData.name = newName;
     delete accounts[email];
     accounts[newEmail] = acctData;
     localStorage.setItem('bp_accounts', JSON.stringify(accounts));
-    // Migrate all per-user localStorage keys to new email prefix
+
     const oldPfx = 'bp_' + email + '_';
     const newPfx = 'bp_' + newEmail + '_';
     const toMigrate = [];
@@ -4306,19 +4337,17 @@ function saveProfile(){
   const hdrLabel = document.getElementById('hdr-user-label');
   if(hdrLabel) hdrLabel.innerText = newName;
 
-  // ── Handle Other store ──
   const profOtherChip = document.getElementById('profile-other-chip');
   if(profOtherChip && profOtherChip.classList.contains('selected')){
     const profOtherVal = (document.getElementById('profile-other-text')?.value || '').trim();
     if(profOtherVal && !profileStores.includes(profOtherVal)) profileStores.push(profOtherVal);
   }
 
-  // ── Save everything else ──
   saveU('household', profileHousehold);
   saveU('preferred_stores', profileStores);
   saveU('zip', zipVal);
   saveU('weekly_budget', profileBudget);
-  // Save shopping frequency
+
   if(profileFreq === 'other'){
     const freqOtherVal = (document.getElementById('profile-freq-other-text')?.value || '').trim();
     saveU('shopping_freq', 'other');
@@ -4327,23 +4356,15 @@ function saveProfile(){
     saveU('shopping_freq', profileFreq);
   }
 
-  // Show saved confirmation
   const msg = document.getElementById('profile-saved-msg');
   if(msg){ msg.innerText = '\u2713 ' + (t.profileSaved || 'Profile saved!'); msg.style.display = 'block'; setTimeout(() => { msg.style.display = 'none'; }, 2500); }
   showToast(t.profileSaved || 'Profile saved!', 'ok');
 }
 
-// ────────────────────────────────────────────────
-// PENNY API PROXY WRAPPER
-// Works around CORS restrictions when hosted on any domain.
-// Uses a CORS proxy so Penny works on Netlify, GoDaddy, etc.
-// ────────────────────────────────────────────────
 async function anthropicFetch(fetchOptions){
   const { signal, ...opts } = fetchOptions;
   const body = JSON.parse(opts.body);
 
-  // Always route through /api/penny — it handles both text and vision (Groq free tier)
-  // For text: uses llama-3.3-70b. For images: uses llama-4-scout (vision capable, also free).
   const groqBody = {
     model: body.model || 'llama-3.3-70b-versatile',
     max_tokens: body.max_tokens || 1000,
@@ -4365,19 +4386,17 @@ async function anthropicFetch(fetchOptions){
   return { ok: true, json: async () => ({ content: [{ type: 'text', text }] }) };
 }
 
-// ────────────────────────────────────────────────
-// PENNY AI — FULL TAB WITH SESSIONS
-// ────────────────────────────────────────────────
 let pennyAbortCtrl = null;
 let pennyBusy      = false;
-let pennyActiveSession = null; // { id, title, messages: [{role,content,image?}] }
-let pennySessions  = []; // loaded from storage
-let pennyPendingImages = []; // [{dataUrl, mimeType, name}]
+let pennyActiveSession = null;
+let pennySessions  = [];
+let pennyPendingImages = [];
+let pennyEditingIdx = -1;
 let pennySidebarOpen = window.innerWidth >= 600;
 
 function loadPennySessions(){
   pennySessions = loadU('penny_sessions', []);
-  // Re-sync pennyActiveSession reference to point into the new array
+
   if(pennyActiveSession){
     const found = pennySessions.find(s => s.id === pennyActiveSession.id);
     if(found) pennyActiveSession = found;
@@ -4388,8 +4407,17 @@ function savePennySessions(){
   saveU('penny_sessions', pennySessions);
 }
 
+function pennyGoList(listId){
+  if(listId) activeListId = listId;
+  goTab('grocery');
+}
+
 function pennyNewChat(){
   const id = 'ps_' + Date.now();
+  // Archive previous session to memory if it had real content
+  if(pennyActiveSession && pennyActiveSession.messages.length >= 4){
+    _archivePennySession(pennyActiveSession);
+  }
   const session = { id, title: 'New Chat', messages: [], ts: Date.now() };
   pennySessions.push(session);
   pennyActiveSession = session;
@@ -4399,6 +4427,46 @@ function pennyNewChat(){
   document.getElementById('pennyChatTitle').textContent = 'Penny';
   pennyPendingImages = [];
   renderPennyAttachStrip();
+}
+
+/* ── PENNY CROSS-SESSION MEMORY ── */
+function _pennyMemoryKey(){
+  const sess = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  return sess.email ? 'bp_'+sess.email+'_pmemory' : 'bp_pmemory';
+}
+function loadPennyMemory(){
+  try { return JSON.parse(localStorage.getItem(_pennyMemoryKey())||'null') || null; }
+  catch(e){ return null; }
+}
+function savePennyMemory(mem){
+  try { localStorage.setItem(_pennyMemoryKey(), JSON.stringify(mem)); } catch(e){}
+}
+async function _archivePennySession(session){
+  // Build a plain-text transcript of the session (skip images, limit length)
+  const lines = session.messages
+    .filter(m => typeof m.content === 'string' && m.content.trim())
+    .map(m => (m.role==='user'?'User: ':'Penny: ') + m.content.slice(0,300))
+    .join('\n');
+  if(lines.length < 80) return; // too short to summarize
+  try {
+    const res = await anthropicFetch({
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile', max_tokens:200,
+        system:'Summarize this shopping assistant conversation in 2-3 sentences. Focus on: what the user bought/compared, which stores/lists they used, any strong preferences or patterns, and any decisions made. Be factual and brief.',
+        messages:[{ role:'user', content: lines.slice(0,3000) }]
+      })
+    });
+    const data = await res.json();
+    const summary = (data.content?.[0]?.text||'').trim();
+    if(!summary) return;
+    const existing = loadPennyMemory() || { summaries:[], sessionCount:0 };
+    existing.summaries.unshift({ date: new Date().toLocaleDateString(), text: summary });
+    if(existing.summaries.length > 8) existing.summaries = existing.summaries.slice(0,8);
+    existing.sessionCount = (existing.sessionCount||0) + 1;
+    existing.lastUpdated = new Date().toISOString();
+    savePennyMemory(existing);
+  } catch(e){ /* silently fail */ }
 }
 
 function pennyLoadSession(id){
@@ -4430,8 +4498,7 @@ function togglePennySidebar(){
 }
 
 function renderPennySessions(){
-  // Do NOT call loadPennySessions here — it would break the live pennyActiveSession reference.
-  // pennySessions is kept in sync via savePennySessions() on every write.
+
   const list = document.getElementById('pennySessionList');
   if(!list) return;
   if(!pennySessions.length){
@@ -4469,28 +4536,42 @@ function renderPennyMessages(){
     </div>`;
     return;
   }
-  area.innerHTML = pennyActiveSession.messages.map(m => {
+  const sess2 = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const initials2 = ((sess2.firstName||sess2.name||'?')[0]).toUpperCase();
+  area.innerHTML = pennyActiveSession.messages.map((m, idx) => {
     const isUser = m.role === 'user';
-    const sess = JSON.parse(localStorage.getItem('bp_session')||'{}');
-    const initials = ((sess.firstName||sess.name||'?')[0]).toUpperCase();
     const avatarHtml = isUser
-      ? `<div class="pmsg-avatar">${initials}</div>`
+      ? `<div class="pmsg-avatar">${initials2}</div>`
       : `<div class="pmsg-avatar" style="background:var(--brand);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>`;
     const imgHtml = m.image ? `<img class="pmsg-img" src="${m.image}" alt="attached">` : '';
     const bubbleContent = isUser
       ? (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       : pennyMd(m.content||'');
-    return `<div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>`;
+    const svgEdit = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    const svgDel = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`;
+    const svgRegen = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>`;
+    if(pennyEditingIdx === idx && isUser){
+      const escaped = (m.content||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return `<div class="pmsg-wrap user"><div class="pmsg user">${avatarHtml}<div class="pmsg-edit-wrap"><textarea class="pmsg-edit-ta" id="pmsg-edit-ta" rows="3">${escaped}</textarea><div class="pmsg-edit-footer"><div class="pmsg-edit-info"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Editing will resend from this point.</div><div class="pmsg-edit-btns"><button class="pmsg-edit-cancel" onclick="pennyEditCancel()">Cancel</button><button class="pmsg-edit-save" onclick="pennyEditSave(${idx})">Save &amp; Send</button></div></div></div></div></div>`;
+    }
+    const svgCopy = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+    const editBtn = isUser ? `<button class="pmsg-act-btn" onclick="pennyEditStart(${idx})">${svgEdit}Edit</button>` : '';
+    const regenBtn = !isUser ? `<button class="pmsg-act-btn" onclick="pennyRegenerate(${idx})">${svgRegen}Regenerate</button>` : '';
+    const copyBtn = `<button class="pmsg-act-btn" id="pmsg-copy-${idx}" onclick="pennyCopyMsg(${idx},this)">${svgCopy}Copy</button>`;
+    const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
+    const listLinkHtml = (!isUser && m.listLink) ? `<button class="pmsg-list-link" onclick="pennyGoList('${m.listLink.id}')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>View "${m.listLink.name}" →</button>` : '';
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${listLinkHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
 
-function pennyAddMessage(role, text, imageDataUrl){
+function pennyAddMessage(role, text, imageDataUrl, listLink){
   if(!pennyActiveSession) pennyNewChat();
   const msg = { role, content: text };
   if(imageDataUrl) msg.image = imageDataUrl;
+  if(listLink) msg.listLink = listLink;
   pennyActiveSession.messages.push(msg);
-  // Temp title from first user message — shows immediately in sidebar
+
   if(role === 'user' && pennyActiveSession.messages.filter(m => m.role === 'user').length === 1){
     const tempTitle = text.slice(0, 45) + (text.length > 45 ? '...' : '');
     pennyActiveSession.title = tempTitle;
@@ -4529,6 +4610,67 @@ async function pennyGenerateTitle(session){
   } catch(e){ /* silently fail — temp title stays */ }
 }
 
+function pennyDeleteMsg(idx){
+  showConfirm('Delete message', 'Delete this message and everything after it?', () => {
+    if(!pennyActiveSession) return;
+    pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
+    savePennySessions();
+    renderPennyMessages();
+    showToast('Message deleted', 'ok');
+  });
+}
+
+function pennyEditStart(idx){
+  pennyEditingIdx = idx;
+  renderPennyMessages();
+  setTimeout(() => {
+    const ta = document.getElementById('pmsg-edit-ta');
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; }
+  }, 50);
+}
+
+function pennyEditCancel(){
+  pennyEditingIdx = -1;
+  renderPennyMessages();
+}
+
+function pennyEditSave(idx){
+  const ta = document.getElementById('pmsg-edit-ta');
+  if(!ta || !pennyActiveSession) return;
+  const newText = ta.value.trim();
+  if(!newText) return;
+  pennyEditingIdx = -1;
+  pennyActiveSession.messages[idx].content = newText;
+  pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx + 1);
+  savePennySessions();
+  renderPennyMessages();
+  showToast('Message updated — resending…', 'ok');
+  pennyCallAPI();
+}
+
+function pennyCopyMsg(idx, btn){
+  const msg = pennyActiveSession?.messages[idx];
+  if(!msg) return;
+  navigator.clipboard.writeText(msg.content || '').then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = btn.innerHTML.replace('Copy','Copied!');
+    btn.style.color = 'var(--ok)';
+    btn.style.borderColor = 'var(--ok)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.color=''; btn.style.borderColor=''; }, 1800);
+  });
+}
+
+
+function pennyRegenerate(idx){
+  showConfirm('Regenerate response', 'Remove this response and generate a new one?', () => {
+    if(!pennyActiveSession) return;
+    pennyActiveSession.messages = pennyActiveSession.messages.slice(0, idx);
+    savePennySessions();
+    renderPennyMessages();
+    pennyCallAPI();
+  });
+}
+
 function pennyAddTyping(){
   const area = document.getElementById('pennyMessages');
   if(!area) return;
@@ -4541,50 +4683,31 @@ function pennyAddTyping(){
 }
 function pennyRemoveTyping(){ document.getElementById('penny-typing')?.remove(); }
 
-async function pennySend(){
-  const inp = document.getElementById('pennyInput');
-  const text = inp.value.trim();
-  const hasImages = pennyPendingImages.length > 0;
-  if(!text && !hasImages) return;
-  if(pennyBusy) return;
-
-  if(!pennyActiveSession) pennyNewChat();
-
-  const imageDataUrl = hasImages ? pennyPendingImages[0].dataUrl : null;
-  inp.value = '';
-  inp.style.height = 'auto';
-  pennyPendingImages = [];
-  renderPennyAttachStrip();
-
-  pennyAddMessage('user', text || '(image attached)', imageDataUrl);
+async function pennyCallAPI(){
+  if(pennyBusy || !pennyActiveSession) return;
   pennyBusy = true;
   document.getElementById('pennySendBtn').disabled = true;
   pennyAddTyping();
 
-  // Build messages for API
-  const historyMsgs = pennyActiveSession.messages.slice(0, -1);
+  const allMsgs = pennyActiveSession.messages;
   const apiMessages = [];
   let lastRole = null;
-
-  // Build history (text only — images in history not supported by Groq text models)
-  for(const m of historyMsgs){
+  for(const m of allMsgs){
     const apiRole = m.role === 'penny' ? 'assistant' : 'user';
     if(apiRole === lastRole) continue;
-    if(m.image) continue;
+    if(m.image){
+      const parts = [];
+      const txt = (m.content && m.content !== '(image attached)') ? m.content.trim() : '';
+      if(txt) parts.push({ type:'text', text: txt });
+      parts.push({ type:'image_url', image_url:{ url: m.image } });
+      apiMessages.push({ role: apiRole, content: parts });
+      lastRole = apiRole;
+      continue;
+    }
     const content = typeof m.content === 'string' ? m.content : '';
     if(!content.trim()) continue;
     apiMessages.push({ role: apiRole, content });
     lastRole = apiRole;
-  }
-
-  // Add current message — use image_url format for Groq vision model
-  if(imageDataUrl){
-    apiMessages.push({ role: 'user', content: [
-      { type: 'image_url', image_url: { url: imageDataUrl } },
-      { type: 'text', text: text || 'What do you see? How can this help with my grocery shopping or price comparison?' }
-    ]});
-  } else {
-    apiMessages.push({ role: 'user', content: text });
   }
 
   pennyAbortCtrl = new AbortController();
@@ -4596,25 +4719,52 @@ async function pennySend(){
     });
     const data = await res.json();
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
-    const txt = pennyExecuteAddList(rawTxt);
+    const result = pennyExecuteAddList(rawTxt);
+    const txt = typeof result === 'object' ? result.text : result;
+    const listLink = typeof result === 'object' ? result.listLink : null;
     pennyRemoveTyping();
-    // Save assistant message — pennyAddMessage handles save + render
-    pennyAddMessage('penny', txt);
-    // After first exchange: generate a proper AI title (replaces the temp truncated one)
+    pennyAddMessage('penny', txt, null, listLink);
     const userMsgCount = pennyActiveSession.messages.filter(m => m.role === 'user').length;
     if(userMsgCount === 1) pennyGenerateTitle(pennyActiveSession);
   } catch(e) {
     pennyRemoveTyping();
-    console.error('Penny error:', e);
-    const errText = e.message || '';
     if(e.name !== 'AbortError'){
-      // Show the actual error in dev, generic message in prod
-      const msg = errText.includes('HTTP') ? 'Penny had trouble responding. Please try again.' : 'Could not connect. Please check your internet.';
+      const msg = (e.message||'').includes('HTTP') ? 'Penny had trouble responding. Please try again.' : 'Could not connect. Please check your internet.';
       pennyAddMessage('penny', msg);
     }
   }
   pennyBusy = false;
   document.getElementById('pennySendBtn').disabled = false;
+}
+
+async function pennySend(){
+  const inp = document.getElementById('pennyInput');
+  const text = inp.value.trim();
+  const hasImages = pennyPendingImages.length > 0;
+  if(!text && !hasImages) return;
+  if(pennyBusy) return;
+  if(!pennyActiveSession) pennyNewChat();
+  const images = pennyPendingImages.slice();
+  inp.value = '';
+  inp.style.height = 'auto';
+  pennyPendingImages = [];
+  renderPennyAttachStrip();
+  if(hasImages){
+    // Push one message per image (first image gets the text, rest get '(image attached)')
+    images.forEach((img, i) => {
+      const msgText = i === 0 ? (text || '(image attached)') : '(image attached)';
+      const msg = { role:'user', content: msgText, image: img.dataUrl };
+      pennyActiveSession.messages.push(msg);
+    });
+    if(pennyActiveSession.messages.filter(m=>m.role==='user').length === images.length){
+      const tmp = (text||'image').slice(0,45); pennyActiveSession.title=tmp;
+      const tel=document.getElementById('pennyChatTitle'); if(tel) tel.textContent=tmp;
+    }
+    savePennySessions(); renderPennySessions(); renderPennyMessages();
+  } else {
+    pennyAddMessage('user', text);
+  }
+  await pennyCallAPI();
 }
 
 function pennyQuickSend(text){
@@ -4624,7 +4774,7 @@ function pennyQuickSend(text){
 }
 
 function pennyInjectCompare(){
-  // Grab current compare card data and send as context
+
   const t = T();
   const hh = loadU('household', 2);
   const lines = [];
@@ -4643,13 +4793,12 @@ function pennyInjectCompare(){
   goTab('penny');
 }
 
-// ── Penny In-Chat Price Search Panel ──
 function pennyTogglePricePanel(){
   const panel = document.getElementById('pennyPricePanel');
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
   if(!isOpen){
-    // Show zip from profile
+
     const zip = loadU('zip','');
     const lbl = document.getElementById('pennyPriceZipLbl');
     if(lbl){ const t2=T(); lbl.textContent = zip ? (t2.pennyZipNear||'Searching near')+' '+zip : (t2.pennyZipNoZip||'Enter your zip in Profile for local results'); }
@@ -4750,13 +4899,11 @@ async function pennyPriceSearch(){
   const stores   = loadU('preferred_stores',[]);
   const storeList = stores.length ? stores.join(', ') : 'Walmart, Target, Publix, Kroger, Aldi';
 
-  // Close panel, send as a Penny message
   document.getElementById('pennyPricePanel').style.display = 'none';
   document.getElementById('pennyPriceListText').value = '';
 
   const userMsg = `Please compare prices for my grocery list at stores near ${zip||'my location'} and tell me where I save the most.\n\nMy list (${hh}-person household):\n${items.map(i=>`• ${i}`).join('\n')}\n\nStores to check: ${storeList}`;
 
-  // Put it in the chat input and fire it
   const inp = document.getElementById('pennyInput');
   if(inp){
     inp.value = userMsg;
@@ -4776,14 +4923,13 @@ function pennyChooseFile(){
   input.click();
 }
 
-// ── In-app camera using getUserMedia — works on all devices ──
 let cameraStream = null;
-let cameraFacing = 'environment'; // rear by default
+let cameraFacing = 'environment';
 
 async function pennyChooseCamera(){
-  // Check if getUserMedia is available
+
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    // Fallback: file picker
+
     pennyChooseFile();
     return;
   }
@@ -4794,7 +4940,7 @@ async function pennyChooseCamera(){
 }
 
 async function startCameraStream(){
-  // Stop any existing stream
+
   if(cameraStream){
     cameraStream.getTracks().forEach(t => t.stop());
     cameraStream = null;
@@ -4806,7 +4952,7 @@ async function startCameraStream(){
       audio: false
     });
     video.srcObject = cameraStream;
-    // Show flip button only if multiple cameras exist
+
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(d => d.kind === 'videoinput');
@@ -4815,7 +4961,7 @@ async function startCameraStream(){
     } catch(e){}
   } catch(err){
     closeCameraModal();
-    // Permission denied or no camera — fall back to file picker
+
     if(err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'){
       showToast('Camera access denied. Please allow camera in browser settings.');
     } else {
@@ -4843,7 +4989,7 @@ function takePhoto(){
   const video = document.getElementById('cameraVideo');
   const canvas = document.getElementById('cameraCanvas');
   if(!video || !canvas) return;
-  // Flash effect
+
   const shutter = document.getElementById('camShutterBtn');
   if(shutter){ shutter.style.background = '#aaa'; setTimeout(() => shutter.style.background = '#fff', 120); }
   canvas.width = video.videoWidth || 1280;
@@ -4852,12 +4998,10 @@ function takePhoto(){
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
   closeCameraModal();
-  // Add to pending attachments
+
   pennyPendingImages.push({ dataUrl, name: 'photo.jpg', mimeType: 'image/jpeg' });
   renderPennyAttachStrip();
 }
-
-// Generate a short meaningful chat title from the first exchange using AI
 
 function pennyHandlePaste(e){
   const items = e.clipboardData?.items;
@@ -4878,20 +5022,21 @@ function pennyHandlePaste(e){
   }
 }
 function _hasFileDrag(e){ return Array.from(e.dataTransfer.items||[]).some(i=>i.kind==='file')||Array.from(e.dataTransfer.types||[]).includes('Files'); }
+function _pennyMain(){return document.querySelector('#tab-penny .penny-main');}
 function pennyDragEnter(e){
   e.preventDefault(); e.stopPropagation();
   if(!_hasFileDrag(e)) return;
-  document.getElementById('pennyMessages')?.classList.add('penny-drag-active');
+  _pennyMain()?.classList.add('penny-drag-active');
 }
 function pennyDragOver(e){
   e.preventDefault(); e.stopPropagation();
   if(!_hasFileDrag(e)) return;
   e.dataTransfer.dropEffect = 'copy';
-  document.getElementById('pennyMessages')?.classList.add('penny-drag-active');
+  _pennyMain()?.classList.add('penny-drag-active');
 }
 function pennyDragLeave(e){
   e.preventDefault(); e.stopPropagation();
-  const container = document.getElementById('pennyMessages');
+  const container = _pennyMain();
   if(container && !container.contains(e.relatedTarget)){
     container.classList.remove('penny-drag-active');
   }
@@ -4899,14 +5044,14 @@ function pennyDragLeave(e){
 function _showPennyImgToast(n){
   let t = document.getElementById('penny-img-toast');
   if(!t){ t=document.createElement('div'); t.id='penny-img-toast'; t.className='penny-img-toast'; document.body.appendChild(t); }
-  t.textContent = n===1 ? '📷 Image added — type your message and send!' : `📷 ${n} images added — type your message and send!`;
+  t.textContent = n===1 ? 'Image added — type your message and send!' : `${n} images added — type your message and send!`;
   t.classList.add('show');
   clearTimeout(t._tid);
   t._tid = setTimeout(()=>t.classList.remove('show'), 2800);
 }
 function pennyDrop(e){
   e.preventDefault(); e.stopPropagation();
-  document.getElementById('pennyMessages')?.classList.remove('penny-drag-active');
+  _pennyMain()?.classList.remove('penny-drag-active');
   const files = Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));
   let loaded = 0;
   files.forEach(file => {
@@ -4925,6 +5070,35 @@ function pennyDrop(e){
   });
   if(files.length) document.getElementById('pennyInput')?.focus();
 }
+function lpDragEnter(e){
+  e.preventDefault(); e.stopPropagation();
+  if(!_hasFileDrag(e)) return;
+  document.getElementById('landing-penny-popup')?.classList.add('lp-drag-active');
+}
+function lpDragOver(e){
+  e.preventDefault(); e.stopPropagation();
+  if(!_hasFileDrag(e)) return;
+  e.dataTransfer.dropEffect='copy';
+  document.getElementById('landing-penny-popup')?.classList.add('lp-drag-active');
+}
+function lpDragLeave(e){
+  e.preventDefault(); e.stopPropagation();
+  const popup=document.getElementById('landing-penny-popup');
+  if(popup&&!popup.contains(e.relatedTarget)) popup.classList.remove('lp-drag-active');
+}
+function lpDrop(e){
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById('landing-penny-popup')?.classList.remove('lp-drag-active');
+  const files=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));
+  if(!files.length) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    _showPennyImgToast(1);
+    sendLandingPenny(ev.target.result);
+  };
+  reader.readAsDataURL(files[0]);
+}
+
 function pennyHandleFile(input){
   const file = input.files[0];
   if(!file) return;
@@ -4954,7 +5128,6 @@ function renderPennyAttachStrip(){
   }).join('');
 }
 
-// Keep old function names working for any lingering references
 function closeAIPanel(){}
 function resetPennyBtn(){}
 function startPenny(){ goTab('penny'); }
@@ -4969,9 +5142,9 @@ function buildSys(){
   const freq=loadU('shop_frequency','');
   const ln=lang==='es'?'Spanish':lang==='pt'?'Portuguese':'English';
 
-  // Build rich grocery list context for Penny
   const activeList = groceryLists.find(l=>String(l.id)===String(activeListId));
   const activeListName = activeList ? activeList.name : (groceryLists[0]?.name || 'My Weekly Essentials');
+  const nowStr = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
   const listContext = groceryLists.map(l => {
     const its = groceryItems.filter(gi => gi.listId === l.id);
     const allNames = its.map(i=>i.name).join(', ');
@@ -5012,11 +5185,15 @@ function buildSys(){
     freq?'Shopping frequency: '+freq:'',
   ].filter(Boolean).join(' | ');
 
+  const mem = loadPennyMemory();
+  const memBlock = mem?.summaries?.length
+    ? `\nPAST CONVERSATION MEMORY (from previous sessions — use this to personalize and avoid re-asking things you already know):\n${mem.summaries.slice(0,4).map((s,i)=>`[${s.date}] ${s.text}`).join('\n')}\n`
+    : '';
+
   return `You are Penny, a warm and knowledgeable grocery shopping advisor built into the Better Price! app — like a smart friend who knows prices inside and out. Always respond in ${ln}.
 
 ${firstName?`The user's first name is ${firstName}. Use their name naturally in conversation — greet them by name when starting a new chat session, and occasionally use it to make the conversation feel personal. Don't overuse it.`:''}
-
-
+${memBlock}
 APP GUIDE — You know exactly how Better Price! works. When users ask how to do something, explain it clearly and confidently:
 
 COMPARE TAB: The main tab. Users enter up to 6 product cards side by side. Each card has: Name (type or scan barcode to auto-fill), Price ($), Size (number + unit: oz/lb/ml/g/gal/ct/pk), Quantity (pack qty), optional Discount (% off or flat $ off), and Category (for cost-per-day estimates). The app instantly calculates unit price (cost per oz/lb/etc.) so users see the best deal highlighted. The "Save to Preset" button saves the entire setup to reuse later. The duplicate card button (two overlapping squares icon) copies a card.
@@ -5037,9 +5214,13 @@ LANGUAGE: The app supports English, Spanish (Español), and Portuguese (Portugu�
 
 DARK MODE: Toggle with the sun/moon icon in the top bar.
 
+Current date & time: ${nowStr}
+Use this date for all advice — store hours, sales cycles, seasonal pricing. Never cite prices as "current" without noting they are estimates based on typical 2025 US retail pricing. Aldi/Walmart/Lidl run weekly sales that reset on Wednesdays; Costco/Sam's Club on Mondays — factor in the day when advising.
+
 ${contextLines}
 Grocery lists: ${listContext}
-Active list: "${activeListName}"
+Currently selected list (UI default): "${activeListName}"
+IMPORTANT — only use the above list if the user has NOT named a specific list. The moment the user says any list name (even approximately), switch to that list. If it doesn't exist, offer to create it.
 
 Products being compared:
 ${lines||'(none entered yet)'}
@@ -5079,21 +5260,34 @@ RULE 1 — CREATING A LIST (always multi-step unless user gives everything upfro
   c. Only after you have name AND item decisions → output CREATELIST exactly once.
   Exception: if the user's message contains both name and items ("make a list called Party with chips and drinks"), create immediately.
 
-RULE 2 — ADDING ITEMS (always confirm before acting):
-  NEVER add items to any list without first confirming with the user — even if there is only one list.
-  Ask: "I'll add [item] to your [list name] — does that sound right?" and wait for confirmation.
-  If no list was specified, ask which list by name. Never guess based on item category.
-  Only add after the user says yes or confirms.
+RULE 2 — ADDING ITEMS (ask THEN act — NEVER in the same message):
+  Step 1 — ASK ONLY: Your message contains ONLY the confirmation question. Zero command tags. Zero actions.
+    Example: "I'll add bread to your Bread list — sound good?"
+    If the list doesn't exist: "You don't have a Bread list yet — want me to create it and add bread?" — STOP HERE. No tags.
+    If no list was specified: ask which list by name first.
+  Step 2 — ACT ONLY: User says yes/yeah/sure/ok/yep/correct/any affirmative → NOW output the command tag. No question in this message.
+
+  ⚠ ABSOLUTE RULE: A message that contains a question mark at the end of a confirmation sentence MUST NOT contain any command tag (ADDLIST, CREATELIST, etc.). Split them into two turns every time.
+  CRITICAL: If the user names a specific list, ALWAYS use that exact list. Never override with the active list.
+  WRONG LIST CORRECTION — if you added to the wrong list, fix in one message: REMOVEITEMS for wrong list + ADDLIST for correct list. Say: "My bad! Moving [item] from [wrong] to [correct] now."
 
 RULE 3 — DUPLICATE DETECTION:
   Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
   Never add a duplicate without explicit confirmation.
 
-RULE 4 — ONE COMMAND PER REPLY:
-  Output each command tag at most once per message. No repeated ADDLIST, CREATELIST, etc.
+RULE 4 — BATCH COMMANDS ALLOWED:
+  You CAN output multiple different command tags in a single reply when the user asks for several actions at once (e.g. "add eggs to my weekly list and apples to my fruit list"). Each command type may appear multiple times if targeting different lists.
+  Exception to confirm-first rule: when the user explicitly asks for multiple items across multiple lists in one message, execute all at once (skip individual confirmation and do a brief summary instead).
+  Still required: REMOVEITEMS + ADDLIST together when correcting a wrong-list mistake.
 
-RULE 5 — Warm, brief, conversational. 150 words max. No bullet points in chat.
-- Default to active list "${activeListName}" when context is clear — but still confirm before acting.
+RULE 5 — Warm, conversational tone. Use rich formatting when it helps clarity:
+- Use **bold** for store names, prices, and key terms
+- Use bullet lists (- item) or numbered lists for comparisons, multi-item advice, or step-by-step instructions
+- Use headers (## heading) only for longer structured responses
+- Keep simple conversational replies as plain text — no forced formatting
+- 200 words max for casual replies; longer is fine for detailed comparisons or lists
+- ONLY use "${activeListName}" as a default when the user has not named any list at all. The instant the user names any list (even loosely — "bread list", "my orange list", "the dinner one"), use THAT list. Never revert to "${activeListName}" after the user has corrected you.
+
 
 RULE 6 — ASK ABOUT FREQUENCY & USAGE BEFORE ADVISING:
 When a user asks about a product, store, or price WITHOUT mentioning how often they buy it, ask first — naturally woven into your reply:
@@ -5134,10 +5328,18 @@ Rules:
 - Only suggest stores the user could realistically visit (use their zip + preferred stores; nearby chains count even if not in their list)
 - Only flag it if savings are meaningful: at least ~$0.30/unit or ~10% cheaper — don't nitpick pennies
 - One soft offer, then wait. If they say "stick to my usual" → respect it, don't push that store again for that item
-- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency\`;
+- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency
+
+RECEIPT & IMAGE SCANNING:
+When the user sends an image, analyze it immediately. If it looks like a grocery receipt or store shelf tag:
+  - Extract every grocery/food item you can read, with name, price, quantity, and any relevant notes (sale price, unit price, brand)
+  - State the store name and date if visible
+  - Offer to add items to a list: "I can see your receipt from [store]. Want me to add these items to a list?" Then on confirmation output ADDLIST.
+  - If it's a shelf tag or price label, identify the product, calculate unit price if possible, and compare to typical retail prices.
+  - If it's a product label, read the name, size/weight, and any relevant nutritional info the user might care about for price comparison.
+  - If the image isn't recognizable, ask the user what they'd like help with.`;
 }
 
-// ── Landing Page Penny Widget ──
 let _lpHistory = [];
 function toggleLandingPenny(){
   const popup = document.getElementById('landing-penny-popup');
@@ -5164,15 +5366,35 @@ function lpAddMsg(role, text, id){
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
-async function sendLandingPenny(){
+async function sendLandingPenny(imageDataUrl){
   const inp = document.getElementById('lp-input');
   const btn = document.getElementById('lp-send-btn');
   const text = (inp?.value||'').trim();
-  if(!text) return;
-  inp.value = '';
-  lpAddMsg('user', text);
-  _lpHistory.push({role:'user', content:text});
-  btn.disabled = true;
+  if(!text && !imageDataUrl) return;
+  if(inp) inp.value = '';
+  // Build user message content
+  let userContent;
+  if(imageDataUrl){
+    const parts = [];
+    if(text) parts.push({type:'text', text});
+    parts.push({type:'image_url', image_url:{url: imageDataUrl}});
+    userContent = parts;
+    // Show image preview in chat
+    const msgs = document.getElementById('lp-msgs');
+    if(msgs){
+      const imgEl = document.createElement('img');
+      imgEl.src = imageDataUrl; imgEl.style.cssText='max-width:100%;max-height:160px;border-radius:8px;display:block;margin-top:4px;';
+      const wrap = document.createElement('div');
+      wrap.className='lp-msg lp-user'; wrap.appendChild(imgEl);
+      if(text){ const t=document.createElement('div'); t.textContent=text; wrap.insertBefore(t,imgEl); }
+      msgs.appendChild(wrap); msgs.scrollTop=msgs.scrollHeight;
+    }
+  } else {
+    userContent = text;
+    lpAddMsg('user', text);
+  }
+  _lpHistory.push({role:'user', content: userContent});
+  if(btn) btn.disabled = true;
   lpAddMsg('thinking', '...', 'lp-typing');
   try {
     const res = await anthropicFetch({
@@ -5194,11 +5416,14 @@ async function sendLandingPenny(){
     document.getElementById('lp-typing')?.remove();
     lpAddMsg('penny', 'Oops, something went wrong. Try again in a moment!');
   }
-  btn.disabled = false;
+  if(btn) btn.disabled = false;
   document.getElementById('lp-msgs').scrollTop = 9999;
 }
 function buildLandingSys(){
-  return `You are Penny, a warm and friendly AI shopping advisor for Better Price! — a free grocery price comparison web app. You help visitors understand the app and give grocery saving tips before they sign up.
+  const langLine = lang==='es' ? 'IMPORTANT: Always reply in Spanish, no matter what language the user writes in.\n\n'
+                 : lang==='pt' ? 'IMPORTANT: Always reply in Portuguese (Brazilian), no matter what language the user writes in.\n\n'
+                 : '';
+  return langLine + `You are Penny, a warm and friendly AI shopping advisor for Better Price! — a free grocery price comparison web app. You help visitors understand the app and give grocery saving tips before they sign up.
 
 HOW BETTER PRICE! WORKS:
 - Compare Tab: Enter up to 6 products side by side. Fill in the name, price, size (oz/lb/ml/g/gal), quantity, and optional discount (% off or flat $ off). The app instantly calculates unit price so you can see the best deal. You can scan barcodes to auto-fill product info. Save any comparison as a "Preset" to reuse later.
@@ -5218,7 +5443,6 @@ TIPS:
 Keep replies warm, brief (under 100 words), and conversational. Encourage them to sign up and try it. If asked how to sign up, tell them to use the form on the page.`;
 }
 
-// ── Penny Account Action Engine ──
 function pennyUID(){ return 'gi_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
 
 function pennyResolveList(nameHint){
@@ -5226,8 +5450,8 @@ function pennyResolveList(nameHint){
   const lower = nameHint.toLowerCase();
   return groceryLists.find(l => l.name.toLowerCase() === lower)
       || groceryLists.find(l => l.name.toLowerCase().includes(lower))
-      || groceryLists.find(l => l.id === activeListId)
-      || groceryLists[0];
+      || groceryLists.find(l => lower.includes(l.name.toLowerCase()))
+      || null; // never silently fall back to active list when a name was specified
 }
 
 function pennyEnsureList(name){
@@ -5249,31 +5473,62 @@ function pennyMakeItem(listId, item){
 function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
 
 function pennyMd(text){
-  // Sanitize HTML
-  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // Bold **text**
+  // Strip hidden command tags before rendering
+  let s = text.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):[^\n]*/gm,'').trim();
+  // Escape HTML
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Code blocks ```...```
+  s = s.replace(/```([\s\S]*?)```/g,'<pre class="pmsg-pre"><code>$1</code></pre>');
+  // Inline code `...`
+  s = s.replace(/`([^`\n]+)`/g,'<code class="pmsg-code">$1</code>');
+  // Headers ### ## #
+  s = s.replace(/^###\s+(.+)$/gm,'<div class="pmsg-h3">$1</div>');
+  s = s.replace(/^##\s+(.+)$/gm,'<div class="pmsg-h2">$1</div>');
+  s = s.replace(/^#\s+(.+)$/gm,'<div class="pmsg-h1">$1</div>');
+  // Bold **text** and __text__
   s = s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
-  // Italic *text* (not touching already-bolded spans)
+  s = s.replace(/__([^_\n]+)__/g,'<strong>$1</strong>');
+  // Italic *text* and _text_
   s = s.replace(/(?<!\*)\*(?!\*)([^*\n]+)\*(?!\*)/g,'<em>$1</em>');
-  // Newlines to <br>
+  s = s.replace(/(?<!_)_(?!_)([^_\n]+)_(?!_)/g,'<em>$1</em>');
+  // Horizontal rule ---
+  s = s.replace(/^---+$/gm,'<hr class="pmsg-hr">');
+  // Unordered lists (lines starting with - or * or •)
+  s = s.replace(/^[ \t]*[-*•]\s+(.+)$/gm,'<li>$1</li>');
+  s = s.replace(/(<li>[\s\S]*?<\/li>)(\s*<li>)/g,'$1$2'); // keep consecutive
+  s = s.replace(/(<li>.*<\/li>)/gs, m => '<ul class="pmsg-ul">'+m+'</ul>');
+  // Numbered lists
+  s = s.replace(/^[ \t]*\d+\.\s+(.+)$/gm,'<oli>$1</oli>');
+  s = s.replace(/(<oli>.*<\/oli>)/gs, m => '<ol class="pmsg-ol">'+m.replace(/<oli>/g,'<li>').replace(/<\/oli>/g,'</li>')+'</ol>');
+  // Paragraphs: double newline → paragraph break
+  s = s.replace(/\n\n+/g,'</p><p class="pmsg-p">');
+  s = '<p class="pmsg-p">'+s+'</p>';
+  // Single newline → <br> (inside paragraphs)
   s = s.replace(/\n/g,'<br>');
+  // Clean up empty paragraphs
+  s = s.replace(/<p class="pmsg-p"><\/p>/g,'');
+  s = s.replace(/<p class="pmsg-p">(<(?:ul|ol|div|pre|hr)[^>]*>)/g,'$1');
+  s = s.replace(/(<\/(?:ul|ol|div|pre|hr)>)<\/p>/g,'$1');
   return s;
 }
 
 function pennyExecuteActions(rawText){
-  // Match commands anywhere on a line (model sometimes adds a stray char before the tag)
+
+
   const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):(\{.+\})\s*$/gm;
   const commands = [];
   let m;
   while((m = cmdRx.exec(rawText)) !== null){
     try { commands.push({ type: m[1], data: JSON.parse(m[2]) }); } catch(e){ console.warn('Penny cmd parse:', m[0], e); }
   }
-  // Strip any line that contains a command tag (handles stray leading chars too)
-  const cleanText = rawText.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
+
+  const cleanText = rawText
+    .replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
   if(!commands.length) return cleanText;
 
   const toasts = [];
   let saveLists = false, saveItms = false;
+  let listLink = null; // { name, id } of last list modified — for the "View list" chip
 
   commands.forEach(cmd => {
     const d = cmd.data;
@@ -5281,9 +5536,16 @@ function pennyExecuteActions(rawText){
       if(cmd.type === 'ADDLIST'){
         if(!groceryLists.length){ pennyEnsureList(d.list || activeListName); }
         const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
-        let n = 0;
-        (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(list.id, item)); n++; } });
-        if(n){ saveItms=true; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
+        let n = 0, dupes = 0;
+        (d.items || []).forEach(item => {
+          if(!item.name?.trim()) return;
+          const nm = item.name.trim();
+          const isDupe = groceryItems.some(gi => gi.listId === list.id && gi.name.toLowerCase() === nm.toLowerCase());
+          if(isDupe){ dupes++; return; }
+          groceryItems.push(pennyMakeItem(list.id, item)); n++;
+        });
+        if(n){ saveItms=true; listLink = { name: list.name, id: list.id }; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
+        if(dupes){ toasts.push(lang==='es'?`${dupes} duplicado${dupes!==1?'s':''} omitido${dupes!==1?'s':''}`:lang==='pt'?`${dupes} duplicata${dupes!==1?'s':''} ignorada${dupes!==1?'s':''}`:`${dupes} duplicate${dupes!==1?'s':''} skipped`); }
       }
       else if(cmd.type === 'CREATELIST'){
         const lid = 'list_penny_' + Date.now();
@@ -5292,6 +5554,7 @@ function pennyExecuteActions(rawText){
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(lid, item)); n++; } });
         if(n) saveItms=true;
+        listLink = { name: list.name, id: lid };
         toasts.push('Created "' + list.name + '"' + (n ? ' with ' + n + ' item' + (n!==1?'s':'') : ''));
       }
       else if(cmd.type === 'REMOVEITEMS'){
@@ -5341,13 +5604,9 @@ function pennyExecuteActions(rawText){
   if(saveItms) saveU('gitems', groceryItems);
   if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
   if(toasts.length) showToast(toasts.join(' · '), 'ok');
-  return cleanText;
+  return listLink ? { text: cleanText, listLink } : cleanText;
 }
 
-
-// ────────────────────────────────────────────────
-// INIT
-// ────────────────────────────────────────────────
 document.addEventListener('keydown', e=>{
   if(e.target.type==='number' && ['e','E','+','-'].includes(e.key)) e.preventDefault();
 });
