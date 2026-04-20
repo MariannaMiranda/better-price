@@ -3,6 +3,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(500).json({ error: 'API key not configured. Set GROQ_API_KEY in Vercel environment variables.' });
+  }
+
   try {
     const body = req.body;
 
@@ -36,6 +40,7 @@ export default async function handler(req, res) {
       : models;
 
     let lastError = null;
+    let lastStatus = 500;
 
     for (const model of tryModels) {
       const groqBody = { ...body, model };
@@ -56,9 +61,21 @@ export default async function handler(req, res) {
         return res.status(200).json({ text });
       }
 
-      // If model not found or doesn't support the request type, try next
-      const errMsg = data?.error?.message || '';
+      const errMsg = data?.error?.message || data?.error?.code || 'Unknown error';
       lastError = errMsg;
+      lastStatus = response.status;
+
+      // Rate limit — surface immediately so frontend can show a friendly wait message
+      if (response.status === 429) {
+        return res.status(429).json({ error: 'Rate limit reached. Please wait a moment and try again.' });
+      }
+
+      // Auth error — no point retrying
+      if (response.status === 401) {
+        return res.status(401).json({ error: 'Invalid API key.' });
+      }
+
+      // Model not available — try next
       if (
         errMsg.toLowerCase().includes('model') ||
         errMsg.toLowerCase().includes('not found') ||
@@ -69,12 +86,14 @@ export default async function handler(req, res) {
         continue;
       }
 
-      // Any other error (bad key, rate limit, etc.) — return immediately
-      return res.status(response.status).json({ error: errMsg || 'Groq error' });
+      // Other client error — return immediately
+      if (response.status >= 400 && response.status < 500) {
+        return res.status(response.status).json({ error: errMsg });
+      }
+      // Server error — try next model
     }
 
-    // All models failed
-    return res.status(500).json({ error: 'All models failed. Last error: ' + lastError });
+    return res.status(lastStatus).json({ error: 'All models unavailable. Last error: ' + lastError });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });

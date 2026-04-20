@@ -365,6 +365,8 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;}
 .toggle-pass svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .auth-btn{width:100%;padding:15px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;margin-top:6px;transition:.2s;}
+.beta-notice{margin-top:10px;padding:8px 12px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:8px;font-size:11.5px;color:#92400e;text-align:center;line-height:1.5;}
+body.dark .beta-notice{background:#1c1500;border-color:#f59e0b;color:#fbbf24;}
 .auth-btn:hover{background:var(--brand-h);}
 .auth-btn:active{transform:scale(.98);}
 
@@ -1056,6 +1058,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           <div class="err-bubble" id="err-pass"><span class="err-icon">!</span><span class="msg"></span></div>
         </div>
         <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign Up</button>
+        <div class="beta-notice">⚠️ Beta — do not use real passwords. All data is stored only on this device.</div>
       </div>
     </div>
   </div>
@@ -1622,6 +1625,16 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
     <div id="profile-saved-msg" class="prof-lbl-saved" style="display:none;text-align:center;margin-top:12px;color:var(--ok);font-size:14px;font-weight:600;">&#10003; Profile saved!</div>
+
+    <div style="margin-top:24px;padding:12px 14px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;font-size:12px;color:#92400e;line-height:1.6;" id="local-storage-warning">
+      <strong>⚠️ Beta — local storage only.</strong> Your data lives on this device. Clearing your browser cache or switching devices will erase everything. Use the export button below to back up your data.
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button onclick="exportUserData()" style="flex:1;padding:11px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='var(--brand-light)';this.style.color='var(--brand)'">⬇️ Export Backup</button>
+      <button onclick="document.getElementById('import-file-input').click()" style="flex:1;padding:11px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='var(--brand-light)';this.style.color='var(--brand)'">⬆️ Restore Backup</button>
+      <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importUserData(this)">
+    </div>
 
     <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);">
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--danger);margin-bottom:10px;" class="prof-lbl-danger">Danger Zone</div>
@@ -2586,6 +2599,13 @@ document.addEventListener('click', e=>{
   if(e.target && e.target.id!=='authBtn') clearErrs();
 });
 
+async function hashPass(email, pass){
+  const data = new TextEncoder().encode(email.toLowerCase().trim() + ':' + pass);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function _isLegacyHash(h){ return typeof h === 'string' && h.length > 0 && !/^[0-9a-f]{64}$/.test(h); }
+
 async function handleAuth(){
   const t=T();
   const firstName=(document.getElementById('authFirstName')?.value||'').trim();
@@ -2619,7 +2639,7 @@ async function handleAuth(){
     }
     const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
     if(accounts[email]) return showErr('email', t.errPassAlreadyReg);
-    accounts[email] = { name, firstName, lastName, passHash: btoa(pass) };
+    accounts[email] = { name, firstName, lastName, passHash: await hashPass(email, pass) };
     localStorage.setItem('bp_accounts', JSON.stringify(accounts));
     localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
     showApp(true);
@@ -2627,10 +2647,19 @@ async function handleAuth(){
     if(!pass) return showErr('pass',t.errPassLogin);
     const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
     if(!accounts[email]) return showErr('email', t.errNoAccount);
-    if(accounts[email].passHash !== btoa(pass)) return showErr('pass', t.errWrongPass);
-    const name = accounts[email].name || email;
-    const firstName = accounts[email].firstName || '';
-    const lastName  = accounts[email].lastName  || '';
+    const acct = accounts[email];
+    let match = false;
+    if(_isLegacyHash(acct.passHash)){
+      // Migrate old btoa hash to SHA-256 on successful login
+      match = acct.passHash === btoa(pass);
+      if(match){ acct.passHash = await hashPass(email, pass); localStorage.setItem('bp_accounts', JSON.stringify(accounts)); }
+    } else {
+      match = acct.passHash === await hashPass(email, pass);
+    }
+    if(!match) return showErr('pass', t.errWrongPass);
+    const name = acct.name || email;
+    const firstName = acct.firstName || '';
+    const lastName  = acct.lastName  || '';
     localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
     showApp();
   }
@@ -4193,6 +4222,47 @@ function renderProfileTab(){
 
 }
 
+function exportUserData(){
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const email = session.email || '';
+  const prefix = email ? 'bp_' + email + '_' : 'bp_';
+  const data = { exportedAt: new Date().toISOString(), email, data: {} };
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(!key) continue;
+    if(key === 'bp_accounts') continue; // never export password hashes
+    if(key.startsWith(prefix) || key === 'bp_session' || key === 'bp_lang' || key === 'bp_theme'){
+      try { data.data[key] = JSON.parse(localStorage.getItem(key)); } catch(e){ data.data[key] = localStorage.getItem(key); }
+    }
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `better-price-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Backup downloaded!', 'ok');
+}
+
+function importUserData(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if(!backup?.data || typeof backup.data !== 'object') throw new Error('Invalid backup file');
+      showConfirm('Restore Backup', 'This will overwrite your current data with the backup. Continue?', () => {
+        Object.entries(backup.data).forEach(([key, val]) => {
+          try { localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch(err){}
+        });
+        showToast('Backup restored! Reloading…', 'ok');
+        setTimeout(() => location.reload(), 1200);
+      });
+    } catch(err){ showToast('Could not read backup file. Make sure it\'s a valid Better Price export.', ''); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
 function confirmDeleteAccount(){
   const t = T();
   showConfirm(
@@ -4229,7 +4299,7 @@ function confirmSaveProfile(){
   showConfirm(t.profileSave||'Save Changes', lang==='es'?'¿Estás seguro de que quieres guardar los cambios?':lang==='pt'?'Tem certeza que deseja salvar as alterações?':'Are you sure you want to save your changes?', saveProfile);
 }
 
-function saveProfile(){
+async function saveProfile(){
   const t = T();
   const session  = JSON.parse(localStorage.getItem('bp_session')||'{}');
   const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
@@ -4263,7 +4333,8 @@ function saveProfile(){
     if(!acct){ showPassErr('Account not found.'); return; }
 
     const curPass = curPassEl?.value || '';
-    if(acct.passHash !== btoa(curPass)){ showPassErr(t.profilePassWrong||'Current password is incorrect.'); return; }
+    const curHash = _isLegacyHash(acct.passHash) ? btoa(curPass) : await hashPass(email, curPass);
+    if(acct.passHash !== curHash){ showPassErr(t.profilePassWrong||'Current password is incorrect.'); return; }
 
     const hLen = newPass.length >= 8;
     const hU   = /[A-Z]/.test(newPass);
@@ -4282,7 +4353,7 @@ function saveProfile(){
     }
     if(newPass !== confPass){ showPassErr(t.profilePassNoMatch||'New passwords do not match.'); return; }
 
-    accounts[email].passHash = btoa(newPass);
+    accounts[email].passHash = await hashPass(email, newPass);
 
     if(curPassEl) curPassEl.value = newPass;
 
@@ -4405,6 +4476,14 @@ function loadPennySessions(){
 function savePennySessions(){
   if(pennySessions.length > 30) pennySessions = pennySessions.slice(-30);
   saveU('penny_sessions', pennySessions);
+}
+
+function pennyRetry(errorMsgIdx){
+  if(!pennyActiveSession) return;
+  // Remove the error message and retry
+  pennyActiveSession.messages = pennyActiveSession.messages.slice(0, errorMsgIdx);
+  savePennySessions(); renderPennyMessages();
+  pennyCallAPI();
 }
 
 function pennyGoList(listId){
@@ -4560,16 +4639,18 @@ function renderPennyMessages(){
     const copyBtn = `<button class="pmsg-act-btn" id="pmsg-copy-${idx}" onclick="pennyCopyMsg(${idx},this)">${svgCopy}Copy</button>`;
     const delBtn = `<button class="pmsg-act-btn" onclick="pennyDeleteMsg(${idx})">${svgDel}Delete</button>`;
     const listLinkHtml = (!isUser && m.listLink) ? `<button class="pmsg-list-link" onclick="pennyGoList('${m.listLink.id}')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>View "${m.listLink.name}" →</button>` : '';
-    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${listLinkHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
+    const retryHtml = (!isUser && m.isError) ? `<button class="pmsg-list-link" style="border-color:var(--danger);color:var(--danger);" onclick="pennyRetry(${idx})"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Retry</button>` : '';
+    return `<div class="pmsg-wrap ${isUser?'user':'penny'}"><div class="pmsg ${isUser?'user':'penny'}">${avatarHtml}<div class="pmsg-bubble">${imgHtml}${bubbleContent}</div></div>${listLinkHtml}${retryHtml}<div class="pmsg-actions">${editBtn}${regenBtn}${copyBtn}${delBtn}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
 
-function pennyAddMessage(role, text, imageDataUrl, listLink){
+function pennyAddMessage(role, text, imageDataUrl, listLink, isError){
   if(!pennyActiveSession) pennyNewChat();
   const msg = { role, content: text };
   if(imageDataUrl) msg.image = imageDataUrl;
   if(listLink) msg.listLink = listLink;
+  if(isError) msg.isError = true;
   pennyActiveSession.messages.push(msg);
 
   if(role === 'user' && pennyActiveSession.messages.filter(m => m.role === 'user').length === 1){
@@ -4729,8 +4810,15 @@ async function pennyCallAPI(){
   } catch(e) {
     pennyRemoveTyping();
     if(e.name !== 'AbortError'){
-      const msg = (e.message||'').includes('HTTP') ? 'Penny had trouble responding. Please try again.' : 'Could not connect. Please check your internet.';
-      pennyAddMessage('penny', msg);
+      const em = e.message || '';
+      let msg;
+      if(em.includes('429') || em.toLowerCase().includes('rate limit')) msg = "I'm getting a lot of requests right now — please wait a moment and try again.";
+      else if(em.includes('401') || em.includes('403')) msg = "There's an API configuration issue. Please contact support.";
+      else if(em.includes('HTTP')) msg = "I had trouble responding. Please try again.";
+      else msg = "Can't connect right now. Check your internet and try again.";
+      // Add retry button via a special listLink-style chip
+      const lastUserMsg = pennyActiveSession?.messages.slice().reverse().find(m => m.role === 'user');
+      pennyAddMessage('penny', msg, null, null, true /* isError */);
     }
   }
   pennyBusy = false;
