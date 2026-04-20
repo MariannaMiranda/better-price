@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Better Price!
-</title>
+<title>Better Price!</title>
+<meta name="description" content="Compare grocery prices, manage shopping lists, and get AI-powered shopping advice from Penny."/>
+<meta property="og:title" content="Better Price!"/>
+<meta property="og:description" content="Compare grocery prices, manage shopping lists, and get AI shopping advice from Penny."/>
+<meta property="og:type" content="website"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -365,8 +368,12 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;}
 .toggle-pass svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .auth-btn{width:100%;padding:15px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;margin-top:6px;transition:.2s;}
-.beta-notice{margin-top:10px;padding:8px 12px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:8px;font-size:11.5px;color:#92400e;text-align:center;line-height:1.5;}
-body.dark .beta-notice{background:#1c1500;border-color:#f59e0b;color:#fbbf24;}
+.beta-notice{margin-top:10px;padding:8px 12px;background:var(--brand-light);border:1px solid var(--brand);border-radius:8px;font-size:11.5px;color:var(--brand);text-align:center;line-height:1.5;opacity:.9;}
+body.dark .beta-notice{background:#0d1f33;border-color:#4d8fcc;color:#7ec8f8;}
+.prof-backup-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;}
+.prof-backup-btn:hover{background:var(--brand);color:#fff;}
+body.dark .prof-backup-btn{background:#0d1f33;border-color:#4d8fcc;color:#7ec8f8;}
+body.dark .prof-backup-btn:hover{background:#1a3d66;color:#fff;}
 .auth-btn:hover{background:var(--brand-h);}
 .auth-btn:active{transform:scale(.98);}
 
@@ -893,6 +900,7 @@ body.dark .pmsg-edit-cancel{border-color:#2a4060;color:#eef2ff;}
   #pennyPricePanel{padding:10px 12px;}
   .penny-chat-header{padding:8px 10px;gap:6px;}
   .penny-context-btn{padding:5px 8px;font-size:11px;}
+  .penny-sidebar-toggle{padding:10px;min-width:40px;min-height:40px;}
   .penny-messages{padding:12px 10px;}
   .penny-input-area{padding:8px 10px;}
   .penny-textarea{font-size:16px;} /* prevent iOS zoom */
@@ -1626,14 +1634,23 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
     <div id="profile-saved-msg" class="prof-lbl-saved" style="display:none;text-align:center;margin-top:12px;color:var(--ok);font-size:14px;font-weight:600;">&#10003; Profile saved!</div>
 
-    <div style="margin-top:24px;padding:12px 14px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;font-size:12px;color:#92400e;line-height:1.6;" id="local-storage-warning">
-      <strong>⚠️ Beta — local storage only.</strong> Your data lives on this device. Clearing your browser cache or switching devices will erase everything. Use the export button below to back up your data.
-    </div>
-
-    <div style="margin-top:16px;display:flex;gap:8px;">
-      <button onclick="exportUserData()" style="flex:1;padding:11px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='var(--brand-light)';this.style.color='var(--brand)'">⬇️ Export Backup</button>
-      <button onclick="document.getElementById('import-file-input').click()" style="flex:1;padding:11px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='var(--brand-light)';this.style.color='var(--brand)'">⬆️ Restore Backup</button>
-      <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importUserData(this)">
+    <div class="profile-section" style="margin-top:16px;" id="local-storage-warning">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Data Backup
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5;">Your data lives on this device only. Export a backup before clearing your browser or switching devices.</p>
+      <div style="display:flex;gap:8px;">
+        <button onclick="exportUserData()" class="prof-backup-btn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Backup
+        </button>
+        <button onclick="document.getElementById('import-file-input').click()" class="prof-backup-btn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Restore Backup
+        </button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importUserData(this)">
+      </div>
     </div>
 
     <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);">
@@ -2629,6 +2646,11 @@ async function handleAuth(){
     if(!ext||ext.length<2) return showErr('email',t.errEmailShort);
     if(provider==='gmail'&&ext==='co') return showErr('email',t.errGmail);
   }
+  const btn = document.getElementById('authBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = authMode === 'signup' ? 'Creating account\u2026' : 'Signing in\u2026';
+  try {
   if(authMode==='signup'){
     const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
     if(!pass||!hLen||!hU||!hL||!hN||!hS){
@@ -2662,6 +2684,9 @@ async function handleAuth(){
     const lastName  = acct.lastName  || '';
     localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
     showApp();
+  }
+  } finally {
+    if(btn) { btn.disabled = false; btn.textContent = origText; }
   }
 }
 
