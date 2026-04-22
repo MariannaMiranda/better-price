@@ -388,7 +388,11 @@ body.dark .prof-backup-btn:hover{background:#1a3d66;color:#fff;}
 .hdr-right{display:flex;align-items:center;gap:8px;}
 .hdr-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:.2s;white-space:nowrap;}
 .hdr-btn:hover{background:rgba(255,255,255,.22);}
-@media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}}
+@media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}.hdr-btn{padding:8px 10px;}}
+.penny-sidebar-close{display:none;background:none;border:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:6px;border-radius:6px;transition:.15s;margin-left:auto;}
+.penny-sidebar-close:hover{background:var(--input-bg);color:var(--text);}
+#pennySidebarBackdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:9;cursor:pointer;}
+@media(max-width:600px){.penny-sidebar-close{display:flex;align-items:center;justify-content:center;min-width:36px;min-height:36px;}}
 
 .nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
 .nav-tabs::-webkit-scrollbar{display:none;}
@@ -1224,7 +1228,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
     <div class="hdr-right">
       <button class="hdr-btn hdr-help-btn" onclick="openModal('helpModal')" title="Help" style="background:none;border:none;color:rgba(255,255,255,.55);font-size:18px;font-weight:700;cursor:pointer;padding:4px 8px;line-height:1;">?</button>
-      <button class="hdr-btn" onclick="logout()"><span class="lbl" id="txt-logout">Log out</span></button>
+      <button class="hdr-btn" onclick="logout()" title="Log out"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="lbl" id="txt-logout">Log out</span></button>
     </div>
   </header>
 
@@ -1298,12 +1302,14 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             New Chat
           </button>
+          <button class="penny-sidebar-close" onclick="togglePennySidebar()" title="Close">&#10005;</button>
         </div>
         <div class="penny-session-list" id="pennySessionList"></div>
       </div>
-      
+
       <div class="penny-main" style="position:relative;"
         ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
+        <div id="pennySidebarBackdrop" onclick="togglePennySidebar()"></div>
         <div class="penny-drop-overlay">
           <div class="pdrop-icon">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
@@ -2716,8 +2722,10 @@ function loadUserData(){
 }
 
 function logout(){
-  localStorage.removeItem('bp_session');
-  location.reload();
+  showConfirm('Sign Out', 'Are you sure you want to sign out?', () => {
+    localStorage.removeItem('bp_session');
+    location.reload();
+  });
 }
 
 function showApp(isNewUser=false){
@@ -4584,21 +4592,25 @@ function pennyLoadSession(id){
 
 function pennyDeleteSession(id, e){
   e.stopPropagation();
-  pennySessions = pennySessions.filter(x => x.id !== id);
-  if(pennyActiveSession?.id === id){
-    pennyActiveSession = pennySessions[pennySessions.length - 1] || null;
-  }
-  savePennySessions();
-  renderPennySessions();
-  renderPennyMessages();
-  const titleEl = document.getElementById('pennyChatTitle');
-  if(titleEl) titleEl.textContent = pennyActiveSession?.title || 'Penny';
+  showConfirm('Delete Chat', 'Delete this chat? This cannot be undone.', () => {
+    pennySessions = pennySessions.filter(x => x.id !== id);
+    if(pennyActiveSession?.id === id){
+      pennyActiveSession = pennySessions[pennySessions.length - 1] || null;
+    }
+    savePennySessions();
+    renderPennySessions();
+    renderPennyMessages();
+    const titleEl = document.getElementById('pennyChatTitle');
+    if(titleEl) titleEl.textContent = pennyActiveSession?.title || 'Penny';
+  });
 }
 
 function togglePennySidebar(){
   pennySidebarOpen = !pennySidebarOpen;
   const sb = document.getElementById('pennySidebar');
   if(sb) sb.classList.toggle('collapsed', !pennySidebarOpen);
+  const bd = document.getElementById('pennySidebarBackdrop');
+  if(bd) bd.style.display = (pennySidebarOpen && window.innerWidth < 600) ? 'block' : 'none';
 }
 
 function renderPennySessions(){
