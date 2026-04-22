@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Better Price!
-</title>
+<title>Better Price!</title>
+<meta name="description" content="Compare grocery prices, manage shopping lists, and get AI-powered shopping advice from Penny."/>
+<meta property="og:title" content="Better Price!"/>
+<meta property="og:description" content="Compare grocery prices, manage shopping lists, and get AI shopping advice from Penny."/>
+<meta property="og:type" content="website"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -365,8 +368,12 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;}
 .toggle-pass svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .auth-btn{width:100%;padding:15px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;margin-top:6px;transition:.2s;}
-.beta-notice{margin-top:10px;padding:8px 12px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:8px;font-size:11.5px;color:#92400e;text-align:center;line-height:1.5;}
-body.dark .beta-notice{background:#1c1500;border-color:#f59e0b;color:#fbbf24;}
+.beta-notice{margin-top:10px;padding:8px 12px;background:var(--brand-light);border:1px solid var(--brand);border-radius:8px;font-size:11.5px;color:var(--brand);text-align:center;line-height:1.5;opacity:.9;}
+body.dark .beta-notice{background:#0d1f33;border-color:#4d8fcc;color:#7ec8f8;}
+.prof-backup-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;}
+.prof-backup-btn:hover{background:var(--brand);color:#fff;}
+body.dark .prof-backup-btn{background:#0d1f33;border-color:#4d8fcc;color:#7ec8f8;}
+body.dark .prof-backup-btn:hover{background:#1a3d66;color:#fff;}
 .auth-btn:hover{background:var(--brand-h);}
 .auth-btn:active{transform:scale(.98);}
 
@@ -381,7 +388,11 @@ body.dark .beta-notice{background:#1c1500;border-color:#f59e0b;color:#fbbf24;}
 .hdr-right{display:flex;align-items:center;gap:8px;}
 .hdr-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:.2s;white-space:nowrap;}
 .hdr-btn:hover{background:rgba(255,255,255,.22);}
-@media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}}
+@media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}.hdr-btn{padding:8px 10px;}}
+.penny-sidebar-close{display:none;background:none;border:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:6px;border-radius:6px;transition:.15s;margin-left:auto;}
+.penny-sidebar-close:hover{background:var(--input-bg);color:var(--text);}
+#pennySidebarBackdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:9;cursor:pointer;}
+@media(max-width:600px){.penny-sidebar-close{display:flex;align-items:center;justify-content:center;min-width:36px;min-height:36px;}}
 
 .nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
 .nav-tabs::-webkit-scrollbar{display:none;}
@@ -893,6 +904,7 @@ body.dark .pmsg-edit-cancel{border-color:#2a4060;color:#eef2ff;}
   #pennyPricePanel{padding:10px 12px;}
   .penny-chat-header{padding:8px 10px;gap:6px;}
   .penny-context-btn{padding:5px 8px;font-size:11px;}
+  .penny-sidebar-toggle{padding:10px;min-width:40px;min-height:40px;}
   .penny-messages{padding:12px 10px;}
   .penny-input-area{padding:8px 10px;}
   .penny-textarea{font-size:16px;} /* prevent iOS zoom */
@@ -1216,7 +1228,7 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
     <div class="hdr-right">
       <button class="hdr-btn hdr-help-btn" onclick="openModal('helpModal')" title="Help" style="background:none;border:none;color:rgba(255,255,255,.55);font-size:18px;font-weight:700;cursor:pointer;padding:4px 8px;line-height:1;">?</button>
-      <button class="hdr-btn" onclick="logout()"><span class="lbl" id="txt-logout">Log out</span></button>
+      <button class="hdr-btn" onclick="logout()" title="Log out"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="lbl" id="txt-logout">Log out</span></button>
     </div>
   </header>
 
@@ -1290,12 +1302,14 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             New Chat
           </button>
+          <button class="penny-sidebar-close" onclick="togglePennySidebar()" title="Close">&#10005;</button>
         </div>
         <div class="penny-session-list" id="pennySessionList"></div>
       </div>
-      
+
       <div class="penny-main" style="position:relative;"
         ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
+        <div id="pennySidebarBackdrop" onclick="togglePennySidebar()"></div>
         <div class="penny-drop-overlay">
           <div class="pdrop-icon">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
@@ -1626,14 +1640,23 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
     <div id="profile-saved-msg" class="prof-lbl-saved" style="display:none;text-align:center;margin-top:12px;color:var(--ok);font-size:14px;font-weight:600;">&#10003; Profile saved!</div>
 
-    <div style="margin-top:24px;padding:12px 14px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;font-size:12px;color:#92400e;line-height:1.6;" id="local-storage-warning">
-      <strong>⚠️ Beta — local storage only.</strong> Your data lives on this device. Clearing your browser cache or switching devices will erase everything. Use the export button below to back up your data.
-    </div>
-
-    <div style="margin-top:16px;display:flex;gap:8px;">
-      <button onclick="exportUserData()" style="flex:1;padding:11px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='var(--brand-light)';this.style.color='var(--brand)'">⬇️ Export Backup</button>
-      <button onclick="document.getElementById('import-file-input').click()" style="flex:1;padding:11px;background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.15s;" onmouseover="this.style.background='var(--brand)';this.style.color='#fff'" onmouseout="this.style.background='var(--brand-light)';this.style.color='var(--brand)'">⬆️ Restore Backup</button>
-      <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importUserData(this)">
+    <div class="profile-section" style="margin-top:16px;" id="local-storage-warning">
+      <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Data Backup
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5;">Your data lives on this device only. Export a backup before clearing your browser or switching devices.</p>
+      <div style="display:flex;gap:8px;">
+        <button onclick="exportUserData()" class="prof-backup-btn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Backup
+        </button>
+        <button onclick="document.getElementById('import-file-input').click()" class="prof-backup-btn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Restore Backup
+        </button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importUserData(this)">
+      </div>
     </div>
 
     <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);">
@@ -2629,6 +2652,11 @@ async function handleAuth(){
     if(!ext||ext.length<2) return showErr('email',t.errEmailShort);
     if(provider==='gmail'&&ext==='co') return showErr('email',t.errGmail);
   }
+  const btn = document.getElementById('authBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = authMode === 'signup' ? 'Creating account\u2026' : 'Signing in\u2026';
+  try {
   if(authMode==='signup'){
     const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
     if(!pass||!hLen||!hU||!hL||!hN||!hS){
@@ -2663,6 +2691,9 @@ async function handleAuth(){
     localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
     showApp();
   }
+  } finally {
+    if(btn) { btn.disabled = false; btn.textContent = origText; }
+  }
 }
 
 function togglePass(){
@@ -2691,8 +2722,10 @@ function loadUserData(){
 }
 
 function logout(){
-  localStorage.removeItem('bp_session');
-  location.reload();
+  showConfirm('Sign Out', 'Are you sure you want to sign out?', () => {
+    localStorage.removeItem('bp_session');
+    location.reload();
+  });
 }
 
 function showApp(isNewUser=false){
@@ -4452,7 +4485,7 @@ async function anthropicFetch(fetchOptions){
   });
 
   const data = await r.json();
-  if (!r.ok) throw new Error(data?.error || 'HTTP ' + r.status);
+  if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + (data?.error || 'Unknown error'));
   const text = data.text || '';
   return { ok: true, json: async () => ({ content: [{ type: 'text', text }] }) };
 }
@@ -4559,21 +4592,25 @@ function pennyLoadSession(id){
 
 function pennyDeleteSession(id, e){
   e.stopPropagation();
-  pennySessions = pennySessions.filter(x => x.id !== id);
-  if(pennyActiveSession?.id === id){
-    pennyActiveSession = pennySessions[pennySessions.length - 1] || null;
-  }
-  savePennySessions();
-  renderPennySessions();
-  renderPennyMessages();
-  const titleEl = document.getElementById('pennyChatTitle');
-  if(titleEl) titleEl.textContent = pennyActiveSession?.title || 'Penny';
+  showConfirm('Delete Chat', 'Delete this chat? This cannot be undone.', () => {
+    pennySessions = pennySessions.filter(x => x.id !== id);
+    if(pennyActiveSession?.id === id){
+      pennyActiveSession = pennySessions[pennySessions.length - 1] || null;
+    }
+    savePennySessions();
+    renderPennySessions();
+    renderPennyMessages();
+    const titleEl = document.getElementById('pennyChatTitle');
+    if(titleEl) titleEl.textContent = pennyActiveSession?.title || 'Penny';
+  });
 }
 
 function togglePennySidebar(){
   pennySidebarOpen = !pennySidebarOpen;
   const sb = document.getElementById('pennySidebar');
   if(sb) sb.classList.toggle('collapsed', !pennySidebarOpen);
+  const bd = document.getElementById('pennySidebarBackdrop');
+  if(bd) bd.style.display = (pennySidebarOpen && window.innerWidth < 600) ? 'block' : 'none';
 }
 
 function renderPennySessions(){
@@ -4811,13 +4848,19 @@ async function pennyCallAPI(){
     pennyRemoveTyping();
     if(e.name !== 'AbortError'){
       const em = e.message || '';
+      const status = parseInt(em.match(/HTTP (\d+)/)?.[1] || '0');
       let msg;
-      if(em.includes('429') || em.toLowerCase().includes('rate limit')) msg = "I'm getting a lot of requests right now — please wait a moment and try again.";
-      else if(em.includes('401') || em.includes('403')) msg = "There's an API configuration issue. Please contact support.";
-      else if(em.includes('HTTP')) msg = "I had trouble responding. Please try again.";
-      else msg = "Can't connect right now. Check your internet and try again.";
-      // Add retry button via a special listLink-style chip
-      const lastUserMsg = pennyActiveSession?.messages.slice().reverse().find(m => m.role === 'user');
+      if(status === 429 || em.toLowerCase().includes('rate limit'))
+        msg = "I'm getting a lot of requests right now — please wait a moment and try again.";
+      else if(status === 401 || status === 403)
+        msg = "There's a configuration issue on my end. Please try again later.";
+      else if(status >= 500 || em.toLowerCase().includes('all models'))
+        msg = "Penny is sleeping right now. Please try again in a minute.";
+      else if(status >= 400)
+        msg = "I had trouble with that request. Please try again.";
+      else
+        msg = "Can't reach Penny right now. Check your connection and try again.";
+      showToast(msg);
       pennyAddMessage('penny', msg, null, null, true /* isError */);
     }
   }
