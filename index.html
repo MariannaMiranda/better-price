@@ -9,6 +9,7 @@
 <meta property="og:type" content="website"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1773,6 +1774,10 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
 
 <script>
 
+const SUPABASE_URL = 'https://qkpkrlncajvpswdywtcd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrcGtybG5jYWp2cHN3ZHl3dGNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzM1ODYsImV4cCI6MjA5MjU0OTU4Nn0.Gal9e0QVgYQ_SVhdLofoQKmXB4uRz8ocIbdeu6H-RQE';
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let items = 2;
 let scanner = null;
 let activeIdx = null;
@@ -2643,12 +2648,7 @@ document.addEventListener('click', e=>{
   if(e.target && e.target.id!=='authBtn') clearErrs();
 });
 
-async function hashPass(email, pass){
-  const data = new TextEncoder().encode(email.toLowerCase().trim() + ':' + pass);
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-function _isLegacyHash(h){ return typeof h === 'string' && h.length > 0 && !/^[0-9a-f]{64}$/.test(h); }
+
 
 async function handleAuth(){
   const t=T();
@@ -2678,40 +2678,40 @@ async function handleAuth(){
   btn.disabled = true;
   btn.textContent = authMode === 'signup' ? 'Creating account\u2026' : 'Signing in\u2026';
   try {
-  if(authMode==='signup'){
-    const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
-    if(!pass||!hLen||!hU||!hL||!hN||!hS){
-      const miss=[];
-      if(!hLen)miss.push(t.passReqs[0]);if(!hU)miss.push(t.passReqs[1]);
-      if(!hL)miss.push(t.passReqs[2]);if(!hN)miss.push(t.passReqs[3]);if(!hS)miss.push(t.passReqs[4]);
-      return showErr('pass',t.errPassMissing+miss.join(', ')+'.');
-    }
-    const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
-    if(accounts[email]) return showErr('email', t.errPassAlreadyReg);
-    accounts[email] = { name, firstName, lastName, passHash: await hashPass(email, pass) };
-    localStorage.setItem('bp_accounts', JSON.stringify(accounts));
-    localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
-    showApp(true);
-  } else {
-    if(!pass) return showErr('pass',t.errPassLogin);
-    const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
-    if(!accounts[email]) return showErr('email', t.errNoAccount);
-    const acct = accounts[email];
-    let match = false;
-    if(_isLegacyHash(acct.passHash)){
-      // Migrate old btoa hash to SHA-256 on successful login
-      match = acct.passHash === btoa(pass);
-      if(match){ acct.passHash = await hashPass(email, pass); localStorage.setItem('bp_accounts', JSON.stringify(accounts)); }
+    if(authMode==='signup'){
+      const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
+      if(!pass||!hLen||!hU||!hL||!hN||!hS){
+        const miss=[];
+        if(!hLen)miss.push(t.passReqs[0]);if(!hU)miss.push(t.passReqs[1]);
+        if(!hL)miss.push(t.passReqs[2]);if(!hN)miss.push(t.passReqs[3]);if(!hS)miss.push(t.passReqs[4]);
+        return showErr('pass',t.errPassMissing+miss.join(', ')+'.');
+      }
+      const { data, error } = await _sb.auth.signUp({
+        email,
+        password: pass,
+        options: { data: { firstName, lastName, name } }
+      });
+      if(error) return showErr('email', error.message);
+      if(data.session){
+        localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
+        showApp(true);
+      } else {
+        showToast('Check your email to confirm your account!', 'ok');
+      }
     } else {
-      match = acct.passHash === await hashPass(email, pass);
+      if(!pass) return showErr('pass',t.errPassLogin);
+      const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
+      if(error){
+        if(error.message.toLowerCase().includes('invalid login')) return showErr('pass', t.errWrongPass);
+        return showErr('pass', error.message);
+      }
+      const meta = data.user.user_metadata || {};
+      const fName = meta.firstName || '';
+      const lName = meta.lastName || '';
+      const uName = meta.name || [fName, lName].filter(Boolean).join(' ') || email;
+      localStorage.setItem('bp_session', JSON.stringify({email: data.user.email, name: uName, firstName: fName, lastName: lName}));
+      showApp();
     }
-    if(!match) return showErr('pass', t.errWrongPass);
-    const name = acct.name || email;
-    const firstName = acct.firstName || '';
-    const lastName  = acct.lastName  || '';
-    localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
-    showApp();
-  }
   } finally {
     if(btn) { btn.disabled = false; btn.textContent = origText; }
   }
@@ -2743,7 +2743,8 @@ function loadUserData(){
 }
 
 function logout(){
-  showConfirm('Sign Out', 'Are you sure you want to sign out?', () => {
+  showConfirm('Sign Out', 'Are you sure you want to sign out?', async () => {
+    await _sb.auth.signOut();
     localStorage.removeItem('bp_session');
     location.reload();
   });
@@ -4180,19 +4181,14 @@ function renderProfileTab(){
   const zip        = loadU('zip', '');
 
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
   const email = session.email || '';
-  const acct = accounts[email] || {};
 
   const firstEl = document.getElementById('profile-firstname');
   const lastEl  = document.getElementById('profile-lastname');
   const emailEl = document.getElementById('profile-email');
-  if(firstEl) firstEl.value = acct.firstName || session.firstName || '';
-  if(lastEl)  lastEl.value  = acct.lastName  || session.lastName  || '';
+  if(firstEl) firstEl.value = session.firstName || '';
+  if(lastEl)  lastEl.value  = session.lastName  || '';
   if(emailEl) emailEl.value = email;
-
-  const curPassEl = document.getElementById('profile-current-pass');
-  if(curPassEl && acct.passHash){ try{ curPassEl.value = atob(acct.passHash); }catch(e){ curPassEl.value=''; } }
 
   ['profile-new-pass','profile-confirm-pass'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value=''; el.type='password'; } });
 
@@ -4284,7 +4280,7 @@ function exportUserData(){
   for(let i = 0; i < localStorage.length; i++){
     const key = localStorage.key(i);
     if(!key) continue;
-    if(key === 'bp_accounts') continue; // never export password hashes
+
     if(key.startsWith(prefix) || key === 'bp_session' || key === 'bp_lang' || key === 'bp_theme'){
       try { data.data[key] = JSON.parse(localStorage.getItem(key)); } catch(e){ data.data[key] = localStorage.getItem(key); }
     }
@@ -4327,7 +4323,7 @@ function confirmDeleteAccount(){
   );
 }
 
-function deleteAccount(){
+async function deleteAccount(){
   const t = T();
   const session = JSON.parse(localStorage.getItem('bp_session') || '{}');
   const email = session.email || '';
@@ -4339,10 +4335,8 @@ function deleteAccount(){
       if(k && k.startsWith(pfx)) toRemove.push(k);
     }
     toRemove.forEach(k => localStorage.removeItem(k));
-    const accounts = JSON.parse(localStorage.getItem('bp_accounts') || '{}');
-    delete accounts[email];
-    localStorage.setItem('bp_accounts', JSON.stringify(accounts));
   }
+  await _sb.auth.signOut();
   localStorage.removeItem('bp_session');
   showToast(t.deleteAccountDone || 'Account deleted.', 'ok');
   setTimeout(() => location.reload(), 1200);
@@ -4355,9 +4349,8 @@ function confirmSaveProfile(){
 
 async function saveProfile(){
   const t = T();
-  const session  = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  const accounts = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
-  const email    = session.email || '';
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const email   = session.email || '';
 
   const firstEl = document.getElementById('profile-firstname');
   const lastEl  = document.getElementById('profile-lastname');
@@ -4383,12 +4376,8 @@ async function saveProfile(){
   if(passErrEl) passErrEl.style.display = 'none';
 
   if(newPass || confPass){
-    const acct = accounts[email];
-    if(!acct){ showPassErr('Account not found.'); return; }
-
     const curPass = curPassEl?.value || '';
-    const curHash = _isLegacyHash(acct.passHash) ? btoa(curPass) : await hashPass(email, curPass);
-    if(acct.passHash !== curHash){ showPassErr(t.profilePassWrong||'Current password is incorrect.'); return; }
+    if(!curPass){ showPassErr(t.profilePassWrong||'Please enter your current password.'); return; }
 
     const hLen = newPass.length >= 8;
     const hU   = /[A-Z]/.test(newPass);
@@ -4396,7 +4385,6 @@ async function saveProfile(){
     const hN   = /\d/.test(newPass);
     const hS   = /[\W_]/.test(newPass);
     if(!hLen || !hU || !hL || !hN || !hS){
-      const t = T();
       const miss = [];
       if(!hLen) miss.push(t.passReqs[0]);
       if(!hU)   miss.push(t.passReqs[1]);
@@ -4407,10 +4395,13 @@ async function saveProfile(){
     }
     if(newPass !== confPass){ showPassErr(t.profilePassNoMatch||'New passwords do not match.'); return; }
 
-    accounts[email].passHash = await hashPass(email, newPass);
+    const { error: reAuthErr } = await _sb.auth.signInWithPassword({ email, password: curPass });
+    if(reAuthErr){ showPassErr(t.profilePassWrong||'Current password is incorrect.'); return; }
 
-    if(curPassEl) curPassEl.value = newPass;
+    const { error: passErr } = await _sb.auth.updateUser({ password: newPass });
+    if(passErr){ showPassErr(passErr.message); return; }
 
+    if(curPassEl) curPassEl.value = '';
     if(newPassEl)  newPassEl.value  = '';
     if(confPassEl) confPassEl.value = '';
 
@@ -4427,37 +4418,15 @@ async function saveProfile(){
   const emailInputEl = document.getElementById('profile-email');
   const newEmail = (emailInputEl?.value || '').trim().toLowerCase();
   if(newEmail && newEmail !== email && newEmail.includes('@') && newEmail.split('@')[1]?.includes('.')){
-
-    const acctData = { ...(accounts[email] || {}) };
-    acctData.firstName = firstName; acctData.lastName = lastName; acctData.name = newName;
-    delete accounts[email];
-    accounts[newEmail] = acctData;
-    localStorage.setItem('bp_accounts', JSON.stringify(accounts));
-
-    const oldPfx = 'bp_' + email + '_';
-    const newPfx = 'bp_' + newEmail + '_';
-    const toMigrate = [];
-    for(let k = 0; k < localStorage.length; k++){
-      const key = localStorage.key(k);
-      if(key && key.startsWith(oldPfx)) toMigrate.push(key);
-    }
-    toMigrate.forEach(key => {
-      const val = localStorage.getItem(key);
-      localStorage.setItem(newPfx + key.slice(oldPfx.length), val);
-      localStorage.removeItem(key);
-    });
-    localStorage.setItem('bp_session', JSON.stringify({ ...session, email: newEmail, firstName, lastName, name: newName }));
-    showToast('Email updated. Please log in again.', 'ok');
-    setTimeout(() => { localStorage.removeItem('bp_session'); location.reload(); }, 2000);
+    const { error: emailErr } = await _sb.auth.updateUser({ email: newEmail });
+    if(emailErr){ showToast(emailErr.message, 'error'); return; }
+    await _sb.auth.updateUser({ data: { firstName, lastName, name: newName } });
+    showToast('Confirmation sent to ' + newEmail + '. Please log in again.', 'ok');
+    setTimeout(async () => { await _sb.auth.signOut(); localStorage.removeItem('bp_session'); location.reload(); }, 2000);
     return;
   }
 
-  if(email && accounts[email]){
-    accounts[email].firstName = firstName;
-    accounts[email].lastName  = lastName;
-    accounts[email].name = newName;
-    localStorage.setItem('bp_accounts', JSON.stringify(accounts));
-  }
+  await _sb.auth.updateUser({ data: { firstName, lastName, name: newName } });
   localStorage.setItem('bp_session', JSON.stringify({ ...session, firstName, lastName, name: newName }));
   const hdrLabel = document.getElementById('hdr-user-label');
   if(hdrLabel) hdrLabel.innerText = newName;
@@ -5787,7 +5756,7 @@ document.addEventListener('keydown', e=>{
   if(e.target.type==='number' && ['e','E','+','-'].includes(e.key)) e.preventDefault();
 });
 
-window.onload=()=>{
+window.onload=async ()=>{
   initTheme();
   document.getElementById('authLang').value=lang;
   document.getElementById('setLang').value=lang;
@@ -5795,10 +5764,16 @@ window.onload=()=>{
   currRate = 1;
   setMode('signup');
   applyLang();
-  const session = localStorage.getItem('bp_session');
+  const { data: { session } } = await _sb.auth.getSession();
   if(session){
+    const meta = session.user.user_metadata || {};
+    const firstName = meta.firstName || '';
+    const lastName  = meta.lastName  || '';
+    const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
+    localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
     showApp();
   } else {
+    localStorage.removeItem('bp_session');
     document.getElementById('auth-screen').style.display='flex';
     document.getElementById('app').style.display='none';
     document.getElementById('landing-penny-fab').style.display='flex';
