@@ -327,10 +327,24 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .lp-close-btn{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.75;line-height:1;font-size:15px;}
 .lp-close-btn:hover{opacity:1;}
 .lp-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;min-height:120px;}
-.lp-msg{max-width:86%;border-radius:14px;padding:9px 12px;font-size:13px;line-height:1.45;word-break:break-word;}
+.lp-msg{max-width:86%;border-radius:14px;padding:10px 13px;font-size:13px;line-height:1.65;word-break:break-word;}
 .lp-msg.lp-penny{background:var(--card-bg);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
-.lp-msg.lp-user{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.lp-msg.lp-user{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;white-space:pre-wrap;}
 .lp-msg.lp-thinking{opacity:.55;font-style:italic;}
+.lp-msg.lp-penny strong{font-weight:700;}
+.lp-msg.lp-penny em{font-style:italic;}
+.lp-msg.lp-penny .pmsg-p{margin:0 0 7px;}
+.lp-msg.lp-penny .pmsg-p:last-child{margin:0;}
+.lp-msg.lp-penny .pmsg-ul,.lp-msg.lp-penny .pmsg-ol{margin:4px 0 7px;padding-left:18px;}
+.lp-msg.lp-penny .pmsg-ul{list-style:disc;}
+.lp-msg.lp-penny .pmsg-ol{list-style:decimal;}
+.lp-msg.lp-penny .pmsg-ul li,.lp-msg.lp-penny .pmsg-ol li{margin-bottom:3px;line-height:1.55;}
+.lp-msg.lp-penny .pmsg-h1{font-size:15px;font-weight:700;margin:8px 0 4px;}
+.lp-msg.lp-penny .pmsg-h2{font-size:14px;font-weight:700;margin:6px 0 3px;}
+.lp-msg.lp-penny .pmsg-h3{font-size:13px;font-weight:700;margin:5px 0 2px;}
+.lp-msg.lp-penny .pmsg-pre{background:var(--input-bg);border-radius:6px;padding:8px 10px;font-size:11px;margin:5px 0;overflow-x:auto;}
+.lp-msg.lp-penny .pmsg-code{background:var(--input-bg);border-radius:3px;padding:1px 4px;font-size:11px;font-family:monospace;}
+.lp-msg.lp-penny .pmsg-hr{border:none;border-top:1px solid var(--border);margin:8px 0;}
 .lp-input-row{display:flex;gap:8px;padding:9px 12px;border-top:1px solid var(--border);flex-shrink:0;}
 .lp-textarea{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px;font-size:13px;background:var(--bg);color:var(--text);outline:none;resize:none;font-family:var(--font);max-height:80px;}
 .lp-textarea:focus{border-color:var(--brand);}
@@ -389,10 +403,11 @@ body.dark .prof-backup-btn:hover{background:#1a3d66;color:#fff;}
 .hdr-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:.2s;white-space:nowrap;}
 .hdr-btn:hover{background:rgba(255,255,255,.22);}
 @media(max-width:480px){.hdr-user{display:none;}.hdr-btn .lbl{display:none;}.hdr-btn{padding:8px 10px;}}
-.penny-sidebar-close{display:none;background:none;border:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:6px;border-radius:6px;transition:.15s;margin-left:auto;}
-.penny-sidebar-close:hover{background:var(--input-bg);color:var(--text);}
+.penny-sidebar-close{background:rgba(0,0,0,.06);border:none;color:var(--text);font-size:18px;line-height:1;cursor:pointer;padding:0;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.penny-sidebar-close:hover{background:rgba(0,0,0,.14);}
+body.dark .penny-sidebar-close{background:rgba(255,255,255,.1);color:#eef2ff;}
+body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 #pennySidebarBackdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:9;cursor:pointer;}
-@media(max-width:600px){.penny-sidebar-close{display:flex;align-items:center;justify-content:center;min-width:36px;min-height:36px;}}
 
 .nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
 .nav-tabs::-webkit-scrollbar{display:none;}
@@ -788,7 +803,7 @@ input:checked+.slider:before{transform:translateX(20px);}
 
 /* ── PENNY FULL TAB ── */
 #tab-penny{flex-direction:column;overflow:hidden;}
-.penny-layout{display:flex;flex:1;height:calc(100dvh - 116px);height:calc(100vh - 116px);overflow:hidden;}
+.penny-layout{display:flex;flex:1;height:calc(100dvh - 116px);height:calc(100vh - 116px);overflow:hidden;position:relative;}
 .penny-sidebar{width:220px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .25s;}
 .penny-sidebar.collapsed{width:0;overflow:hidden;}
 .penny-sidebar-top{display:flex;align-items:center;justify-content:space-between;padding:14px 12px 10px;flex-shrink:0;}
@@ -1228,7 +1243,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     </div>
     <div class="hdr-right">
       <button class="hdr-btn hdr-help-btn" onclick="openModal('helpModal')" title="Help" style="background:none;border:none;color:rgba(255,255,255,.55);font-size:18px;font-weight:700;cursor:pointer;padding:4px 8px;line-height:1;">?</button>
-      <button class="hdr-btn" onclick="logout()" title="Log out"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="lbl" id="txt-logout">Log out</span></button>
     </div>
   </header>
 
@@ -1307,9 +1321,9 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
         <div class="penny-session-list" id="pennySessionList"></div>
       </div>
 
+      <div id="pennySidebarBackdrop" onclick="togglePennySidebar()"></div>
       <div class="penny-main" style="position:relative;"
         ondragenter="pennyDragEnter(event)" ondragover="pennyDragOver(event)" ondragleave="pennyDragLeave(event)" ondrop="pennyDrop(event)">
-        <div id="pennySidebarBackdrop" onclick="togglePennySidebar()"></div>
         <div class="penny-drop-overlay">
           <div class="pdrop-icon">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
@@ -1659,7 +1673,14 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
       </div>
     </div>
 
-    <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);">
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+      <button onclick="logout()" style="width:100%;padding:13px;background:none;border:2px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;" class="prof-btn-signout" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background='none'">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--danger);margin-bottom:10px;" class="prof-lbl-danger">Danger Zone</div>
       <button onclick="confirmDeleteAccount()" style="width:100%;padding:13px;background:none;border:2px solid var(--danger);color:var(--danger);border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.2s;" onmouseover="this.style.background='rgba(239,68,68,.08)'" onmouseout="this.style.background='none'" class="prof-btn-delete">Delete Account</button>
       <div style="font-size:11px;color:var(--muted);margin-top:7px;text-align:center;" class="prof-lbl-deleteNote">This permanently removes your account and all data. You can sign up again with the same email.</div>
@@ -5316,7 +5337,10 @@ function buildSys(){
     freq?'Shopping frequency: '+freq:'',
   ].filter(Boolean).join(' | ');
 
-  const mem = loadPennyMemory();
+  const userAskedForget = pennyActiveSession?.messages.some(m =>
+    m.role === 'user' && /forget|ignore.*(memory|past|session)|no memory|fresh start|start fresh|don.t (remember|use my history)/i.test(m.content || '')
+  );
+  const mem = userAskedForget ? null : loadPennyMemory();
   const memBlock = mem?.summaries?.length
     ? `\nPAST CONVERSATION MEMORY (from previous sessions — use this to personalize and avoid re-asking things you already know):\n${mem.summaries.slice(0,4).map((s,i)=>`[${s.date}] ${s.text}`).join('\n')}\n`
     : '';
@@ -5461,6 +5485,21 @@ Rules:
 - One soft offer, then wait. If they say "stick to my usual" → respect it, don't push that store again for that item
 - If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency
 
+RULE 11 — PRICE ACCURACY & AVAILABILITY HONESTY:
+Your price knowledge comes from training data and may be months or years old. You do NOT have live access to store inventory or current prices. ALWAYS:
+- Use hedged language: "typically around", "usually priced at", "last I saw about $X", "based on typical pricing" — never state a price as a guaranteed fact
+- Add at least one caveat per price conversation: "Prices vary by location and may have changed — worth checking the store app or website before you go"
+- Never promise an item will be in stock. For anything specialty, seasonal, or limited: "Availability varies — worth calling ahead or checking online before making the trip"
+- If the user asks "is this in stock at Walmart?" be honest: "I can't check live inventory, but [Walmart.com / Sam's Club app / store.brand.com] will show real-time stock for your location"
+- After giving estimated prices, naturally invite them to verify: "Want to plug these into the Compare tab so you can track the real prices when you check?"
+
+RULE 12 — CHECKING REAL STORE PRICES:
+When a user asks about prices at specific stores (Walmart, Sam's Club, Costco, etc.):
+1. Give your best estimate from training knowledge, clearly labeled as an estimate
+2. Always follow with: "For current prices, check [store name]'s app or website — or I can help you set up a comparison in the Compare tab once you find the real numbers"
+3. If they want a side-by-side, build it with your estimates but remind them to verify before shopping
+4. For Sam's Club: remind user that membership is required ($50/year) — factor that into bulk savings math
+
 RECEIPT & IMAGE SCANNING:
 When the user sends an image, analyze it immediately. If it looks like a grocery receipt or store shelf tag:
   - Extract every grocery/food item you can read, with name, price, quantity, and any relevant notes (sale price, unit price, brand)
@@ -5493,7 +5532,11 @@ function lpAddMsg(role, text, id){
   div.className = 'lp-msg ' + (role==='user' ? 'lp-user' : 'lp-penny');
   if(id) div.id = id;
   if(role==='thinking') div.classList.add('lp-thinking');
-  div.textContent = text;
+  if(role === 'penny') {
+    div.innerHTML = pennyMd(text);
+  } else {
+    div.textContent = text;
+  }
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
@@ -5570,6 +5613,8 @@ TIPS:
 - Sign up takes about 10 seconds.
 - Discounts can be % off or flat dollar amount.
 - The Compare tab shows cost-per-day estimates for common grocery items.
+
+PRICE HONESTY: Your price knowledge may be outdated — always say "typically around $X" or "prices vary by location." Never guarantee stock or a specific price. If asked about live inventory, say you can't check in real time but the store's app or website can.
 
 Keep replies warm, brief (under 100 words), and conversational. Encourage them to sign up and try it. If asked how to sign up, tell them to use the form on the page.`;
 }
