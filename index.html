@@ -1909,7 +1909,7 @@ const TRANSLATIONS = {
     toastCopied:'Copied to Item', toastNoSlot:'No empty card available.',
     toastNoProduct:'Product not found.', toastSizeNA:'Size not detected. Enter manually.',
     toastCopiedClip:'Copied!', toastCopyFail:'Copy failed.',
-    toastRunFirst:'Run a comparison first.', toastEnterPrice:'Enter at least one price to compare.',
+    toastRunFirst:'Run a comparison first.', toastEnterPrice:'Enter at least one price to compare.', pennyAddCompareFirst:'Add items to Compare first.',
     toastPresetName:'Enter a preset name first.', toastListName:'Please enter a name.',
     toastItemName:'Please enter an item name.', toastItemNameEmpty:'Item name cannot be empty.',
     toastNoLists:'No lists to copy to.',
@@ -2061,7 +2061,7 @@ const TRANSLATIONS = {
     toastCopied:'Copiado al artículo', toastNoSlot:'No hay tarjeta vacía.',
     toastNoProduct:'Producto no encontrado.', toastSizeNA:'Tamaño no detectado.',
     toastCopiedClip:'¡Copiado!', toastCopyFail:'Error al copiar.',
-    toastRunFirst:'Ejecuta una comparación primero.', toastEnterPrice:'Ingresa al menos un precio.',
+    toastRunFirst:'Ejecuta una comparación primero.', toastEnterPrice:'Ingresa al menos un precio.', pennyAddCompareFirst:'Primero agrega artículos en Comparar.',
     toastPresetName:'Ingresa un nombre para el preajuste.', toastListName:'Por favor ingresa un nombre.',
     toastItemName:'Por favor ingresa un nombre.', toastItemNameEmpty:'El nombre no puede estar vacío.',
     toastNoLists:'No hay listas para copiar.',
@@ -2213,7 +2213,7 @@ const TRANSLATIONS = {
     toastCopied:'Copiado para item', toastNoSlot:'Nenhum cartão vazio.',
     toastNoProduct:'Produto não encontrado.', toastSizeNA:'Tamanho não detectado.',
     toastCopiedClip:'Copiado!', toastCopyFail:'Falha ao copiar.',
-    toastRunFirst:'Execute uma comparação primeiro.', toastEnterPrice:'Insira pelo menos um preço.',
+    toastRunFirst:'Execute uma comparação primeiro.', toastEnterPrice:'Insira pelo menos um preço.', pennyAddCompareFirst:'Adicione itens em Comparar primeiro.',
     toastPresetName:'Insira um nome para a predefinição.', toastListName:'Por favor insira um nome.',
     toastItemName:'Por favor insira um nome.', toastItemNameEmpty:'O nome não pode estar vazio.',
     toastNoLists:'Sem listas para copiar.',
@@ -4938,7 +4938,7 @@ function pennyInjectCompare(){
     const q = document.getElementById(`q-${i}`)?.value || '1';
     if(n || p) lines.push(`Item ${i+1}: ${n||'Unnamed'} | $${p} | ${s}${u} x${q}`);
   }
-  if(!lines.length){ showToast('Add items to Compare first.'); return; }
+  if(!lines.length){ showToast(t.pennyAddCompareFirst||'Add items to Compare first.'); return; }
   const msg = `Here are the products I am comparing for my household of ${hh}:\n${lines.join('\n')}\n\nWhich is the best value and why?`;
   const inp = document.getElementById('pennyInput');
   if(inp){ inp.value = msg; inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,120)+'px'; inp.focus(); }
