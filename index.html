@@ -327,10 +327,24 @@ body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflo
 .lp-close-btn{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.75;line-height:1;font-size:15px;}
 .lp-close-btn:hover{opacity:1;}
 .lp-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;min-height:120px;}
-.lp-msg{max-width:86%;border-radius:14px;padding:9px 12px;font-size:13px;line-height:1.45;word-break:break-word;}
+.lp-msg{max-width:86%;border-radius:14px;padding:10px 13px;font-size:13px;line-height:1.65;word-break:break-word;}
 .lp-msg.lp-penny{background:var(--card-bg);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
-.lp-msg.lp-user{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.lp-msg.lp-user{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;white-space:pre-wrap;}
 .lp-msg.lp-thinking{opacity:.55;font-style:italic;}
+.lp-msg.lp-penny strong{font-weight:700;}
+.lp-msg.lp-penny em{font-style:italic;}
+.lp-msg.lp-penny .pmsg-p{margin:0 0 7px;}
+.lp-msg.lp-penny .pmsg-p:last-child{margin:0;}
+.lp-msg.lp-penny .pmsg-ul,.lp-msg.lp-penny .pmsg-ol{margin:4px 0 7px;padding-left:18px;}
+.lp-msg.lp-penny .pmsg-ul{list-style:disc;}
+.lp-msg.lp-penny .pmsg-ol{list-style:decimal;}
+.lp-msg.lp-penny .pmsg-ul li,.lp-msg.lp-penny .pmsg-ol li{margin-bottom:3px;line-height:1.55;}
+.lp-msg.lp-penny .pmsg-h1{font-size:15px;font-weight:700;margin:8px 0 4px;}
+.lp-msg.lp-penny .pmsg-h2{font-size:14px;font-weight:700;margin:6px 0 3px;}
+.lp-msg.lp-penny .pmsg-h3{font-size:13px;font-weight:700;margin:5px 0 2px;}
+.lp-msg.lp-penny .pmsg-pre{background:var(--input-bg);border-radius:6px;padding:8px 10px;font-size:11px;margin:5px 0;overflow-x:auto;}
+.lp-msg.lp-penny .pmsg-code{background:var(--input-bg);border-radius:3px;padding:1px 4px;font-size:11px;font-family:monospace;}
+.lp-msg.lp-penny .pmsg-hr{border:none;border-top:1px solid var(--border);margin:8px 0;}
 .lp-input-row{display:flex;gap:8px;padding:9px 12px;border-top:1px solid var(--border);flex-shrink:0;}
 .lp-textarea{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px;font-size:13px;background:var(--bg);color:var(--text);outline:none;resize:none;font-family:var(--font);max-height:80px;}
 .lp-textarea:focus{border-color:var(--brand);}
@@ -5471,6 +5485,21 @@ Rules:
 - One soft offer, then wait. If they say "stick to my usual" → respect it, don't push that store again for that item
 - If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency
 
+RULE 11 — PRICE ACCURACY & AVAILABILITY HONESTY:
+Your price knowledge comes from training data and may be months or years old. You do NOT have live access to store inventory or current prices. ALWAYS:
+- Use hedged language: "typically around", "usually priced at", "last I saw about $X", "based on typical pricing" — never state a price as a guaranteed fact
+- Add at least one caveat per price conversation: "Prices vary by location and may have changed — worth checking the store app or website before you go"
+- Never promise an item will be in stock. For anything specialty, seasonal, or limited: "Availability varies — worth calling ahead or checking online before making the trip"
+- If the user asks "is this in stock at Walmart?" be honest: "I can't check live inventory, but [Walmart.com / Sam's Club app / store.brand.com] will show real-time stock for your location"
+- After giving estimated prices, naturally invite them to verify: "Want to plug these into the Compare tab so you can track the real prices when you check?"
+
+RULE 12 — CHECKING REAL STORE PRICES:
+When a user asks about prices at specific stores (Walmart, Sam's Club, Costco, etc.):
+1. Give your best estimate from training knowledge, clearly labeled as an estimate
+2. Always follow with: "For current prices, check [store name]'s app or website — or I can help you set up a comparison in the Compare tab once you find the real numbers"
+3. If they want a side-by-side, build it with your estimates but remind them to verify before shopping
+4. For Sam's Club: remind user that membership is required ($50/year) — factor that into bulk savings math
+
 RECEIPT & IMAGE SCANNING:
 When the user sends an image, analyze it immediately. If it looks like a grocery receipt or store shelf tag:
   - Extract every grocery/food item you can read, with name, price, quantity, and any relevant notes (sale price, unit price, brand)
@@ -5503,7 +5532,11 @@ function lpAddMsg(role, text, id){
   div.className = 'lp-msg ' + (role==='user' ? 'lp-user' : 'lp-penny');
   if(id) div.id = id;
   if(role==='thinking') div.classList.add('lp-thinking');
-  div.textContent = text;
+  if(role === 'penny') {
+    div.innerHTML = pennyMd(text);
+  } else {
+    div.textContent = text;
+  }
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
@@ -5580,6 +5613,8 @@ TIPS:
 - Sign up takes about 10 seconds.
 - Discounts can be % off or flat dollar amount.
 - The Compare tab shows cost-per-day estimates for common grocery items.
+
+PRICE HONESTY: Your price knowledge may be outdated — always say "typically around $X" or "prices vary by location." Never guarantee stock or a specific price. If asked about live inventory, say you can't check in real time but the store's app or website can.
 
 Keep replies warm, brief (under 100 words), and conversational. Encourage them to sign up and try it. If asked how to sign up, tell them to use the form on the page.`;
 }
