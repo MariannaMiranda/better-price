@@ -1086,7 +1086,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
           <div class="err-bubble" id="err-pass"><span class="err-icon">!</span><span class="msg"></span></div>
         </div>
         <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign Up</button>
-        <div class="beta-notice">⚠️ Beta — do not use real passwords. All data is stored only on this device.</div>
       </div>
     </div>
   </div>
@@ -1654,25 +1653,6 @@ body.dark #profile-zip{background:var(--input-bg);color:var(--text);}
     
     <button class="auth-btn prof-btn-save" style="margin-top:8px" onclick="confirmSaveProfile()">Save Changes</button>
     <div id="profile-saved-msg" class="prof-lbl-saved" style="display:none;text-align:center;margin-top:12px;color:var(--ok);font-size:14px;font-weight:600;">&#10003; Profile saved!</div>
-
-    <div class="profile-section" style="margin-top:16px;" id="local-storage-warning">
-      <div class="profile-section-title">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Data Backup
-      </div>
-      <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5;">Your data lives on this device only. Export a backup before clearing your browser or switching devices.</p>
-      <div style="display:flex;gap:8px;">
-        <button onclick="exportUserData()" class="prof-backup-btn">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export Backup
-        </button>
-        <button onclick="document.getElementById('import-file-input').click()" class="prof-backup-btn">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Restore Backup
-        </button>
-        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importUserData(this)">
-      </div>
-    </div>
 
     <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
       <button onclick="logout()" style="width:100%;padding:13px;background:none;border:2px solid var(--brand);color:var(--brand);border-radius:var(--rsm);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;" class="prof-btn-signout" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background='none'">
