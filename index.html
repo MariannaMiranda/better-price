@@ -2894,8 +2894,6 @@ async function showApp(isNewUser=false){
     obSkipped = {1:false,2:false,3:false,4:false,5:false};
     obGoStep(1);
     document.getElementById('onboarding-screen').style.display='flex';
-  } else {
-    _sb.auth.getUser().then(({data})=>{ if(data?.user) localStorage.setItem('bp_onboarded_'+data.user.id,'1'); });
   }
 }
 
