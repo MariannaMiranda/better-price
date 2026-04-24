@@ -5898,25 +5898,36 @@ window.onload=async ()=>{
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 
-  const { data: { session } } = await _sb.auth.getSession();
-  if(session){
+  let _appStarted = false;
+  function handleSession(session){
+    if(_appStarted) return;
+    if(!session){
+      localStorage.removeItem('bp_session');
+      document.getElementById('auth-screen').style.display='flex';
+      document.getElementById('app').style.display='none';
+      document.getElementById('landing-penny-fab').style.display='flex';
+      return;
+    }
+    _appStarted = true;
     const meta = session.user.user_metadata || {};
     const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
     const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
     const onboardedKey = 'bp_onboarded_' + session.user.id;
-    // If email was just confirmed (within 10 min), clear any stale flag and show quiz
     const confirmedAt = session.user.email_confirmed_at ? new Date(session.user.email_confirmed_at).getTime() : 0;
     if((Date.now() - confirmedAt) < 600000) localStorage.removeItem(onboardedKey);
     const isNewUser = !localStorage.getItem(onboardedKey);
     showApp(isNewUser);
-  } else {
-    localStorage.removeItem('bp_session');
-    document.getElementById('auth-screen').style.display='flex';
-    document.getElementById('app').style.display='none';
-    document.getElementById('landing-penny-fab').style.display='flex';
   }
+
+  // Listen for auth changes (catches email confirmation redirects)
+  _sb.auth.onAuthStateChange((_event, session) => {
+    if(!_appStarted) handleSession(session);
+  });
+
+  const { data: { session } } = await _sb.auth.getSession();
+  handleSession(session);
 };
 </script>
 </body>
