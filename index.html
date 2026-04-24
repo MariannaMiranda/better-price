@@ -1144,7 +1144,8 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
       <div class="ce-sub">We sent a confirmation link to</div>
       <div class="ce-email" id="ce-email-addr"></div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:28px;">Don't see it? Check your spam folder.</div>
-      <button class="ce-resend" onclick="resendConfirmation()" style="width:100%;">Resend email</button>
+      <button class="ce-resend" id="ce-resend-btn" onclick="resendConfirmation()" style="width:100%;">Resend email</button>
+      <div id="ce-countdown" style="font-size:13px;color:var(--muted);margin-top:10px;min-height:20px;"></div>
       <button class="ce-back" onclick="backToLogin()" style="margin-top:16px;display:block;width:100%;">Back to login</button>
     </div>
   </div>
@@ -2793,11 +2794,35 @@ async function handleAuth(){
 }
 
 let _pendingConfirmEmail = '';
+let _resendTimer = null;
+function startResendCountdown(){
+  const btn = document.getElementById('ce-resend-btn');
+  const cd = document.getElementById('ce-countdown');
+  let secs = 60;
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  btn.style.cursor = 'not-allowed';
+  cd.textContent = `You can resend in ${secs}s`;
+  clearInterval(_resendTimer);
+  _resendTimer = setInterval(() => {
+    secs--;
+    if(secs <= 0){
+      clearInterval(_resendTimer);
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.cursor = '';
+      cd.textContent = '';
+    } else {
+      cd.textContent = `You can resend in ${secs}s`;
+    }
+  }, 1000);
+}
 function showCheckEmail(email){
   _pendingConfirmEmail = email;
   document.getElementById('ce-email-addr').textContent = email;
   document.getElementById('check-email-screen').style.display = 'flex';
   document.getElementById('auth-screen').style.display = 'none';
+  startResendCountdown();
 }
 function backToLogin(){
   document.getElementById('check-email-screen').style.display = 'none';
@@ -2808,6 +2833,7 @@ async function resendConfirmation(){
   if(!_pendingConfirmEmail) return;
   const { error } = await _sb.auth.resend({ type: 'signup', email: _pendingConfirmEmail });
   showToast(error ? error.message : 'Email resent!', error ? '' : 'ok');
+  if(!error) startResendCountdown();
 }
 async function signInWithGoogle(){
   await _sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
