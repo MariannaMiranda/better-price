@@ -5906,6 +5906,9 @@ window.onload=async ()=>{
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
     const onboardedKey = 'bp_onboarded_' + session.user.id;
+    // If email was just confirmed (within 10 min), clear any stale flag and show quiz
+    const confirmedAt = session.user.email_confirmed_at ? new Date(session.user.email_confirmed_at).getTime() : 0;
+    if((Date.now() - confirmedAt) < 600000) localStorage.removeItem(onboardedKey);
     const isNewUser = !localStorage.getItem(onboardedKey);
     showApp(isNewUser);
   } else {
