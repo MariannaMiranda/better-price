@@ -1772,6 +1772,7 @@ function saveU(k, v){
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
   const prefix = session.email ? 'bp_'+session.email+'_' : 'bp_';
   try { localStorage.setItem(prefix+k, JSON.stringify(v)); } catch(e){ console.error('saveU',e); }
+  _sbScheduleSync();
 }
 function loadU(k, def){
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
@@ -1781,6 +1782,42 @@ function loadU(k, def){
     if(raw !== null) return JSON.parse(raw);
   } catch(e){ console.error('loadU',e); }
   return def;
+}
+
+let _sbSyncTimer = null;
+function _sbScheduleSync(){
+  clearTimeout(_sbSyncTimer);
+  _sbSyncTimer = setTimeout(_sbDoSync, 1500);
+}
+async function _sbDoSync(){
+  const { data: { user } } = await _sb.auth.getUser();
+  if(!user) return;
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const email = session.email || '';
+  if(!email) return;
+  const prefix = 'bp_' + email + '_';
+  const allData = {};
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith(prefix)){
+      try { allData[key.slice(prefix.length)] = JSON.parse(localStorage.getItem(key)); }
+      catch(e){ allData[key.slice(prefix.length)] = localStorage.getItem(key); }
+    }
+  }
+  await _sb.from('user_data').upsert({ user_id: user.id, data: allData, updated_at: new Date().toISOString() });
+}
+async function loadUserDataFromSupabase(){
+  const { data: { user } } = await _sb.auth.getUser();
+  if(!user) return;
+  const { data: row } = await _sb.from('user_data').select('data').eq('user_id', user.id).single();
+  if(!row || !row.data) return;
+  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
+  const email = session.email || '';
+  if(!email) return;
+  const prefix = 'bp_' + email + '_';
+  for(const [k, v] of Object.entries(row.data)){
+    try { localStorage.setItem(prefix + k, JSON.stringify(v)); } catch(e){}
+  }
 }
 
 function esc(str){ const d=document.createElement('div'); d.appendChild(document.createTextNode(String(str||''))); return d.innerHTML; }
@@ -2730,12 +2767,13 @@ function logout(){
   });
 }
 
-function showApp(isNewUser=false){
+async function showApp(isNewUser=false){
   document.getElementById('auth-screen').style.display='none';
 
   document.getElementById('app').style.display='block';
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
+  await loadUserDataFromSupabase();
   loadUserData();
   loadPennySessions();
   ['history','grocery','presets','help','profile','penny'].forEach(n=>{
@@ -4522,6 +4560,7 @@ function loadPennyMemory(){
 }
 function savePennyMemory(mem){
   try { localStorage.setItem(_pennyMemoryKey(), JSON.stringify(mem)); } catch(e){}
+  _sbScheduleSync();
 }
 async function _archivePennySession(session){
   // Build a plain-text transcript of the session (skip images, limit length)
