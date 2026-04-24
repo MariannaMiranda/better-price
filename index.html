@@ -2894,6 +2894,8 @@ async function showApp(isNewUser=false){
     obSkipped = {1:false,2:false,3:false,4:false,5:false};
     obGoStep(1);
     document.getElementById('onboarding-screen').style.display='flex';
+  } else {
+    _sb.auth.getUser().then(({data})=>{ if(data?.user) localStorage.setItem('bp_onboarded_'+data.user.id,'1'); });
   }
 }
 
@@ -3101,6 +3103,7 @@ function tryFinishOnboarding(){
 }
 
 function finishOnboarding(){
+  _sb.auth.getUser().then(({data})=>{ if(data?.user) localStorage.setItem('bp_onboarded_'+data.user.id,'1'); });
   if(!obSkipped[1]) saveU('household', obHousehold);
   if(!obSkipped[2]){
     const otherFreqChip = document.getElementById('freq-other-chip');
@@ -5904,9 +5907,8 @@ window.onload=async ()=>{
     const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
-    // Detect new Google/OAuth sign-ups: created within last 2 minutes
-    const createdAt = new Date(session.user.created_at).getTime();
-    const isNewUser = (Date.now() - createdAt) < 120000;
+    const onboardedKey = 'bp_onboarded_' + session.user.id;
+    const isNewUser = !localStorage.getItem(onboardedKey);
     showApp(isNewUser);
   } else {
     localStorage.removeItem('bp_session');
