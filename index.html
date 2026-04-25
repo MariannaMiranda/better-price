@@ -472,6 +472,8 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 .result-line{margin-top:14px;padding:12px 16px;background:var(--brand-light);border-radius:var(--rsm);font-family:var(--font-m);font-size:16px;font-weight:500;color:var(--brand);text-align:right;min-height:44px;transition:.3s;}
 .product-card.best .result-line{background:var(--ok-bg);color:var(--ok);}
 .product-card.tied .result-line{background:#fffbeb;color:#92400e;}
+.product-card.compared .card-fields{display:none;}
+.product-card.compared{padding:14px 18px;}
 
 .compare-wrap{display:flex;justify-content:center;padding:24px 20px 10px;}
 #compareBtn{padding:18px 80px;background:var(--brand);color:#fff;border:none;border-radius:16px;font-family:var(--font-d);font-size:20px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:.2s;box-shadow:0 4px 20px rgba(0,51,102,.25);}
@@ -1012,6 +1014,10 @@ body.dark .ai-chat-input:focus{border-color:#4d8fcc;}
 .ai-chat-send svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
 body.dark .ai-panel{background:#111f2e;border-color:#4d8fcc;}
 body.dark #ob-zip{background:var(--input-bg);color:var(--text);}
+.zip-box{width:48px;height:58px;border-bottom:3px solid var(--brand);font-size:28px;font-weight:700;font-family:var(--font-m);text-align:center;line-height:58px;color:var(--muted);cursor:text;transition:.2s;}
+.zip-box.filled{color:var(--text);}
+.zip-box.active{border-bottom-color:var(--brand);border-bottom-width:3px;}
+body.dark .zip-box{border-bottom-color:#4d8fcc;}
 
 /* Onboarding back button */
 .onboard-back{background:none;border:none;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;padding:0 0 14px;display:flex;align-items:center;gap:5px;transition:.2s;}
@@ -1033,7 +1039,9 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
 .auth-divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:2px 0;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 #check-email-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:2000;flex-direction:row;}
-.ce-left{flex:1;display:none;flex-direction:column;justify-content:center;padding:60px;background:#1a3050;}
+.ce-left{flex:1;display:none;flex-direction:column;justify-content:center;padding:60px;background:linear-gradient(135deg,#003366 0%,#1a4a8a 50%,#002244 100%);position:relative;overflow:hidden;}
+.ce-left::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0,rgba(255,255,255,.015) 1px,transparent 1px,transparent 80px),repeating-linear-gradient(90deg,rgba(255,255,255,.015) 0,rgba(255,255,255,.015) 1px,transparent 1px,transparent 80px);}
+.ce-left-content{position:relative;z-index:1;}
 @media(min-width:900px){.ce-left{display:flex;}}
 .ce-icon{width:72px;height:72px;background:var(--brand-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;}
 .ce-icon svg{width:34px;height:34px;stroke:var(--brand);}
@@ -1133,12 +1141,14 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
 
 <div id="check-email-screen">
   <div class="ce-left">
-    <div class="al-brand" style="margin-bottom:32px;">
-      <div class="al-brand-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
-      <div class="al-brand-name">Better Price!</div>
+    <div class="ce-left-content">
+      <div class="al-brand" style="margin-bottom:40px;">
+        <div class="al-brand-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+        <div class="al-brand-name">Better Price!</div>
+      </div>
+      <div style="font-family:var(--font-d);font-size:42px;font-weight:800;color:#fff;margin-bottom:16px;line-height:1.1;letter-spacing:-1px;">Almost<br>there!</div>
+      <div style="font-size:18px;color:rgba(255,255,255,0.6);line-height:1.7;max-width:280px;">Just confirm your email and you're ready to start saving.</div>
     </div>
-    <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:12px;line-height:1.3;">Almost there!</div>
-    <div style="font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;max-width:260px;">Just confirm your email and you're all set.</div>
   </div>
   <div class="auth-right" style="display:flex;align-items:center;justify-content:center;">
     <div style="width:100%;max-width:400px;text-align:center;padding:20px 0;">
@@ -1263,9 +1273,14 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
             <span style="content:'';position:absolute;bottom:-7px;left:17px;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid var(--border);display:block;width:0;height:0;"></span>
             <span style="content:'';position:absolute;bottom:-6px;left:18px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--white);display:block;width:0;height:0;"></span>
           </div>
-          <input type="text" id="ob-zip" maxlength="5" inputmode="numeric"
-            style="width:100%;padding:18px 20px;border:2px solid var(--brand);border-radius:var(--rsm);font-size:28px;font-weight:700;font-family:var(--font-m);text-align:center;background:var(--brand-light);color:var(--text);outline:none;letter-spacing:6px;"
-            placeholder="- - - - -" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5);document.getElementById('ob-zip-err').style.display='none';this.style.borderColor='';">
+          <input type="text" id="ob-zip" maxlength="5" inputmode="numeric" style="position:absolute;opacity:0;pointer-events:none;">
+          <div style="display:flex;gap:10px;justify-content:center;" onclick="document.getElementById('ob-zip').focus()">
+            <div class="zip-box" id="zb-0">-</div>
+            <div class="zip-box" id="zb-1">-</div>
+            <div class="zip-box" id="zb-2">-</div>
+            <div class="zip-box" id="zb-3">-</div>
+            <div class="zip-box" id="zb-4">-</div>
+          </div>
         </div>
         <div id="ob-zip-note" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;">US zip codes only &mdash; used to find the best nearby deals</div>
       </div>
@@ -2773,6 +2788,7 @@ async function handleAuth(){
         options: { data: { firstName, lastName, name } }
       });
       if(error) return showErr('email', error.message);
+      localStorage.setItem('bp_needs_onboarding', '1');
       if(data.session){
         localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
         showApp(true);
@@ -2841,6 +2857,7 @@ async function resendConfirmation(){
   if(!error) startResendCountdown();
 }
 async function signInWithGoogle(){
+  if(authMode === 'signup') localStorage.setItem('bp_needs_onboarding', '1');
   await _sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
 }
 async function signInWithApple(){
@@ -3080,6 +3097,7 @@ function obGoStep(step){
   });
   const next = document.getElementById('ob-step-' + step);
   if(next) next.classList.add('active');
+  if(step === 5) setTimeout(initZipBoxes, 50);
 }
 function obSkipStep(fromStep){
   obSkipped[fromStep] = true;
@@ -3098,19 +3116,35 @@ function obContinueStores(){
   document.getElementById('ob-store-err').style.display='none';
   obGoStep(5);
 }
+function initZipBoxes(){
+  const inp = document.getElementById('ob-zip');
+  if(!inp) return;
+  inp.addEventListener('input', ()=>{
+    const val = inp.value.replace(/\D/g,'').slice(0,5);
+    inp.value = val;
+    for(let i=0;i<5;i++){
+      const box = document.getElementById('zb-'+i);
+      if(!box) continue;
+      if(val[i]){ box.textContent=val[i]; box.classList.add('filled'); }
+      else { box.textContent='-'; box.classList.remove('filled'); }
+    }
+    document.getElementById('ob-zip-err').style.display='none';
+  });
+  inp.addEventListener('focus', ()=>{ const box=document.getElementById('zb-'+(inp.value.length<5?inp.value.length:4)); if(box) box.style.borderBottomWidth='4px'; });
+  inp.addEventListener('blur', ()=>{ for(let i=0;i<5;i++){ const b=document.getElementById('zb-'+i); if(b) b.style.borderBottomWidth=''; } });
+}
 function tryFinishOnboarding(){
   const zipVal = (document.getElementById('ob-zip')?.value || '').trim();
   if(!zipVal || zipVal.length !== 5){
-    const errEl = document.getElementById('ob-zip-err');
-    if(errEl) errEl.style.display = 'flex';
-    const zipInput = document.getElementById('ob-zip');
-    if(zipInput) zipInput.style.borderColor = 'var(--danger)';
+    document.getElementById('ob-zip-err').style.display = 'flex';
+    document.getElementById('ob-zip')?.focus();
     return;
   }
   finishOnboarding();
 }
 
 function finishOnboarding(){
+  _sb.auth.getUser().then(({data})=>{ if(data?.user) localStorage.setItem('bp_onboarded_'+data.user.id,'1'); });
   if(!obSkipped[1]) saveU('household', obHousehold);
   if(!obSkipped[2]){
     const otherFreqChip = document.getElementById('freq-other-chip');
@@ -3625,6 +3659,7 @@ function updateGrid(){
           <button class="card-icon-btn" title="Delete card" style="color:var(--danger);border-color:var(--danger)" onclick="deleteCard(${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
         </div>
       </div>
+
       <div class="card-summary">
         <span class="card-summary-name" id="cs-name-${i}"></span>
         <span class="card-summary-price" id="cs-price-${i}"></span>
@@ -3667,6 +3702,47 @@ function updateGrid(){
         </div>
         <div class="result-line" id="res-${i}"></div>
       </div>
+
+      <div class="card-fields">
+      <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
+      <label class="card-label">${t.priceLabel}</label>
+      <input type="text" inputmode="decimal" class="price-input" id="p-${i}" placeholder="0.00" onkeydown="priceKeyDown(${i},event)" onpaste="onPricePaste(${i},event)" autocomplete="off">
+      <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
+      <div class="field-row" style="margin-top:10px">
+        <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" class="card-input" id="dv-${i}" value="0"></div>
+        <div style="flex:1"><label class="card-label">${t.typeLabel}</label><select class="card-select" id="dt-${i}"><option value="p">%</option><option value="f">${cur}</option></select></div>
+      </div>
+      <label class="card-label">${t.sizeLabel}</label>
+      <div class="field-row">
+        <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}">
+        <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
+          <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="sheets">sht</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
+        </select>
+      </div>
+      <label class="card-label">${t.packLabel}</label>
+      <input type="number" class="card-input" id="q-${i}" value="1" style="margin-top:4px;margin-bottom:10px">
+      <label class="card-label">${t.categoryLabel||'Category'}</label>
+      <div class="cat-picker" id="cp-${i}">
+        <select class="cat-sel" id="cp-l1-${i}" onchange="catL1Change(${i})">
+          <option value="">Select Category</option>
+        </select>
+        <select class="cat-sel" id="cp-l2-${i}" onchange="catL2Change(${i})" style="display:none;">
+          <option value="">Select Sub-category</option>
+        </select>
+        <select class="cat-sel" id="cp-l3-${i}" onchange="catL3Change(${i})" style="display:none;">
+          <option value="">Select Item Type</option>
+        </select>
+      </div>
+      <input type="hidden" id="cat-${i}" value="">
+      <label class="card-label">${t.nameLabel}</label>
+      <div style="position:relative">
+        <input type="text" class="card-input" id="n-${i}" placeholder="${t.itemNamePh}" oninput="onNameInput(${i})" autocomplete="off">
+        <div class="brand-dropdown" id="bd-${i}"></div>
+      </div>
+      </div>
+      <div class="compared-summary" id="csum-${i}" style="display:none;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;"></div>
+      <div class="result-line" id="res-${i}"></div>
+
     </div>`;
   }
   grid.innerHTML=html;
@@ -3849,6 +3925,15 @@ function compare(){
   ab.style.height='auto';
   ab.style.height=ab.scrollHeight+'px';
   const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=log;
+  // Collapse cards to name + result only
+  for(let i=0;i<items;i++){
+    document.getElementById(`card-${i}`).classList.add('compared');
+    const name=document.getElementById(`n-${i}`).value.trim()||`Item ${i+1}`;
+    const csum=document.getElementById(`csum-${i}`);
+    if(csum){csum.textContent=name;csum.style.display='block';}
+  }
+  // Scroll analysis into view
+  const ab=document.getElementById('analysisBox'); if(ab) ab.scrollIntoView({behavior:'smooth',block:'nearest'});
   playCaChing();
 }
 
@@ -3891,7 +3976,7 @@ function playCaChing(){
   }catch(e){}
 }
 
-function resetAll(){ const t=T(); showConfirm(lang==='en'?'Reset Compare':lang==='es'?'Reiniciar comparación':'Redefinir comparação', lang==='en'?'Clear all items and results?':lang==='es'?'¿Borrar todos los artículos y resultados?':'Limpar todos os itens e resultados?', ()=>{ updateGrid(); document.getElementById('analysisBox').value=''; lastAnalysis=''; const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=T().exportRunFirst; }); }
+function resetAll(){ const t=T(); showConfirm(lang==='en'?'Reset Compare':lang==='es'?'Reiniciar comparación':'Redefinir comparação', lang==='en'?'Clear all items and results?':lang==='es'?'¿Borrar todos los artículos y resultados?':'Limpar todos os itens e resultados?', ()=>{ updateGrid(); document.getElementById('analysisBox').value=''; lastAnalysis=''; const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=T().exportRunFirst; for(let i=0;i<items;i++){ const c=document.getElementById(`card-${i}`); if(c){c.classList.remove('compared');} const cs=document.getElementById(`csum-${i}`); if(cs) cs.style.display='none'; } }); }
 
 function renderHistory(){
   const el=document.getElementById('historyList');
@@ -5935,20 +6020,48 @@ window.onload=async ()=>{
   currRate = 1;
   setMode('signup');
   applyLang();
-  const { data: { session } } = await _sb.auth.getSession();
-  if(session){
+  // Handle OAuth error redirects (e.g. bad_oauth_state)
+  const urlParams = new URLSearchParams(window.location.search);
+  const oauthError = urlParams.get('error_description') || urlParams.get('error');
+  if(oauthError) {
+    history.replaceState(null, '', window.location.pathname);
+    showToast(oauthError.replace(/\+/g,' '), '');
+  }
+
+  let _appStarted = false;
+  function handleSession(session, freshSignIn = false){
+    if(_appStarted) return;
+    if(!session){
+      localStorage.removeItem('bp_session');
+      document.getElementById('auth-screen').style.display='flex';
+      document.getElementById('app').style.display='none';
+      document.getElementById('landing-penny-fab').style.display='flex';
+      return;
+    }
+    _appStarted = true;
     const meta = session.user.user_metadata || {};
-    const firstName = meta.firstName || '';
-    const lastName  = meta.lastName  || '';
+    const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
+    const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
-    showApp();
-  } else {
-    localStorage.removeItem('bp_session');
-    document.getElementById('auth-screen').style.display='flex';
-    document.getElementById('app').style.display='none';
-    document.getElementById('landing-penny-fab').style.display='flex';
+    const onboardedKey = 'bp_onboarded_' + session.user.id;
+    // Only check the onboarding flag on a fresh sign-in, not a page reload
+    const needsOnboarding = freshSignIn && localStorage.getItem('bp_needs_onboarding');
+    if(needsOnboarding) localStorage.removeItem('bp_needs_onboarding');
+    const isNewUser = !!needsOnboarding;
+    showApp(isNewUser);
   }
+
+  // Detect if this page load is coming from an email confirmation or OAuth redirect
+  const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
+  const isFreshAuth = hashParams.get('access_token') || hashParams.get('type') === 'signup';
+
+  _sb.auth.onAuthStateChange((event, session) => {
+    if(!_appStarted) handleSession(session, event === 'SIGNED_IN');
+  });
+
+  const { data: { session } } = await _sb.auth.getSession();
+  handleSession(session, !!isFreshAuth);
 };
 </script>
 </body>
