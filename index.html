@@ -5901,7 +5901,7 @@ window.onload=async ()=>{
   }
 
   let _appStarted = false;
-  function handleSession(session){
+  function handleSession(session, freshSignIn = false){
     if(_appStarted) return;
     if(!session){
       localStorage.removeItem('bp_session');
@@ -5916,16 +5916,17 @@ window.onload=async ()=>{
     const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
-    const needsOnboarding = localStorage.getItem('bp_needs_onboarding');
-    if(needsOnboarding) localStorage.removeItem('bp_needs_onboarding');
     const onboardedKey = 'bp_onboarded_' + session.user.id;
-    const isNewUser = needsOnboarding || !localStorage.getItem(onboardedKey);
+    // Only check the onboarding flag on a fresh sign-in, not a page reload
+    const needsOnboarding = freshSignIn && localStorage.getItem('bp_needs_onboarding');
+    if(needsOnboarding) localStorage.removeItem('bp_needs_onboarding');
+    const isNewUser = !!needsOnboarding;
     showApp(isNewUser);
   }
 
-  // Listen for auth changes (catches email confirmation redirects)
-  _sb.auth.onAuthStateChange((_event, session) => {
-    if(!_appStarted) handleSession(session);
+  // SIGNED_IN fires on fresh logins and email confirmation redirects (not page reloads)
+  _sb.auth.onAuthStateChange((event, session) => {
+    if(!_appStarted) handleSession(session, event === 'SIGNED_IN');
   });
 
   const { data: { session } } = await _sb.auth.getSession();
