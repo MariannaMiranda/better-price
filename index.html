@@ -2766,6 +2766,7 @@ async function handleAuth(){
         options: { data: { firstName, lastName, name } }
       });
       if(error) return showErr('email', error.message);
+      localStorage.setItem('bp_needs_onboarding', '1');
       if(data.session){
         localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
         showApp(true);
@@ -2834,6 +2835,7 @@ async function resendConfirmation(){
   if(!error) startResendCountdown();
 }
 async function signInWithGoogle(){
+  if(authMode === 'signup') localStorage.setItem('bp_needs_onboarding', '1');
   await _sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
 }
 async function signInWithApple(){
@@ -5914,10 +5916,10 @@ window.onload=async ()=>{
     const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
+    const needsOnboarding = localStorage.getItem('bp_needs_onboarding');
+    if(needsOnboarding) localStorage.removeItem('bp_needs_onboarding');
     const onboardedKey = 'bp_onboarded_' + session.user.id;
-    const confirmedAt = session.user.email_confirmed_at ? new Date(session.user.email_confirmed_at).getTime() : 0;
-    if((Date.now() - confirmedAt) < 600000) localStorage.removeItem(onboardedKey);
-    const isNewUser = !localStorage.getItem(onboardedKey);
+    const isNewUser = needsOnboarding || !localStorage.getItem(onboardedKey);
     showApp(isNewUser);
   }
 
