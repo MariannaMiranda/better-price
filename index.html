@@ -445,6 +445,17 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 .product-card.best .best-badge{display:block;}
 .product-card.tied .tied-badge{display:block;}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.card-collapse-btn{width:28px;height:28px;background:none;border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:.2s;flex-shrink:0;}
+.card-collapse-btn:hover{color:var(--brand);border-color:var(--brand);}
+.card-collapse-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;}
+.product-card.collapsed .card-collapse-btn svg{transform:rotate(180deg);}
+.card-body{}
+.card-summary{display:none;padding:6px 0 2px;border-top:1px solid var(--border);margin-top:4px;}
+.product-card.collapsed .card-body{display:none;}
+.product-card.collapsed .card-summary{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+.card-summary-name{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card-summary-price{font-size:13px;font-weight:600;color:var(--brand);white-space:nowrap;font-family:var(--font-m);}
+.product-card.collapsed{padding-bottom:12px;}
 .card-num{width:30px;height:30px;background:var(--brand-light);color:var(--brand);border-radius:8px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);}
 .card-icon-btn{width:30px;height:30px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:.2s;}
 .card-icon-btn:hover{color:var(--brand);border-color:var(--brand);background:var(--brand-light);}
@@ -469,7 +480,7 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 .analysis-wrap{max-width:1000px;margin:16px auto 50px;padding:0 20px;}
 .analysis-row{display:flex;gap:10px;align-items:flex-start;}
 .analysis-row #analysisBox{flex:1;}
-#analysisBox{width:100%;height:130px;border-radius:var(--r);border:1.5px solid var(--border);padding:16px;font-size:14px;font-family:var(--font);color:var(--text);resize:none;background:var(--white);line-height:1.7;}
+#analysisBox{width:100%;min-height:80px;height:auto;overflow:hidden;border-radius:var(--r);border:1.5px solid var(--border);padding:16px;font-size:14px;font-family:var(--font);color:var(--text);resize:none;background:var(--white);line-height:1.7;}
 .btn-save-analysis{white-space:nowrap;padding:12px 16px;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;align-self:flex-start;flex-shrink:0;}
 .btn-save-analysis:hover{background:var(--brand-h);}
 .btn-save-analysis svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -1674,7 +1685,7 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
       </div>
       <input type="text" id="profile-zip" maxlength="5" minlength="5" inputmode="numeric"
         style="width:140px;padding:12px 16px;border:2px solid var(--brand);border-radius:var(--rsm);font-size:22px;font-weight:700;font-family:var(--font-m);text-align:center;background:var(--brand-light);color:var(--text);outline:none;letter-spacing:4px;"
-        placeholder="- - - - -" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5)">
+        placeholder="_____" oninput="this.value=this.value.replace(/\D/g,'').slice(0,5)">
     </div>
 
     <div class="profile-section">
@@ -2004,7 +2015,7 @@ const TRANSLATIONS = {
     profilePassWrong:'Current password is incorrect.',
     profile:'Profile',
     firstNamePh:'First Name', lastNamePh:'Last Name',
-    categoryLabel:'Category', categoryPh:'— Select Category —',
+    categoryLabel:'Category', categoryPh:'Select Category',
     priceErrMsg:'⚠ Please enter a price.',
     removeCard:'Remove Card',
     removeCardConfirm:'Are you sure you want to remove this card? This cannot be undone.',
@@ -2156,7 +2167,7 @@ const TRANSLATIONS = {
     profilePassWrong:'La contraseña actual es incorrecta.',
     profile:'Perfil',
     firstNamePh:'Nombre', lastNamePh:'Apellido',
-    categoryLabel:'Categoría', categoryPh:'— Seleccionar categoría —',
+    categoryLabel:'Categoría', categoryPh:'Seleccionar categoría',
     priceErrMsg:'⚠ Por favor ingresa un precio.',
     removeCard:'Eliminar tarjeta',
     removeCardConfirm:'¿Estás seguro de que quieres eliminar esta tarjeta? Esta acción no se puede deshacer.',
@@ -2308,7 +2319,7 @@ const TRANSLATIONS = {
     profilePassWrong:'Senha atual incorreta.',
     profile:'Perfil',
     firstNamePh:'Nome', lastNamePh:'Sobrenome',
-    categoryLabel:'Categoria', categoryPh:'— Selecionar categoria —',
+    categoryLabel:'Categoria', categoryPh:'Selecionar categoria',
     priceErrMsg:'⚠ Por favor insira um preço.',
     removeCard:'Remover cartão',
     removeCardConfirm:'Tem certeza que deseja remover este cartão? Esta ação não pode ser desfeita.',
@@ -2877,6 +2888,9 @@ async function showApp(isNewUser=false){
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   await loadUserDataFromSupabase();
   loadUserData();
+  createStarterGroceryList();
+  groceryLists = loadU('glists', []);
+  groceryItems = loadU('gitems', []);
   loadPennySessions();
   ['history','grocery','presets','help','profile','penny'].forEach(n=>{
     const el=document.getElementById('tab-'+n); if(el) el.style.display='none';
@@ -3345,9 +3359,9 @@ function catPickerInit(idx){
   const l3 = document.getElementById('cp-l3-' + idx);
   if(!l1) return;
 
-  const selCat = lang==='es'?'— Seleccionar categoría —':lang==='pt'?'— Selecionar categoria —':'— Select Category —';
-  const selSub = lang==='es'?'— Seleccionar subcategoría —':lang==='pt'?'— Selecionar subcategoria —':'— Select Sub-category —';
-  const selType = lang==='es'?'— Seleccionar tipo —':lang==='pt'?'— Selecionar tipo —':'— Select Item Type —';
+  const selCat = lang==='es'?'Seleccionar categoría':lang==='pt'?'Selecionar categoria':'Select Category';
+  const selSub = lang==='es'?'Seleccionar subcategoría':lang==='pt'?'Selecionar subcategoria':'Select Sub-category';
+  const selType = lang==='es'?'Seleccionar tipo':lang==='pt'?'Selecionar tipo':'Select Item Type';
   l1.innerHTML = '<option value="">' + selCat + '</option>' +
     CAT_TREE.map((n, i) => '<option value="' + i + '">' + catLabel(n.label) + '</option>').join('');
 
@@ -3365,13 +3379,13 @@ function catL1Change(idx){
   if(!l1 || !l2) return;
 
   l3.style.display = 'none';
-  l3.innerHTML = '<option value="">— Select Item Type —</option>';
+  l3.innerHTML = '<option value="">Select Item Type</option>';
   catEl.value = '';
   catPickerClearName(idx);
 
   const ni = parseInt(l1.value);
-  const selSub2 = lang==='es'?'— Seleccionar subcategoría —':lang==='pt'?'— Selecionar subcategoria —':'— Select Sub-category —';
-  const selType2 = lang==='es'?'— Seleccionar tipo —':lang==='pt'?'— Selecionar tipo —':'— Select Item Type —';
+  const selSub2 = lang==='es'?'Seleccionar subcategoría':lang==='pt'?'Selecionar subcategoria':'Select Sub-category';
+  const selType2 = lang==='es'?'Seleccionar tipo':lang==='pt'?'Selecionar tipo':'Select Item Type';
   if(isNaN(ni) || l1.value === ''){ l2.style.display = 'none'; l2.innerHTML = '<option value="">' + selSub2 + '</option>'; return; }
 
   const node = CAT_TREE[ni];
@@ -3400,7 +3414,7 @@ function catL2Change(idx){
   catEl.value = '';
   catPickerClearName(idx);
   l3.style.display = 'none';
-  const selType3 = lang==='es'?'— Seleccionar tipo —':lang==='pt'?'— Selecionar tipo —':'— Select Item Type —';
+  const selType3 = lang==='es'?'Seleccionar tipo':lang==='pt'?'Selecionar tipo':'Select Item Type';
   l3.innerHTML = '<option value="">' + selType3 + '</option>';
 
   const ni1 = parseInt(l1.value);
@@ -3602,48 +3616,57 @@ function updateGrid(){
     <div class="product-card" id="card-${i}">
       <div class="best-badge">${t.bestValue}</div><div class="tied-badge">${t.tie}</div>
       <div class="card-header">
-        <div class="card-num">${i+1}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="card-num">${i+1}</div>
+          <button class="card-collapse-btn" title="Collapse card" onclick="toggleCardCollapse(${i})"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg></button>
+        </div>
         <div style="display:flex;gap:6px">
           <button class="card-icon-btn" title="Duplicate" onclick="dupCard(${i})"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
           <button class="card-icon-btn" title="Delete card" style="color:var(--danger);border-color:var(--danger)" onclick="deleteCard(${i})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
         </div>
       </div>
-      <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
-      <label class="card-label">${t.priceLabel}</label>
-      <input type="text" inputmode="decimal" class="price-input" id="p-${i}" placeholder="0.00" onkeydown="priceKeyDown(${i},event)" onpaste="onPricePaste(${i},event)" autocomplete="off">
-      <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
-      <div class="field-row" style="margin-top:10px">
-        <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" class="card-input" id="dv-${i}" value="0"></div>
-        <div style="flex:1"><label class="card-label">${t.typeLabel}</label><select class="card-select" id="dt-${i}"><option value="p">%</option><option value="f">${cur}</option></select></div>
+      <div class="card-summary">
+        <span class="card-summary-name" id="cs-name-${i}"></span>
+        <span class="card-summary-price" id="cs-price-${i}"></span>
       </div>
-      <label class="card-label">${t.sizeLabel}</label>
-      <div class="field-row">
-        <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}">
-        <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
-          <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="sheets">sht</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
-        </select>
+      <div class="card-body">
+        <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
+        <label class="card-label">${t.priceLabel}</label>
+        <input type="text" inputmode="decimal" class="price-input" id="p-${i}" placeholder="0.00" onkeydown="priceKeyDown(${i},event)" onpaste="onPricePaste(${i},event)" autocomplete="off">
+        <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
+        <div class="field-row" style="margin-top:10px">
+          <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" class="card-input" id="dv-${i}" placeholder="0" oninput="checkLeadingZero(this)"></div>
+          <div style="flex:1"><label class="card-label">${t.typeLabel}</label><select class="card-select" id="dt-${i}"><option value="p">%</option><option value="f">${cur}</option></select></div>
+        </div>
+        <label class="card-label">${t.sizeLabel}</label>
+        <div class="field-row">
+          <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}" oninput="checkLeadingZero(this)">
+          <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
+            <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="sheets">sht</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
+          </select>
+        </div>
+        <label class="card-label">${t.packLabel}</label>
+        <input type="number" class="card-input" id="q-${i}" placeholder="1" style="margin-top:4px;margin-bottom:10px" oninput="checkLeadingZero(this)">
+        <label class="card-label">${t.categoryLabel||'Category'}</label>
+        <div class="cat-picker" id="cp-${i}">
+          <select class="cat-sel" id="cp-l1-${i}" onchange="catL1Change(${i})">
+            <option value="">Select Category</option>
+          </select>
+          <select class="cat-sel" id="cp-l2-${i}" onchange="catL2Change(${i})" style="display:none;">
+            <option value="">Select Sub-category</option>
+          </select>
+          <select class="cat-sel" id="cp-l3-${i}" onchange="catL3Change(${i})" style="display:none;">
+            <option value="">Select Item Type</option>
+          </select>
+        </div>
+        <input type="hidden" id="cat-${i}" value="">
+        <label class="card-label">${t.nameLabel}</label>
+        <div style="position:relative">
+          <input type="text" class="card-input" id="n-${i}" placeholder="${t.itemNamePh}" oninput="onNameInput(${i})" autocomplete="off">
+          <div class="brand-dropdown" id="bd-${i}"></div>
+        </div>
+        <div class="result-line" id="res-${i}"></div>
       </div>
-      <label class="card-label">${t.packLabel}</label>
-      <input type="number" class="card-input" id="q-${i}" value="1" style="margin-top:4px;margin-bottom:10px">
-      <label class="card-label">${t.categoryLabel||'Category'}</label>
-      <div class="cat-picker" id="cp-${i}">
-        <select class="cat-sel" id="cp-l1-${i}" onchange="catL1Change(${i})">
-          <option value="">— Select Category —</option>
-        </select>
-        <select class="cat-sel" id="cp-l2-${i}" onchange="catL2Change(${i})" style="display:none;">
-          <option value="">— Select Sub-category —</option>
-        </select>
-        <select class="cat-sel" id="cp-l3-${i}" onchange="catL3Change(${i})" style="display:none;">
-          <option value="">— Select Item Type —</option>
-        </select>
-      </div>
-      <input type="hidden" id="cat-${i}" value="">
-      <label class="card-label">${t.nameLabel}</label>
-      <div style="position:relative">
-        <input type="text" class="card-input" id="n-${i}" placeholder="${t.itemNamePh}" oninput="onNameInput(${i})" autocomplete="off">
-        <div class="brand-dropdown" id="bd-${i}"></div>
-      </div>
-      <div class="result-line" id="res-${i}"></div>
     </div>`;
   }
   grid.innerHTML=html;
@@ -3652,7 +3675,7 @@ function updateGrid(){
 }
 
 function getCard(i){ return {p:document.getElementById(`p-${i}`)?.value||'',dv:document.getElementById(`dv-${i}`)?.value||'0',dt:document.getElementById(`dt-${i}`)?.value||'p',s:document.getElementById(`s-${i}`)?.value||'',u:document.getElementById(`u-${i}`)?.value||'oz',q:document.getElementById(`q-${i}`)?.value||'1',n:document.getElementById(`n-${i}`)?.value||''}; }
-function setCard(i,d){ ['p','dv','dt','s','u','q','n'].forEach(k=>{ const el=document.getElementById(`${k}-${i}`); if(el){ el.value=d[k]!=null?d[k]:''; if(k==='p'&&d[k]){ const c=Math.round(parseFloat(d[k])*100); el.dataset.raw=isNaN(c)?'':String(c); } } }); }
+function setCard(i,d){ ['p','dv','dt','s','u','q','n'].forEach(k=>{ const el=document.getElementById(`${k}-${i}`); if(el){ let v=d[k]!=null?d[k]:''; if(k==='dv'&&(v==='0'||v===0)) v=''; if(k==='q'&&(v==='1'||v===1)) v=''; el.value=v; if(k==='p'&&d[k]){ const c=Math.round(parseFloat(d[k])*100); el.dataset.raw=isNaN(c)?'':String(c); } } }); }
 
 function dupCard(idx){
   const t=T();
@@ -3670,6 +3693,28 @@ function dupCard(idx){
   if(d.n) onNameInput(items-1);
   const cardWord = lang==='es'?'Tarjeta':lang==='pt'?'Cartão':'Card';
   showToast(`${cardWord} ${idx+1} → ${cardWord} ${items}`,'ok');
+}
+
+function toggleCardCollapse(i){
+  const card=document.getElementById('card-'+i);
+  if(!card) return;
+  const collapsed=card.classList.toggle('collapsed');
+  if(collapsed){
+    const name=document.getElementById('n-'+i)?.value||`Item ${i+1}`;
+    const price=document.getElementById('res-'+i)?.innerText||'';
+    const nameEl=document.getElementById('cs-name-'+i);
+    const priceEl=document.getElementById('cs-price-'+i);
+    if(nameEl) nameEl.textContent=name;
+    if(priceEl) priceEl.textContent=price;
+  }
+}
+
+function checkLeadingZero(el){
+  const v=el.value;
+  if(/^0\d/.test(v)){
+    el.value=String(parseFloat(v)||0);
+    showToast(lang==='es'?'Sin ceros al inicio, ej. usa 4 no 04':lang==='pt'?'Sem zeros à esquerda, ex. use 4 não 04':'No leading zeros — use 4, not 04');
+  }
 }
 
 function clearPriceErr(idx){
@@ -3732,7 +3777,7 @@ function compare(){
   const cur=document.getElementById('setCurr').value;
   const t=T();
   let best=Infinity, results=[];
-  let log=`${t.analysisHeader}\n`;
+  let itemLines='';
   let hasError=false;
 
   for(let i=0;i<items;i++){
@@ -3769,7 +3814,7 @@ function compare(){
       const up=net/total;
       const baseUnit=(['oz','lb','g','kg'].includes(u))?'oz':(['ml','l','gal'].includes(u))?'fl oz':(['ft','in','yd','m'].includes(u))?'ft':u;
       document.getElementById(`res-${i}`).innerText=`${cur}${up.toFixed(4)} / ${baseUnit}`;
-      log+=`${n}: ${cur}${up.toFixed(4)} ${t.analysisPer} ${baseUnit}.\n`;
+      itemLines+=`${n}: ${cur}${up.toFixed(4)} ${t.analysisPer} ${baseUnit}.\n`;
       results.push({i,n,up});
       if(up<best)best=up;
     } else {
@@ -3780,24 +3825,29 @@ function compare(){
   if(hasError){ showToast('Please enter a price on all filled cards.'); return; }
   if(!results.length){ showToast(t.toastEnterPrice); return; }
 
+  let winnerLine='';
   const winners=results.filter(r=>Math.abs(r.up-best)<0.0001);
   if(winners.length>1){
     winners.forEach(w=>document.getElementById(`card-${w.i}`).classList.add('tied'));
     const names=winners.map(w=>w.n).join(' & ');
-    log+=`\n${t.analysisTie}: ${names} (${cur}${best.toFixed(4)} ${t.analysisPerUnit})`;
+    winnerLine=`${t.analysisTie}: ${names} (${cur}${best.toFixed(4)} ${t.analysisPerUnit})`;
     const entry={date:new Date().toLocaleString(),winner:`${t.analysisTie}: ${names}`,winnerPrice:`${cur}${best.toFixed(4)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(4)}`).join(' | ')};
     compHistory.unshift(entry); if(compHistory.length>50)compHistory.pop();
     saveU('history',compHistory); renderHistory();
   } else {
     const w=winners[0];
     document.getElementById(`card-${w.i}`).classList.add('best');
-    log+=`\n${t.analysisBest}: ${w.n}`;
+    winnerLine=`${t.analysisBest}: ${w.n}`;
     const entry={date:new Date().toLocaleString(),winner:w.n,winnerPrice:`${cur}${w.up.toFixed(4)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(4)}`).join(' | ')};
     compHistory.unshift(entry); if(compHistory.length>50)compHistory.pop();
     saveU('history',compHistory); renderHistory();
   }
+  const log=`${winnerLine}\n\n${itemLines}`.trimEnd();
   lastAnalysis=log;
-  document.getElementById('analysisBox').value=log;
+  const ab=document.getElementById('analysisBox');
+  ab.value=log;
+  ab.style.height='auto';
+  ab.style.height=ab.scrollHeight+'px';
   const expPre=document.getElementById('exportPre'); if(expPre) expPre.innerText=log;
   playCaChing();
 }
@@ -3997,7 +4047,7 @@ function promptDupItem(id){
 }
 
 function promptEditItem(id){
-  const item=groceryItems.find(i=>i.id===id); if(!item)return;
+  const item=groceryItems.find(i=>String(i.id)===String(id)); if(!item)return;
   document.getElementById('editItemId').value=id;
   document.getElementById('edit-name').value=item.name||'';
   document.getElementById('edit-qty').value=item.qty||'';
@@ -4009,8 +4059,8 @@ function promptEditItem(id){
 }
 
 function saveEditItem(){
-  const id=parseInt(document.getElementById('editItemId').value);
-  const item=groceryItems.find(i=>i.id===id); if(!item)return;
+  const id=document.getElementById('editItemId').value;
+  const item=groceryItems.find(i=>String(i.id)===String(id)); if(!item)return;
   const name=document.getElementById('edit-name').value.trim();
   if(!name){ showToast(T().toastItemNameEmpty); return; }
   item.name=name; delete item.starterKey;

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirm your Better Price account</title>
+</head>
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f0f4f8;padding:40px 16px;">
+  <tr>
+    <td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:520px;">
+
+        <!-- Logo / Header -->
+        <tr>
+          <td align="center" style="padding-bottom:24px;">
+            <table cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                <td style="background:#003366;border-radius:16px;padding:8px 20px;display:inline-block;">
+                  <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Better Price</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Card -->
+        <tr>
+          <td style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+            <!-- Card top accent -->
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                <td style="background:linear-gradient(135deg,#003366 0%,#1a5ea8 100%);padding:36px 40px 32px;text-align:center;">
+                  <!-- Coin icon -->
+                  <div style="width:64px;height:64px;background:rgba(255,255,255,0.15);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
+                    <span style="font-size:32px;line-height:64px;display:block;text-align:center;">💰</span>
+                  </div>
+                  <h1 style="margin:0;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">You're almost in!</h1>
+                  <p style="margin:10px 0 0;font-size:16px;color:rgba(255,255,255,0.8);line-height:1.5;">Confirm your email to start comparing prices and saving money.</p>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding:36px 40px;">
+                  <h2 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a1628;">Confirm your email address</h2>
+                  <p style="margin:0 0 28px;font-size:15px;color:#4a5568;line-height:1.6;">
+                    Click the button below to verify your email and activate your Better Price account. Start finding the best deals in seconds.
+                  </p>
+
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                    <tr>
+                      <td align="center" style="padding-bottom:28px;">
+                        <a href="{{ .ConfirmationURL }}"
+                           style="display:inline-block;background:#003366;color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;letter-spacing:0.2px;box-shadow:0 4px 16px rgba(0,51,102,0.3);">
+                          ✓ &nbsp;Confirm my account
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Features row -->
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid #e8edf2;padding-top:24px;">
+                    <tr>
+                      <td width="33%" style="padding:0 6px;text-align:center;vertical-align:top;">
+                        <div style="font-size:24px;margin-bottom:6px;">🔍</div>
+                        <div style="font-size:12px;font-weight:600;color:#003366;">Compare</div>
+                        <div style="font-size:11px;color:#718096;margin-top:2px;">Unit prices instantly</div>
+                      </td>
+                      <td width="33%" style="padding:0 6px;text-align:center;vertical-align:top;">
+                        <div style="font-size:24px;margin-bottom:6px;">📋</div>
+                        <div style="font-size:12px;font-weight:600;color:#003366;">Plan</div>
+                        <div style="font-size:11px;color:#718096;margin-top:2px;">Your grocery lists</div>
+                      </td>
+                      <td width="33%" style="padding:0 6px;text-align:center;vertical-align:top;">
+                        <div style="font-size:24px;margin-bottom:6px;">💡</div>
+                        <div style="font-size:12px;font-weight:600;color:#003366;">Save</div>
+                        <div style="font-size:11px;color:#718096;margin-top:2px;">Money every week</div>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Fallback link -->
+                  <p style="margin:24px 0 0;font-size:12px;color:#718096;text-align:center;line-height:1.6;">
+                    Button not working? Copy and paste this link into your browser:<br>
+                    <a href="{{ .ConfirmationURL }}" style="color:#003366;word-break:break-all;">{{ .ConfirmationURL }}</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background:#f7fafc;border-top:1px solid #e8edf2;padding:20px 40px;text-align:center;">
+                  <p style="margin:0;font-size:12px;color:#a0aec0;line-height:1.6;">
+                    If you didn't create a Better Price account, you can safely ignore this email.<br>
+                    &copy; 2025 Better Price &bull; Shop smarter, save more.
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
