@@ -3894,7 +3894,7 @@ function compare(){
     if(csum){csum.textContent=name;csum.style.display='block';}
   }
   // Scroll analysis into view
-  const ab=document.getElementById('analysisBox'); if(ab) ab.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(ab) ab.scrollIntoView({behavior:'smooth',block:'nearest'});
   playCaChing();
 }
 
