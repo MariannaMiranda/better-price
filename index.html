@@ -2843,7 +2843,9 @@ function showCheckEmail(email){
   document.getElementById('ce-email-addr').textContent = email;
   document.getElementById('check-email-screen').style.display = 'flex';
   document.getElementById('auth-screen').style.display = 'none';
-  startResendCountdown();
+  const btn=document.getElementById('ce-resend-btn');
+  if(btn){ btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; }
+  document.getElementById('ce-countdown').textContent='';
 }
 function backToLogin(){
   document.getElementById('check-email-screen').style.display = 'none';
