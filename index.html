@@ -2785,7 +2785,10 @@ async function handleAuth(){
       const { data, error } = await _sb.auth.signUp({
         email,
         password: pass,
-        options: { data: { firstName, lastName, name } }
+        options: {
+          data: { firstName, lastName, name },
+          emailRedirectTo: window.location.origin + window.location.pathname + '?onboarding=1'
+        }
       });
       if(error) return showErr('email', error.message);
       localStorage.setItem('bp_needs_onboarding', '1');
@@ -6008,23 +6011,25 @@ window.onload=async ()=>{
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
     const onboardedKey = 'bp_onboarded_' + session.user.id;
-    // Only check the onboarding flag on a fresh sign-in, not a page reload
-    const needsOnboarding = freshSignIn && localStorage.getItem('bp_needs_onboarding');
-    if(needsOnboarding) localStorage.removeItem('bp_needs_onboarding');
-    const isNewUser = !!needsOnboarding;
+    // Check onboarding flag (set at signup) or ?onboarding=1 redirect (email confirmation in new tab)
+    const hasFlag = freshSignIn && localStorage.getItem('bp_needs_onboarding');
+    if(hasFlag) localStorage.removeItem('bp_needs_onboarding');
+    const isNewUser = !!(hasFlag || (freshSignIn && isOnboardingRedirect));
     showApp(isNewUser);
   }
 
   // Detect if this page load is coming from an email confirmation or OAuth redirect
   const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
   const isFreshAuth = hashParams.get('access_token') || hashParams.get('type') === 'signup';
+  const isOnboardingRedirect = new URLSearchParams(window.location.search).get('onboarding') === '1';
+  if(isOnboardingRedirect) history.replaceState(null, '', window.location.pathname);
 
   _sb.auth.onAuthStateChange((event, session) => {
-    if(!_appStarted) handleSession(session, event === 'SIGNED_IN');
+    if(!_appStarted) handleSession(session, event === 'SIGNED_IN' || isOnboardingRedirect);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
-  handleSession(session, !!isFreshAuth);
+  handleSession(session, !!isFreshAuth || isOnboardingRedirect);
 };
 </script>
 </body>
