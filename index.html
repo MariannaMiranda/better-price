@@ -2858,7 +2858,8 @@ async function resendConfirmation(){
 }
 async function signInWithGoogle(){
   if(authMode === 'signup') localStorage.setItem('bp_needs_onboarding', '1');
-  await _sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+  const { error } = await _sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+  if(error){ if(authMode === 'signup') localStorage.removeItem('bp_needs_onboarding'); showToast(error.message, ''); }
 }
 async function signInWithApple(){
   await _sb.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: window.location.origin } });
@@ -6022,7 +6023,9 @@ window.onload=async ()=>{
   applyLang();
   // Handle OAuth error redirects (e.g. bad_oauth_state)
   const urlParams = new URLSearchParams(window.location.search);
-  const oauthError = urlParams.get('error_description') || urlParams.get('error');
+  const hashErrorParams = new URLSearchParams(window.location.hash.replace('#',''));
+  const oauthError = urlParams.get('error_description') || urlParams.get('error')
+    || hashErrorParams.get('error_description') || hashErrorParams.get('error');
   if(oauthError) {
     history.replaceState(null, '', window.location.pathname);
     showToast(oauthError.replace(/\+/g,' '), '');
