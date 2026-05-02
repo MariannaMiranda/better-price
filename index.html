@@ -6028,8 +6028,13 @@ window.onload=async ()=>{
     if(!_appStarted) handleSession(session, event === 'SIGNED_IN' || isOnboardingRedirect);
   });
 
-  const { data: { session } } = await _sb.auth.getSession();
-  handleSession(session, !!isFreshAuth || isOnboardingRedirect);
+  // For email confirmation / OAuth links, onAuthStateChange fires with the real session.
+  // Calling getSession() first returns null (token not yet exchanged) and locks _appStarted,
+  // so skip it when we know this is a fresh auth redirect.
+  if(!isFreshAuth) {
+    const { data: { session } } = await _sb.auth.getSession();
+    handleSession(session, isOnboardingRedirect);
+  }
 };
 </script>
 </body>
