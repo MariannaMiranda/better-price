@@ -2785,7 +2785,7 @@ async function handleAuth(){
       const { data, error } = await _sb.auth.signUp({
         email,
         password: pass,
-        options: { data: { firstName, lastName, name } }
+        options: { data: { firstName, lastName, name }, emailRedirectTo: window.location.origin }
       });
       if(error) return showErr('email', error.message);
       localStorage.setItem('bp_needs_onboarding', '1');
@@ -2852,7 +2852,7 @@ function backToLogin(){
 }
 async function resendConfirmation(){
   if(!_pendingConfirmEmail) return;
-  const { error } = await _sb.auth.resend({ type: 'signup', email: _pendingConfirmEmail });
+  const { error } = await _sb.auth.resend({ type: 'signup', email: _pendingConfirmEmail, options: { emailRedirectTo: window.location.origin } });
   showToast(error ? error.message : 'Email resent!', error ? '' : 'ok');
   if(!error) startResendCountdown();
 }
