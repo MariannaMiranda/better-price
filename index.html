@@ -449,9 +449,10 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 .card-collapse-btn:hover{color:var(--brand);border-color:var(--brand);}
 .card-collapse-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;}
 .product-card.collapsed .card-collapse-btn svg{transform:rotate(180deg);}
-.card-body{}
 .card-summary{display:none;padding:6px 0 2px;border-top:1px solid var(--border);margin-top:4px;}
-.product-card.collapsed .card-body{display:none;}
+.product-card.collapsed .card-fields,
+.product-card.collapsed .compared-summary,
+.product-card.collapsed .result-line{display:none;}
 .product-card.collapsed .card-summary{display:flex;align-items:center;gap:8px;justify-content:space-between;}
 .card-summary-name{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .card-summary-price{font-size:13px;font-weight:600;color:var(--brand);white-space:nowrap;font-family:var(--font-m);}
@@ -3552,30 +3553,30 @@ function createStarterGroceryList(){
   const SN = STARTER_NAMES;
   const list = { id: lid, name: SN.listName[l]||SN.listName.en, starterList: true };
   const starterItems = [
-    {id:'s1',listId:lid,name:SN.s1[l]||SN.s1.en,qty:1,price:'',store:'',notes:'1 dozen',checked:false,starterKey:'s1'},
-    {id:'s2',listId:lid,name:SN.s2[l]||SN.s2.en,qty:1,price:'',store:'',notes:'1 gallon',checked:false,starterKey:'s2'},
-    {id:'s3',listId:lid,name:SN.s3[l]||SN.s3.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s3'},
-    {id:'s4',listId:lid,name:SN.s4[l]||SN.s4.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s4'},
-    {id:'s5',listId:lid,name:SN.s5[l]||SN.s5.en,qty:2,price:'',store:'',notes:'lbs',checked:false,starterKey:'s5'},
-    {id:'s6',listId:lid,name:SN.s6[l]||SN.s6.en,qty:1,price:'',store:'',notes:'1 lb',checked:false,starterKey:'s6'},
-    {id:'s7',listId:lid,name:SN.s7[l]||SN.s7.en,qty:1,price:'',store:'',notes:'1 bunch',checked:false,starterKey:'s7'},
-    {id:'s8',listId:lid,name:SN.s8[l]||SN.s8.en,qty:1,price:'',store:'',notes:'1 bag',checked:false,starterKey:'s8'},
-    {id:'s9',listId:lid,name:SN.s9[l]||SN.s9.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s9'},
-    {id:'s10',listId:lid,name:SN.s10[l]||SN.s10.en,qty:2,price:'',store:'',notes:'',checked:false,starterKey:'s10'},
-    {id:'s11',listId:lid,name:SN.s11[l]||SN.s11.en,qty:1,price:'',store:'',notes:'3 lb bag',checked:false,starterKey:'s11'},
-    {id:'s12',listId:lid,name:SN.s12[l]||SN.s12.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s12'},
-    {id:'s13',listId:lid,name:SN.s13[l]||SN.s13.en,qty:1,price:'',store:'',notes:'5 lb bag',checked:false,starterKey:'s13'},
-    {id:'s14',listId:lid,name:SN.s14[l]||SN.s14.en,qty:1,price:'',store:'',notes:'1 lb box',checked:false,starterKey:'s14'},
-    {id:'s15',listId:lid,name:SN.s15[l]||SN.s15.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s15'},
-    {id:'s16',listId:lid,name:SN.s16[l]||SN.s16.en,qty:2,price:'',store:'',notes:'',checked:false,starterKey:'s16'},
-    {id:'s17',listId:lid,name:SN.s17[l]||SN.s17.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s17'},
-    {id:'s18',listId:lid,name:SN.s18[l]||SN.s18.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s18'},
-    {id:'s19',listId:lid,name:SN.s19[l]||SN.s19.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s19'},
-    {id:'s20',listId:lid,name:SN.s20[l]||SN.s20.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s20'},
-    {id:'s21',listId:lid,name:SN.s21[l]||SN.s21.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s21'},
-    {id:'s22',listId:lid,name:SN.s22[l]||SN.s22.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s22'},
-    {id:'s23',listId:lid,name:SN.s23[l]||SN.s23.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s23'},
-    {id:'s24',listId:lid,name:SN.s24[l]||SN.s24.en,qty:1,price:'',store:'',notes:'',checked:false,starterKey:'s24'},
+    {id:'s1',listId:lid,name:SN.s1[l]||SN.s1.en,qty:1,price:'',store:'',notes:'1 dozen',done:false,starterKey:'s1'},
+    {id:'s2',listId:lid,name:SN.s2[l]||SN.s2.en,qty:1,price:'',store:'',notes:'1 gallon',done:false,starterKey:'s2'},
+    {id:'s3',listId:lid,name:SN.s3[l]||SN.s3.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s3'},
+    {id:'s4',listId:lid,name:SN.s4[l]||SN.s4.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s4'},
+    {id:'s5',listId:lid,name:SN.s5[l]||SN.s5.en,qty:2,price:'',store:'',notes:'lbs',done:false,starterKey:'s5'},
+    {id:'s6',listId:lid,name:SN.s6[l]||SN.s6.en,qty:1,price:'',store:'',notes:'1 lb',done:false,starterKey:'s6'},
+    {id:'s7',listId:lid,name:SN.s7[l]||SN.s7.en,qty:1,price:'',store:'',notes:'1 bunch',done:false,starterKey:'s7'},
+    {id:'s8',listId:lid,name:SN.s8[l]||SN.s8.en,qty:1,price:'',store:'',notes:'1 bag',done:false,starterKey:'s8'},
+    {id:'s9',listId:lid,name:SN.s9[l]||SN.s9.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s9'},
+    {id:'s10',listId:lid,name:SN.s10[l]||SN.s10.en,qty:2,price:'',store:'',notes:'',done:false,starterKey:'s10'},
+    {id:'s11',listId:lid,name:SN.s11[l]||SN.s11.en,qty:1,price:'',store:'',notes:'3 lb bag',done:false,starterKey:'s11'},
+    {id:'s12',listId:lid,name:SN.s12[l]||SN.s12.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s12'},
+    {id:'s13',listId:lid,name:SN.s13[l]||SN.s13.en,qty:1,price:'',store:'',notes:'5 lb bag',done:false,starterKey:'s13'},
+    {id:'s14',listId:lid,name:SN.s14[l]||SN.s14.en,qty:1,price:'',store:'',notes:'1 lb box',done:false,starterKey:'s14'},
+    {id:'s15',listId:lid,name:SN.s15[l]||SN.s15.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s15'},
+    {id:'s16',listId:lid,name:SN.s16[l]||SN.s16.en,qty:2,price:'',store:'',notes:'',done:false,starterKey:'s16'},
+    {id:'s17',listId:lid,name:SN.s17[l]||SN.s17.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s17'},
+    {id:'s18',listId:lid,name:SN.s18[l]||SN.s18.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s18'},
+    {id:'s19',listId:lid,name:SN.s19[l]||SN.s19.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s19'},
+    {id:'s20',listId:lid,name:SN.s20[l]||SN.s20.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s20'},
+    {id:'s21',listId:lid,name:SN.s21[l]||SN.s21.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s21'},
+    {id:'s22',listId:lid,name:SN.s22[l]||SN.s22.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s22'},
+    {id:'s23',listId:lid,name:SN.s23[l]||SN.s23.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s23'},
+    {id:'s24',listId:lid,name:SN.s24[l]||SN.s24.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s24'},
   ];
   saveU('glists', [list]);
   saveU('gitems', starterItems);
@@ -3667,45 +3668,6 @@ function updateGrid(){
         <span class="card-summary-name" id="cs-name-${i}"></span>
         <span class="card-summary-price" id="cs-price-${i}"></span>
       </div>
-      <div class="card-body">
-        <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
-        <label class="card-label">${t.priceLabel}</label>
-        <input type="text" inputmode="decimal" class="price-input" id="p-${i}" placeholder="0.00" onkeydown="priceKeyDown(${i},event)" onpaste="onPricePaste(${i},event)" autocomplete="off">
-        <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
-        <div class="field-row" style="margin-top:10px">
-          <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" class="card-input" id="dv-${i}" placeholder="0" oninput="checkLeadingZero(this)"></div>
-          <div style="flex:1"><label class="card-label">${t.typeLabel}</label><select class="card-select" id="dt-${i}"><option value="p">%</option><option value="f">${cur}</option></select></div>
-        </div>
-        <label class="card-label">${t.sizeLabel}</label>
-        <div class="field-row">
-          <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}" oninput="checkLeadingZero(this)">
-          <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
-            <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="sheets">sht</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
-          </select>
-        </div>
-        <label class="card-label">${t.packLabel}</label>
-        <input type="number" class="card-input" id="q-${i}" placeholder="1" style="margin-top:4px;margin-bottom:10px" oninput="checkLeadingZero(this)">
-        <label class="card-label">${t.categoryLabel||'Category'}</label>
-        <div class="cat-picker" id="cp-${i}">
-          <select class="cat-sel" id="cp-l1-${i}" onchange="catL1Change(${i})">
-            <option value="">Select Category</option>
-          </select>
-          <select class="cat-sel" id="cp-l2-${i}" onchange="catL2Change(${i})" style="display:none;">
-            <option value="">Select Sub-category</option>
-          </select>
-          <select class="cat-sel" id="cp-l3-${i}" onchange="catL3Change(${i})" style="display:none;">
-            <option value="">Select Item Type</option>
-          </select>
-        </div>
-        <input type="hidden" id="cat-${i}" value="">
-        <label class="card-label">${t.nameLabel}</label>
-        <div style="position:relative">
-          <input type="text" class="card-input" id="n-${i}" placeholder="${t.itemNamePh}" oninput="onNameInput(${i})" autocomplete="off">
-          <div class="brand-dropdown" id="bd-${i}"></div>
-        </div>
-        <div class="result-line" id="res-${i}"></div>
-      </div>
-
       <div class="card-fields">
       <button class="scan-btn" onclick="startScan(${i})"><svg viewBox="0 0 24 24"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="11" y1="12" x2="13" y2="12"/><line x1="17" y1="12" x2="17" y2="12"/></svg>${t.scanBarcode}</button>
       <label class="card-label">${t.priceLabel}</label>
@@ -3743,7 +3705,7 @@ function updateGrid(){
         <div class="brand-dropdown" id="bd-${i}"></div>
       </div>
       </div>
-      <div class="compared-summary" id="csum-${i}" style="display:none;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;"></div>
+      <div class="compared-summary" id="csum-${i}" style="display:none;font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;cursor:pointer;" onclick="uncompareCard(${i})" title="Click to edit"></div>
       <div class="result-line" id="res-${i}"></div>
 
     </div>`;
@@ -3786,6 +3748,14 @@ function toggleCardCollapse(i){
     if(nameEl) nameEl.textContent=name;
     if(priceEl) priceEl.textContent=price;
   }
+}
+
+function uncompareCard(i){
+  const card=document.getElementById('card-'+i);
+  if(!card) return;
+  card.classList.remove('compared');
+  const csum=document.getElementById('csum-'+i);
+  if(csum) csum.style.display='none';
 }
 
 function checkLeadingZero(el){
@@ -3861,7 +3831,8 @@ function compare(){
 
   for(let i=0;i<items;i++){
     clearPriceErr(i);
-    document.getElementById(`card-${i}`).classList.remove('best','tied');
+    document.getElementById(`card-${i}`).classList.remove('best','tied','compared');
+    const csum=document.getElementById(`csum-${i}`); if(csum) csum.style.display='none';
   }
 
   for(let i=0;i<items;i++){
@@ -4435,7 +4406,7 @@ function renderProfileTab(){
   profileHousehold = loadU('household', 2);
   profileStores    = loadU('preferred_stores', []);
   profileBudget    = loadU('weekly_budget', 200);
-  profileFreq      = loadU('shopping_freq', 'weekly');
+  profileFreq      = loadU('shop_frequency', 'weekly');
   const zip        = loadU('zip', '');
 
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
@@ -4494,7 +4465,7 @@ function renderProfileTab(){
   if(profileFreq === 'other'){
     if(freqOtherChip) freqOtherChip.classList.add('selected');
     if(freqOtherRow)  freqOtherRow.style.display = 'block';
-    const savedOtherFreq = loadU('shopping_freq_other','');
+    const savedOtherFreq = loadU('shop_frequency_other','');
     if(freqOtherText) freqOtherText.value = savedOtherFreq;
   } else {
     const matchChip = document.querySelector(`#profile-freq-chips .freq-chip[onclick*="'${profileFreq}'"]`);
@@ -4515,7 +4486,7 @@ function renderProfileTab(){
   const otherChip = document.getElementById('profile-other-chip');
   const otherRow  = document.getElementById('profile-other-row');
   const otherText = document.getElementById('profile-other-text');
-  const knownStores = ['Walmart','Target','Costco','Sam\'s Club','Publix','Kroger','Aldi','Whole Foods','Trader Joe\'s','Lidl','Amazon Fresh','BJ\'s','Dollar General','CVS','Walgreens'];
+  const knownStores = ['Walmart','Target','Costco','Sam\'s Club','Publix','Kroger','Aldi','Whole Foods','Trader Joe\'s','Lidl','BJ\'s','Sprouts'];
   const customStores = profileStores.filter(s => !knownStores.includes(s));
   if(customStores.length && otherChip){
     otherChip.classList.add('selected');
@@ -4703,10 +4674,10 @@ async function saveProfile(){
 
   if(profileFreq === 'other'){
     const freqOtherVal = (document.getElementById('profile-freq-other-text')?.value || '').trim();
-    saveU('shopping_freq', 'other');
-    if(freqOtherVal) saveU('shopping_freq_other', freqOtherVal);
+    saveU('shop_frequency', 'other');
+    if(freqOtherVal) saveU('shop_frequency_other', freqOtherVal);
   } else {
-    saveU('shopping_freq', profileFreq);
+    saveU('shop_frequency', profileFreq);
   }
 
   const msg = document.getElementById('profile-saved-msg');
@@ -5209,7 +5180,7 @@ function pennyPriceRenderMyLists(){
     return;
   }
   wrap.innerHTML = groceryLists.map(list => {
-    const its = groceryItems.filter(i => i.listId===list.id && !i.checked);
+    const its = groceryItems.filter(i => i.listId===list.id && !i.done);
     if(!its.length) return '';
     return `<div onclick="pennyPriceImportList('${list.id}')" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rsm);cursor:pointer;background:var(--input-bg);transition:.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor=''">
       <div style="font-size:13px;font-weight:600;color:var(--text);">${esc(list.name)}</div>
@@ -5219,7 +5190,7 @@ function pennyPriceRenderMyLists(){
 }
 
 function pennyPriceImportList(listId){
-  const its = groceryItems.filter(i => i.listId===listId && !i.checked);
+  const its = groceryItems.filter(i => i.listId===listId && !i.done);
   const text = its.map(i => (i.qty>1?i.qty+'x ':'')+i.name).join('\n');
   pennyPriceTab('type');
   const ta = document.getElementById('pennyPriceListText');
@@ -5236,15 +5207,15 @@ async function pennyPriceHandlePhoto(input){
   const reader = new FileReader();
   reader.onload = async e => {
     try {
-      const base64 = e.target.result.split(',')[1];
+      const dataUrl = e.target.result;
       const res = await anthropicFetch({
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          model:'claude-sonnet-4-20250514', max_tokens:500,
+          max_tokens:500,
           system:'Extract every grocery item from this photo of a shopping list. Return ONLY the items, one per line, no numbering or bullets. Include quantities if visible.',
           messages:[{ role:'user', content:[
-            { type:'image', source:{ type:'base64', media_type: file.type||'image/jpeg', data: base64 }},
-            { type:'text', text:'Read all grocery items from this list.' }
+            { type:'text', text:'Read all grocery items from this list.' },
+            { type:'image_url', image_url:{ url: dataUrl }}
           ]}]
         })
       });
@@ -5545,15 +5516,6 @@ function buildSys(){
     if(n||p) cards.push({i:i+1,name:n||'Item '+(i+1),price:p,size:s,unit:u,packQty:q,disc:dv,dt,cat});
   }
   const lines=cards.map(c=>{
-    const cons=c.cat?CONSUMPTION_DATA[c.cat]:null;
-    if(cons){
-      const tpd=cons.perPersonPerDay*hh;
-      const tu=c.size*c.packQty*(UNIT_RATES[c.unit]||1);
-      const days=tu>0?(tu/(cons.perPersonPerDay*hh)).toFixed(1):'?';
-      const net=c.dt==='p'?c.price*(1-Math.min(c.disc,100)/100):c.price-c.disc;
-      const cpd=tu>0&&tpd>0?((net/tu)*tpd).toFixed(3):'?';
-      return 'Card '+c.i+': "'+c.name+'" $'+c.price.toFixed(2)+' | '+c.size+c.unit+'x'+c.packQty+' | ~'+days+' days | $'+cpd+'/day | '+cons.usageDesc;
-    }
     return 'Card '+c.i+': "'+c.name+'" $'+c.price.toFixed(2)+' | '+c.size+c.unit+'x'+c.packQty;
   }).join('\n');
 
@@ -5872,7 +5834,7 @@ function pennyEnsureList(name){
 }
 
 function pennyMakeItem(listId, item){
-  return { id: pennyUID(), listId, name: item.name.trim(), qty: item.qty || 1, price: '', store: '', notes: item.notes || '', checked: false };
+  return { id: pennyUID(), listId, name: item.name.trim(), qty: item.qty || 1, price: '', store: '', notes: item.notes || '', done: false };
 }
 
 function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
@@ -5939,7 +5901,7 @@ function pennyExecuteActions(rawText){
     const d = cmd.data;
     try {
       if(cmd.type === 'ADDLIST'){
-        if(!groceryLists.length){ pennyEnsureList(d.list || activeListName); }
+        if(!groceryLists.length){ pennyEnsureList(d.list || 'My List'); }
         const list = pennyResolveList(d.list) || pennyEnsureList(d.list);
         let n = 0, dupes = 0;
         (d.items || []).forEach(item => {
@@ -5986,7 +5948,7 @@ function pennyExecuteActions(rawText){
       else if(cmd.type === 'CLEARCHECKED'){
         const list = pennyResolveList(d.list); if(!list) return;
         const before = groceryItems.length;
-        groceryItems = groceryItems.filter(gi => !(gi.listId === list.id && gi.checked));
+        groceryItems = groceryItems.filter(gi => !(gi.listId === list.id && gi.done));
         const n = before - groceryItems.length;
         if(n){ saveItms=true; toasts.push(`Cleared ${n} checked item${n!==1?'s':''}`); }
       }
