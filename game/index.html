@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Game — Prototype</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #02030a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+canvas { display: block; }
+#hint {
+  color: #1e2e4a;
+  font: 10px/1 monospace;
+  margin-top: 8px;
+  letter-spacing: .07em;
+  text-align: center;
+}
+#hint b { color: #2e4a78; }
+</style>
+</head>
+<body>
+<canvas id="c" width="960" height="540"></canvas>
+<div id="hint">
+  <b>← → / A D</b> move &nbsp;·&nbsp;
+  <b>Space / ↑ / W</b> jump &nbsp;·&nbsp;
+  <b>Shift</b> dash &nbsp;·&nbsp;
+  <b>Z / J</b> attack
+</div>
+<script src="js/input.js"></script>
+<script src="js/player.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
