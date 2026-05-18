@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Run Loop Preview</title>
+<title>Run Loop</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -19,7 +19,7 @@ p { color: #2e4060; font: 10px monospace; margin-top: 6px; letter-spacing: .07em
 </head>
 <body>
 <canvas id="c" width="900" height="440"></canvas>
-<p>running loop — character_Run_motion.json</p>
+<p>running loop</p>
 <script>
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
@@ -35,176 +35,194 @@ function crToBezier(p0, p1, p2, p3) {
   };
 }
 
-function drawShape(s) {
-  if (!s.visible || s.points.length === 0) return;
-  const pts = s.points;
+function buildPath(pts, smooth, closed) {
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
-  if (pts.length >= 2) {
-    if (!s.smooth || pts.length === 2) {
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      if (s.closed) ctx.closePath();
-    } else {
-      const n = pts.length, cl = s.closed;
-      for (let i = 0; i < n - 1; i++) {
-        const p0 = pts[i-1] || (cl ? pts[n-1] : pts[i]);
-        const p1 = pts[i], p2 = pts[i+1];
-        const p3 = pts[i+2] || (cl ? pts[0] : pts[i+1]);
-        const c = crToBezier(p0, p1, p2, p3);
-        ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, p2.x, p2.y);
-      }
-      if (cl) {
-        const p0 = pts[n-2], p1 = pts[n-1], p2 = pts[0], p3 = pts[1] || p2;
-        const c = crToBezier(p0, p1, p2, p3);
-        ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, p2.x, p2.y);
-        ctx.closePath();
-      }
-    }
+  if (pts.length < 2) return;
+  if (!smooth || pts.length === 2) {
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    if (closed) ctx.closePath();
+    return;
   }
+  const n = pts.length;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[i-1] || (closed ? pts[n-1] : pts[i]);
+    const p1 = pts[i], p2 = pts[i+1];
+    const p3 = pts[i+2] || (closed ? pts[0] : pts[i+1]);
+    const c = crToBezier(p0, p1, p2, p3);
+    ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, p2.x, p2.y);
+  }
+  if (closed) {
+    const p0 = pts[n-2], p1 = pts[n-1], p2 = pts[0], p3 = pts[1] || p2;
+    const c = crToBezier(p0, p1, p2, p3);
+    ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, p2.x, p2.y);
+    ctx.closePath();
+  }
+}
+
+function drawShape(s) {
+  if (!s.visible || s.points.length === 0) return;
+  buildPath(s.points, s.smooth, s.closed);
   if (s.fillEnabled)   { ctx.fillStyle = s.fillColor; ctx.fill(); }
   if (s.strokeEnabled) {
     ctx.strokeStyle = s.strokeColor;
     ctx.lineWidth   = s.strokeWidth;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.stroke();
   }
 }
 
-// ── Shapes from character_Run_motion.json ────────────────────────────────────
-const shapes = [
-  // cloak layers (drawn back to front)
-  {name:"shape_1",points:[{x:168,y:359.5},{x:218,y:352.5},{x:229,y:365.5},{x:257,y:383.5},{x:284,y:391.5},{x:300,y:395.5},{x:343,y:405.5},{x:391,y:423.5},{x:429,y:437.5},{x:452,y:449.5},{x:473,y:449.5},{x:466,y:460.5},{x:436,y:459.5},{x:389,y:448.5},{x:336,y:434.5},{x:286,y:430.5},{x:243,y:404.5},{x:215,y:374.5},{x:217,y:352.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
-  {name:"shape_3",points:[{x:168,y:359.5},{x:177,y:408.5},{x:189,y:452.5},{x:215,y:473.5},{x:239,y:488.5},{x:295,y:506.5},{x:349,y:513.5},{x:417,y:523.5},{x:433,y:530.5},{x:406,y:514.5},{x:364,y:499.5},{x:319,y:479.5},{x:289,y:464.5},{x:276,y:449.5},{x:269,y:422.5},{x:244,y:405.5},{x:220,y:376.5},{x:217,y:350.5},{x:168,y:357.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
-  {name:"shape_4",points:[{x:467,y:460.5},{x:483,y:486.5},{x:498,y:513.5},{x:463,y:501.5},{x:441,y:485.5},{x:394,y:475.5},{x:356,y:466.5},{x:334,y:466.5},{x:314,y:461.5},{x:296,y:456.5},{x:273,y:439.5},{x:267,y:421.5},{x:285,y:429.5},{x:339,y:432.5},{x:390,y:447.5},{x:438,y:458.5},{x:468,y:460.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
-  {name:"shape_5",points:[{x:432,y:528.5},{x:463,y:537.5},{x:485,y:540.5},{x:472,y:526.5},{x:466,y:512.5},{x:461,y:499.5},{x:441,y:485.5},{x:393,y:475.5},{x:355,y:466.5},{x:333,y:466.5},{x:313,y:461.5},{x:295,y:456.5},{x:273,y:438.5},{x:279,y:457.5},{x:298,y:474.5},{x:331,y:495.5},{x:360,y:506.5},{x:406,y:514.5},{x:431,y:529.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
-  {name:"shape_6",points:[{x:190,y:455.5},{x:226,y:495.5},{x:258,y:521.5},{x:326,y:564.5},{x:391,y:585.5},{x:408,y:583.5},{x:385,y:570.5},{x:368,y:553.5},{x:354,y:529.5},{x:349,y:512.5},{x:294,y:506.5},{x:239,y:487.5},{x:191,y:455.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
-  // left leg
-  {name:"shape_7",points:[{x:244,y:512.5},{x:227,y:529.5},{x:219,y:545.5},{x:228,y:567.5},{x:211,y:580.5},{x:179,y:612.5},{x:159,y:639.5},{x:135,y:676.5},{x:122,y:700.5},{x:116,y:710.5},{x:129,y:706.5},{x:139,y:698.5},{x:151,y:691.5},{x:163,y:685.5},{x:171,y:676.5},{x:193,y:650.5},{x:210,y:630.5},{x:232,y:609.5},{x:256,y:599.5},{x:274,y:592.5},{x:281,y:577.5},{x:270,y:562.5},{x:294,y:544.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#000000",fillEnabled:true,strokeWidth:2,visible:true},
-  // right leg / foot
-  {name:"shape_8a",points:[{x:372,y:559.5},{x:352,y:528.5},{x:350,y:515.5},{x:418,y:523.5},{x:434,y:529.5},{x:466,y:539.5},{x:486,y:540.5},{x:474,y:525.5},{x:472,y:516.5},{x:499,y:524.5},{x:497,y:554.5},{x:429,y:544.5},{x:412,y:572.5},{x:382,y:566.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#000000",fillEnabled:true,strokeWidth:2,visible:true},
-  // head
-  {name:"shape_8b",points:[{x:174,y:109.5},{x:125,y:130.5},{x:107,y:162.5},{x:97,y:202.5},{x:94,y:236.5},{x:107,y:269.5},{x:138,y:294.5},{x:207,y:303.5},{x:258,y:279.5},{x:287,y:243.5},{x:292,y:190.5},{x:267,y:149.5},{x:232,y:125.5},{x:205,y:114.5},{x:175,y:109.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#ffffff",fillEnabled:false,strokeWidth:2,visible:true},
-  // daisy centre small
-  {name:"shape_9",points:[{x:228,y:138.5},{x:220,y:150.5},{x:231,y:163.5},{x:241,y:159.5},{x:241,y:146.5},{x:229,y:137.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#6a3e2f",fillEnabled:true,strokeWidth:2,visible:true},
-  // left eye outline
-  {name:"shape_10",points:[{x:125,y:158.5},{x:109,y:183.5},{x:103,y:222.5},{x:113,y:245.5},{x:131,y:253.5},{x:151,y:256.5},{x:171,y:251.5},{x:183,y:233.5},{x:186,y:203.5},{x:173,y:178.5},{x:160,y:160.5},{x:147,y:154.5},{x:135,y:154.5},{x:124,y:159.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#ffffff",fillEnabled:false,strokeWidth:2,visible:true},
-  // left eye fill
-  {name:"shape_11",points:[{x:115,y:175.5},{x:129,y:179.5},{x:141,y:195.5},{x:144,y:208.5},{x:143,y:229.5},{x:137,y:243.5},{x:128,y:252.5},{x:112,y:245.5},{x:103,y:222.5},{x:104,y:205.5},{x:108,y:184.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#d6d6d6",fillEnabled:true,strokeWidth:2,visible:true},
-  // left eye highlight
-  {name:"shape_12",points:[{x:140,y:195.5},{x:135,y:205.5},{x:123,y:210.5},{x:112,y:209.5},{x:105,y:206.5},{x:108,y:183.5},{x:115,y:175.5},{x:128,y:178.5},{x:138,y:188.5},{x:140,y:195.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#ffffff",fillEnabled:true,strokeWidth:2,visible:true},
-  // right eye inner
-  {name:"shape_13",points:[{x:221,y:151.5},{x:205,y:165.5},{x:203,y:186.5},{x:203,y:204.5},{x:212,y:204.5},{x:222,y:195.5},{x:229,y:175.5},{x:232,y:161.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
-  // right eye
-  {name:"shape_14",points:[{x:236,y:163.5},{x:252,y:178.5},{x:275,y:184.5},{x:279,y:174.5},{x:267,y:161.5},{x:257,y:156.5},{x:242,y:153.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
-  // daisy petals
-  {name:"shape_15",points:[{x:222,y:144.5},{x:213,y:133.5},{x:213,y:116.5},{x:217,y:99.5},{x:228,y:106.5},{x:238,y:120.5},{x:240,y:142.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
-  {name:"shape_16",points:[{x:221,y:142.5},{x:204,y:131.5},{x:189,y:127.5},{x:174,y:130.5},{x:172,y:144.5},{x:187,y:153.5},{x:202,y:156.5},{x:219,y:154.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
-  {name:"shape_17",points:[{x:241,y:144.5},{x:250,y:129.5},{x:262,y:116.5},{x:278,y:114.5},{x:282,y:123.5},{x:280,y:134.5},{x:273,y:143.5},{x:251,y:154.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
-  // neck ring
-  {name:"shape_18",points:[{x:169,y:325.5},{x:183,y:320.5},{x:202,y:319.5},{x:215,y:321.5},{x:205,y:329.5},{x:188,y:329.5},{x:177,y:330.5},{x:170,y:326.5}],closed:false,smooth:true,strokeColor:"#ffeb8a",strokeEnabled:true,fillColor:"#fdff94",fillEnabled:false,strokeWidth:6,visible:true},
-  // daisy center filled
-  {name:"shape_19",points:[{x:222,y:144.5},{x:234,y:141.5},{x:243,y:149.5},{x:235,y:160.5},{x:223,y:157.5},{x:222,y:144.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#603d0b",fillEnabled:true,strokeWidth:2,visible:true},
-];
+function withPivot(px, py, angle, fn) {
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(angle);
+  ctx.translate(-px, -py);
+  fn();
+  ctx.restore();
+}
 
-// ── Positioning ─────────────────────────────────────────────────────────────
-// Vertex-tool canvas: 500×800. Character bounding box: x≈94–499, y≈99–710.
-// Head centre x ≈ 190. Feet bottom y ≈ 710.
-const SCALE        = 0.50;
-const GROUND_Y     = 410;       // screen y for feet
-const FEET_VY      = 710;       // vertex y of foot
-const BODY_VX      = 190;       // vertex x of body centre (for scroll anchor)
+// ── Shapes (from character_Run_motion.json) ──────────────────────────────────
+// HEAD fillEnabled fixed to true so it renders white.
+const S = {
+  cloak1: {name:"cloak1",points:[{x:168,y:359.5},{x:218,y:352.5},{x:229,y:365.5},{x:257,y:383.5},{x:284,y:391.5},{x:300,y:395.5},{x:343,y:405.5},{x:391,y:423.5},{x:429,y:437.5},{x:452,y:449.5},{x:473,y:449.5},{x:466,y:460.5},{x:436,y:459.5},{x:389,y:448.5},{x:336,y:434.5},{x:286,y:430.5},{x:243,y:404.5},{x:215,y:374.5},{x:217,y:352.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
+  cloak2: {name:"cloak2",points:[{x:168,y:359.5},{x:177,y:408.5},{x:189,y:452.5},{x:215,y:473.5},{x:239,y:488.5},{x:295,y:506.5},{x:349,y:513.5},{x:417,y:523.5},{x:433,y:530.5},{x:406,y:514.5},{x:364,y:499.5},{x:319,y:479.5},{x:289,y:464.5},{x:276,y:449.5},{x:269,y:422.5},{x:244,y:405.5},{x:220,y:376.5},{x:217,y:350.5},{x:168,y:357.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
+  cloak3: {name:"cloak3",points:[{x:467,y:460.5},{x:483,y:486.5},{x:498,y:513.5},{x:463,y:501.5},{x:441,y:485.5},{x:394,y:475.5},{x:356,y:466.5},{x:334,y:466.5},{x:314,y:461.5},{x:296,y:456.5},{x:273,y:439.5},{x:267,y:421.5},{x:285,y:429.5},{x:339,y:432.5},{x:390,y:447.5},{x:438,y:458.5},{x:468,y:460.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
+  cloak4: {name:"cloak4",points:[{x:432,y:528.5},{x:463,y:537.5},{x:485,y:540.5},{x:472,y:526.5},{x:466,y:512.5},{x:461,y:499.5},{x:441,y:485.5},{x:393,y:475.5},{x:355,y:466.5},{x:333,y:466.5},{x:313,y:461.5},{x:295,y:456.5},{x:273,y:438.5},{x:279,y:457.5},{x:298,y:474.5},{x:331,y:495.5},{x:360,y:506.5},{x:406,y:514.5},{x:431,y:529.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
+  cloak5: {name:"cloak5",points:[{x:190,y:455.5},{x:226,y:495.5},{x:258,y:521.5},{x:326,y:564.5},{x:391,y:585.5},{x:408,y:583.5},{x:385,y:570.5},{x:368,y:553.5},{x:354,y:529.5},{x:349,y:512.5},{x:294,y:506.5},{x:239,y:487.5},{x:191,y:455.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#4d0d5e",fillEnabled:true,strokeWidth:2,visible:true},
+  legL:   {name:"legL",points:[{x:244,y:512.5},{x:227,y:529.5},{x:219,y:545.5},{x:228,y:567.5},{x:211,y:580.5},{x:179,y:612.5},{x:159,y:639.5},{x:135,y:676.5},{x:122,y:700.5},{x:116,y:710.5},{x:129,y:706.5},{x:139,y:698.5},{x:151,y:691.5},{x:163,y:685.5},{x:171,y:676.5},{x:193,y:650.5},{x:210,y:630.5},{x:232,y:609.5},{x:256,y:599.5},{x:274,y:592.5},{x:281,y:577.5},{x:270,y:562.5},{x:294,y:544.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#000000",fillEnabled:true,strokeWidth:2,visible:true},
+  legR:   {name:"legR",points:[{x:372,y:559.5},{x:352,y:528.5},{x:350,y:515.5},{x:418,y:523.5},{x:434,y:529.5},{x:466,y:539.5},{x:486,y:540.5},{x:474,y:525.5},{x:472,y:516.5},{x:499,y:524.5},{x:497,y:554.5},{x:429,y:544.5},{x:412,y:572.5},{x:382,y:566.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#000000",fillEnabled:true,strokeWidth:2,visible:true},
+  head:   {name:"head",points:[{x:174,y:109.5},{x:125,y:130.5},{x:107,y:162.5},{x:97,y:202.5},{x:94,y:236.5},{x:107,y:269.5},{x:138,y:294.5},{x:207,y:303.5},{x:258,y:279.5},{x:287,y:243.5},{x:292,y:190.5},{x:267,y:149.5},{x:232,y:125.5},{x:205,y:114.5},{x:175,y:109.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#ffffff",fillEnabled:true,strokeWidth:2,visible:true},
+  daisyC1:{name:"daisyC1",points:[{x:228,y:138.5},{x:220,y:150.5},{x:231,y:163.5},{x:241,y:159.5},{x:241,y:146.5},{x:229,y:137.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#6a3e2f",fillEnabled:true,strokeWidth:2,visible:true},
+  eyeLout:{name:"eyeLout",points:[{x:125,y:158.5},{x:109,y:183.5},{x:103,y:222.5},{x:113,y:245.5},{x:131,y:253.5},{x:151,y:256.5},{x:171,y:251.5},{x:183,y:233.5},{x:186,y:203.5},{x:173,y:178.5},{x:160,y:160.5},{x:147,y:154.5},{x:135,y:154.5},{x:124,y:159.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#ffffff",fillEnabled:false,strokeWidth:2,visible:true},
+  eyeLfil:{name:"eyeLfil",points:[{x:115,y:175.5},{x:129,y:179.5},{x:141,y:195.5},{x:144,y:208.5},{x:143,y:229.5},{x:137,y:243.5},{x:128,y:252.5},{x:112,y:245.5},{x:103,y:222.5},{x:104,y:205.5},{x:108,y:184.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#d6d6d6",fillEnabled:true,strokeWidth:2,visible:true},
+  eyeLhi: {name:"eyeLhi",points:[{x:140,y:195.5},{x:135,y:205.5},{x:123,y:210.5},{x:112,y:209.5},{x:105,y:206.5},{x:108,y:183.5},{x:115,y:175.5},{x:128,y:178.5},{x:138,y:188.5},{x:140,y:195.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#ffffff",fillEnabled:true,strokeWidth:2,visible:true},
+  eyeRin: {name:"eyeRin",points:[{x:221,y:151.5},{x:205,y:165.5},{x:203,y:186.5},{x:203,y:204.5},{x:212,y:204.5},{x:222,y:195.5},{x:229,y:175.5},{x:232,y:161.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
+  eyeRfil:{name:"eyeRfil",points:[{x:236,y:163.5},{x:252,y:178.5},{x:275,y:184.5},{x:279,y:174.5},{x:267,y:161.5},{x:257,y:156.5},{x:242,y:153.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
+  petTop: {name:"petTop",points:[{x:222,y:144.5},{x:213,y:133.5},{x:213,y:116.5},{x:217,y:99.5},{x:228,y:106.5},{x:238,y:120.5},{x:240,y:142.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
+  petL:   {name:"petL",points:[{x:221,y:142.5},{x:204,y:131.5},{x:189,y:127.5},{x:174,y:130.5},{x:172,y:144.5},{x:187,y:153.5},{x:202,y:156.5},{x:219,y:154.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
+  petR:   {name:"petR",points:[{x:241,y:144.5},{x:250,y:129.5},{x:262,y:116.5},{x:278,y:114.5},{x:282,y:123.5},{x:280,y:134.5},{x:273,y:143.5},{x:251,y:154.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#e8e8e8",fillEnabled:true,strokeWidth:2,visible:true},
+  ring:   {name:"ring",points:[{x:169,y:325.5},{x:183,y:320.5},{x:202,y:319.5},{x:215,y:321.5},{x:205,y:329.5},{x:188,y:329.5},{x:177,y:330.5},{x:170,y:326.5}],closed:false,smooth:true,strokeColor:"#ffeb8a",strokeEnabled:true,fillColor:"#fdff94",fillEnabled:false,strokeWidth:6,visible:true},
+  daisyC2:{name:"daisyC2",points:[{x:222,y:144.5},{x:234,y:141.5},{x:243,y:149.5},{x:235,y:160.5},{x:223,y:157.5},{x:222,y:144.5}],closed:false,smooth:true,strokeColor:"#000000",strokeEnabled:true,fillColor:"#603d0b",fillEnabled:true,strokeWidth:2,visible:true},
+};
 
-// Static vertical offset (in vertex space) so feet land on GROUND_Y
-const BASE_TY = GROUND_Y / SCALE - FEET_VY;   // = 820 - 710 = 110
+// ── Anchor points (vertex-space) ─────────────────────────────────────────────
+// These are the hip/attachment pivots used for limb swing.
+const HIP_L   = { x: 250, y: 510 }; // top of left leg
+const HIP_R   = { x: 370, y: 515 }; // top of right leg
+const CLK_PIV = { x: 195, y: 355 }; // cloak neck attachment
+const DAISY_P = { x: 230, y: 138 }; // daisy centre
 
-// ── Animation state ──────────────────────────────────────────────────────────
-let charScreenX = -80;   // screen x of the body-centre anchor
-const SPEED = 190;       // px/s in screen space
+// ── Positioning ──────────────────────────────────────────────────────────────
+// Vertex canvas: 500×800. Character runs facing LEFT in vertex-space.
+// We flip ctx (scale -1 on X) so she runs RIGHT on screen.
+// Anchor: body-centre x ≈ 190, feet y ≈ 710.
+const SCALE    = 0.50;
+const GROUND_Y = 412;
+const FEET_VY  = 710;
+const BODY_VX  = 190;
 
-// Daisy spring (independent bob)
-let daisyBob    = 0;
-let daisyBobVel = 0;
-const SPRING_K  = 260;
-const DAMPING   = 0.04;
+// ── State ────────────────────────────────────────────────────────────────────
+let charX = -180;
+const SPEED = 200; // px/s screen
 
+let daisyBob = 0, daisyVel = 0;
+let prevPhaseInt = 0;
 let lastT = 0;
-let stepPhase = 0;
-let prevStepPhase = 0;
 
 function loop(ts) {
   const dt = Math.min((ts - lastT) / 1000, 0.05);
   lastT = ts;
 
-  // Move character
-  charScreenX += SPEED * dt;
-  if (charScreenX > W + 200) charScreenX = -200;
+  charX += SPEED * dt;
+  if (charX > W + 220) charX = -220;
 
-  // Step phase drives footstrike → daisy kick
-  stepPhase = (stepPhase + dt * 3.6) % 1;
-  const justStruck = (stepPhase < prevStepPhase + dt * 3.6 * 0.5) &&
-                     (Math.floor(stepPhase * 2) !== Math.floor(prevStepPhase * 2));
-  prevStepPhase = stepPhase;
-  if (justStruck) daisyBobVel = -18;
+  // Running phase 0-1, ~3.8 full strides/sec
+  const phase     = (ts / 1000 * 3.8) % 1;
+  const phaseInt  = Math.floor(phase * 2); // 2 footstrikes per stride
+  if (phaseInt !== prevPhaseInt) { daisyVel = -22; }
+  prevPhaseInt = phaseInt;
 
-  // Daisy spring
-  daisyBobVel += (0 - daisyBob) * SPRING_K * dt;
-  daisyBobVel *= Math.pow(DAMPING, dt);
-  daisyBob    += daisyBobVel * dt;
+  daisyVel += (0 - daisyBob) * 290 * dt;
+  daisyVel *= Math.pow(0.04, dt);
+  daisyBob += daisyVel * dt;
 
-  // Body vertical bob
-  const bodyBob = Math.sin(stepPhase * Math.PI * 2) * 5;
+  // Body bobs UP on each footstrike (Hollow Knight feel)
+  const bodyBob   = -Math.abs(Math.sin(phase * Math.PI * 2)) * 5;
 
-  // ── Draw ──────────────────────────────────────────────────────────────────
+  // Leg swing — opposite phase. In flipped ctx positive rotation = counter-clockwise on screen.
+  // Negate so forward swing = clockwise (toward direction of travel).
+  const swing     = 0.36;
+  const legLAngle = -Math.sin(phase * Math.PI * 2) * swing;
+  const legRAngle =  Math.sin(phase * Math.PI * 2) * swing; // opposite
 
-  // Background
+  // Cloak flaps with slight lag
+  const cloakAng  = Math.sin(phase * Math.PI * 2 * 0.65 + 0.6) * 0.09;
+
+  // ── Draw background ────────────────────────────────────────────────────────
   ctx.fillStyle = '#04060e';
   ctx.fillRect(0, 0, W, H);
 
-  // Faint distant glow
-  const glow = ctx.createRadialGradient(W*0.4, H*0.4, 0, W*0.4, H*0.4, 260);
-  glow.addColorStop(0, 'rgba(28,16,60,0.14)');
+  const glow = ctx.createRadialGradient(W*0.5, H*0.45, 0, W*0.5, H*0.45, 310);
+  glow.addColorStop(0, 'rgba(30,14,65,0.14)');
   glow.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
-  // Ground strip
-  const gg = ctx.createLinearGradient(0, GROUND_Y, 0, GROUND_Y + 28);
-  gg.addColorStop(0, 'rgba(40,64,160,0.28)');
-  gg.addColorStop(1, 'transparent');
-  ctx.fillStyle = gg;
-  ctx.fillRect(0, GROUND_Y, W, 28);
+  // Ground glow
+  const gg = ctx.createLinearGradient(0, GROUND_Y, 0, GROUND_Y + 32);
+  gg.addColorStop(0, 'rgba(42,68,170,0.22)'); gg.addColorStop(1, 'transparent');
+  ctx.fillStyle = gg; ctx.fillRect(0, GROUND_Y, W, 32);
 
-  // Shadow ellipse
-  const sx = charScreenX + 12, sy = GROUND_Y + 3;
-  const sg = ctx.createRadialGradient(sx, sy, 2, sx, sy, 42);
-  sg.addColorStop(0, 'rgba(0,0,0,0.30)');
-  sg.addColorStop(1, 'transparent');
+  // Shadow
+  const sx = charX + 14, sy = GROUND_Y + 6;
+  const sg = ctx.createRadialGradient(sx, sy, 2, sx, sy, 46);
+  sg.addColorStop(0, 'rgba(0,0,0,0.28)'); sg.addColorStop(1, 'transparent');
   ctx.fillStyle = sg;
-  ctx.beginPath(); ctx.ellipse(sx, sy + 6, 42, 10, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx, sy, 46, 11, 0, 0, Math.PI * 2); ctx.fill();
 
-  // Character transform
-  const tx = charScreenX / SCALE - BODY_VX;
-  const ty = BASE_TY + bodyBob / SCALE;
-
+  // ── Character transform ────────────────────────────────────────────────────
+  // ctx.scale(-SCALE, SCALE) flips her to face right.
+  // Sub-transforms for limbs are applied in vertex-space WITHIN this flipped context.
   ctx.save();
-  ctx.scale(SCALE, SCALE);
-  ctx.translate(tx, ty);
+  ctx.translate(charX, GROUND_Y + bodyBob);
+  ctx.scale(-SCALE, SCALE);          // <-- horizontal flip: now faces right
+  ctx.translate(-BODY_VX, -FEET_VY); // centre the vertex coords
 
-  // Draw all shapes (in JSON order = back-to-front as user drew them)
-  for (const s of shapes) drawShape(s);
+  // 1. Back cloak layers (drawn before legs so legs sit on top)
+  withPivot(CLK_PIV.x, CLK_PIV.y, cloakAng, () => {
+    drawShape(S.cloak1);
+    drawShape(S.cloak2);
+    drawShape(S.cloak3);
+    drawShape(S.cloak4);
+    drawShape(S.cloak5);
+  });
 
-  // Daisy extra bob — redraw daisy petals + centre with offset
-  const DAISY_SHAPES = ['shape_15','shape_16','shape_17','shape_19','shape_9'];
-  ctx.save();
-  // Daisy is clustered around (228, 140) in vertex space
-  ctx.translate(228, 140);
-  ctx.rotate(daisyBob * 0.012);
-  ctx.translate(-228, -140);
-  for (const s of shapes) {
-    if (DAISY_SHAPES.includes(s.name)) drawShape(s);
-  }
-  ctx.restore();
+  // 2. Back leg (shape_8a / legR — opposite phase, currently behind)
+  withPivot(HIP_R.x, HIP_R.y, legRAngle, () => drawShape(S.legR));
+
+  // 3. Front leg (shape_7 / legL — currently reaching forward)
+  withPivot(HIP_L.x, HIP_L.y, legLAngle, () => drawShape(S.legL));
+
+  // 4. Head (white fill — fixed)
+  drawShape(S.head);
+
+  // 5. Eyes
+  drawShape(S.eyeLout);
+  drawShape(S.eyeLfil);
+  drawShape(S.eyeLhi);
+  drawShape(S.eyeRin);
+  drawShape(S.eyeRfil);
+
+  // 6. Neck ring
+  drawShape(S.ring);
+
+  // 7. Daisy (spring bob on footstrike)
+  withPivot(DAISY_P.x, DAISY_P.y, daisyBob * 0.016, () => {
+    drawShape(S.petTop);
+    drawShape(S.petL);
+    drawShape(S.petR);
+    drawShape(S.daisyC1);
+    drawShape(S.daisyC2);
+  });
 
   ctx.restore();
 
