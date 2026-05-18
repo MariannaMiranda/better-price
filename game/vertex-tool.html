@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vertex Tool</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #15151c;
+    color: #d8d8e0;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #sidebar {
+    width: 320px;
+    background: #1f1f28;
+    border-right: 1px solid #333;
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  #sidebar h2 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: #88c;
+    letter-spacing: 0.1em;
+  }
+  #sidebar h3 {
+    margin: 14px 0 4px;
+    font-size: 11px;
+    color: #aab;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .section {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a34;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    margin: 3px 0;
+    background: #2e2e3a;
+    color: #d8d8e0;
+    border: 1px solid #444;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    text-align: center;
+  }
+  button:hover  { background: #3e3e4a; }
+  button.primary { background: #2a4a8a; border-color: #4a6acc; }
+  button.primary:hover { background: #3a5a9a; }
+  button.danger { background: #4a2a2a; border-color: #aa4a4a; }
+  button.danger:hover  { background: #5a3a3a; }
+
+  label {
+    display: block;
+    margin: 6px 0 2px;
+    font-size: 10px;
+    color: #aab;
+  }
+  label.inline { display: inline-flex; align-items: center; gap: 4px; }
+
+  input[type="text"], input[type="color"], textarea, select {
+    width: 100%;
+    padding: 4px;
+    background: #15151c;
+    border: 1px solid #333;
+    color: #d8d8e0;
+    font-family: inherit;
+    border-radius: 3px;
+  }
+  input[type="range"] { width: 100%; }
+  input[type="file"]  { font-size: 10px; }
+  textarea            { resize: vertical; font-size: 10px; }
+
+  .row { display: flex; gap: 4px; }
+  .row > * { flex: 1; }
+
+  .shape-row {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    margin: 2px 0;
+    background: #2a2a34;
+    border-radius: 3px;
+    cursor: pointer;
+    user-select: none;
+    gap: 4px;
+  }
+  .shape-row.active { background: #2a4a8a; }
+  .shape-row:hover  { background: #3a3a44; }
+  .shape-row.active:hover { background: #3a5a9a; }
+  .shape-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .shape-row button {
+    padding: 2px 6px;
+    margin: 0;
+    width: auto;
+    font-size: 10px;
+  }
+
+  #canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0d0d12;
+    position: relative;
+    overflow: hidden;
+  }
+  canvas {
+    background: #fff;
+    cursor: crosshair;
+    box-shadow: 0 0 0 1px #333;
+  }
+
+  #help {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 10px;
+    color: #888;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 8px 12px;
+    border-radius: 4px;
+    pointer-events: none;
+    line-height: 1.5;
+  }
+  #help b { color: #b8d4ff; }
+
+  #status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 10px;
+    color: #888;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 6px 10px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h2>VERTEX TOOL</h2>
+
+  <div class="section">
+    <button class="primary" id="newShape">+ NEW SHAPE</button>
+    <div class="row">
+      <button id="undoPoint">Undo Point</button>
+      <button id="clearShape">Clear Shape</button>
+    </div>
+    <button class="danger" id="clearAll">Clear Everything</button>
+    <button id="previewToggle">Preview Mode (hide handles)</button>
+  </div>
+
+  <div class="section">
+    <h3>Reference Image</h3>
+    <input type="file" id="refImage" accept="image/*">
+    <label>Opacity: <span id="opVal">40%</span></label>
+    <input type="range" id="refOpacity" min="0" max="100" value="40">
+    <button id="clearRef">Remove Image</button>
+  </div>
+
+  <div class="section">
+    <h3>Current Shape</h3>
+    <label>Name (e.g. head, eye_left, cloak_1)</label>
+    <input type="text" id="shapeName">
+    <div class="row" style="margin-top: 6px;">
+      <label class="inline"><input type="checkbox" id="shapeClosed"> Closed</label>
+      <label class="inline"><input type="checkbox" id="shapeSmooth" checked> Smooth</label>
+    </div>
+    <label>Stroke Color</label>
+    <div class="row">
+      <input type="color" id="strokeColor" value="#000000">
+      <label class="inline"><input type="checkbox" id="strokeEnabled" checked> Stroke</label>
+    </div>
+    <label>Fill Color</label>
+    <div class="row">
+      <input type="color" id="fillColor" value="#ffffff">
+      <label class="inline"><input type="checkbox" id="fillEnabled"> Fill</label>
+    </div>
+    <label>Stroke Width: <span id="swVal">2</span></label>
+    <input type="range" id="strokeWidth" min="0.5" max="8" step="0.5" value="2">
+  </div>
+
+  <div class="section">
+    <h3>Shapes</h3>
+    <div id="shapeList"></div>
+  </div>
+
+  <div class="section">
+    <button class="primary" id="exportBtn">EXPORT JS CODE ▼</button>
+    <textarea id="output" rows="10" readonly placeholder="Click EXPORT to generate code"></textarea>
+    <button id="copyOutput">Copy to Clipboard</button>
+  </div>
+
+  <div class="section">
+    <h3>Save / Load Project</h3>
+    <button id="saveJSON">Save Project (.json)</button>
+    <button id="loadJSON">Load Project (.json)</button>
+    <input type="file" id="loadFile" accept=".json" style="display:none;">
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="c" width="500" height="800"></canvas>
+  <div id="help">
+    <b>Click</b> empty space — add point<br>
+    <b>Click + drag</b> a point — move it<br>
+    <b>Right-click</b> a point — delete<br>
+    <b>Click</b> a point in another shape — switch to that shape
+  </div>
+  <div id="status"></div>
+</div>
+
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+let shapes           = [];
+let currentIdx       = -1;
+let hoverHit         = null;
+let dragPoint        = null;
+let referenceImage   = null;
+let referenceOpacity = 0.4;
+let previewMode      = false;
+
+const HIT_RADIUS = 7;
+
+// ─── SHAPE OPERATIONS ──────────────────────────────────────────────────────
+function newShape() {
+  const s = {
+    name:          'shape_' + (shapes.length + 1),
+    points:        [],
+    closed:        false,
+    smooth:        true,
+    strokeColor:   '#000000',
+    strokeEnabled: true,
+    fillColor:     '#ffffff',
+    fillEnabled:   false,
+    strokeWidth:   2,
+    visible:       true,
+  };
+  shapes.push(s);
+  currentIdx = shapes.length - 1;
+  updateUI();
+  render();
+}
+
+function currentShape() {
+  return shapes[currentIdx] || null;
+}
+
+function deleteShape(i) {
+  shapes.splice(i, 1);
+  if (currentIdx >= shapes.length) currentIdx = shapes.length - 1;
+  if (shapes.length === 0) currentIdx = -1;
+  updateUI();
+  render();
+}
+
+function findHit(x, y) {
+  // Look in current shape first so its points have priority
+  if (currentShape()) {
+    const s = currentShape();
+    for (let i = s.points.length - 1; i >= 0; i--) {
+      if (Math.hypot(s.points[i].x - x, s.points[i].y - y) < HIT_RADIUS) {
+        return { shape: s, point: s.points[i], idx: i, shapeIdx: currentIdx };
+      }
+    }
+  }
+  // Then everywhere else
+  for (let si = 0; si < shapes.length; si++) {
+    if (si === currentIdx) continue;
+    const s = shapes[si];
+    if (!s.visible) continue;
+    for (let i = s.points.length - 1; i >= 0; i--) {
+      if (Math.hypot(s.points[i].x - x, s.points[i].y - y) < HIT_RADIUS) {
+        return { shape: s, point: s.points[i], idx: i, shapeIdx: si };
+      }
+    }
+  }
+  return null;
+}
+
+// ─── INPUT HANDLERS ─────────────────────────────────────────────────────────
+function canvasPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * (canvas.width  / r.width),
+    y: (e.clientY - r.top)  * (canvas.height / r.height),
+  };
+}
+
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault();
+  const { x, y } = canvasPos(e);
+  const hit = findHit(x, y);
+
+  if (e.button === 2) {
+    // Right-click: delete point
+    if (hit) {
+      const idx = hit.shape.points.indexOf(hit.point);
+      if (idx >= 0) hit.shape.points.splice(idx, 1);
+    }
+  } else if (e.button === 0) {
+    if (hit) {
+      // Switch shape if the hit is in a different shape
+      if (hit.shapeIdx !== currentIdx) {
+        currentIdx = hit.shapeIdx;
+        updateUI();
+      }
+      dragPoint = hit.point;
+    } else {
+      // Add new point to current shape (creating one if none exists)
+      if (!currentShape()) newShape();
+      currentShape().points.push({ x, y });
+    }
+  }
+  render();
+});
+
+canvas.addEventListener('mousemove', e => {
+  const { x, y } = canvasPos(e);
+  if (dragPoint) {
+    dragPoint.x = x;
+    dragPoint.y = y;
+    render();
+  } else {
+    const newHover = findHit(x, y);
+    if ((newHover && newHover.point) !== (hoverHit && hoverHit.point)) {
+      hoverHit = newHover;
+      canvas.style.cursor = newHover ? 'move' : 'crosshair';
+      render();
+    }
+    document.getElementById('status').textContent = `x: ${Math.round(x)}, y: ${Math.round(y)}`;
+  }
+});
+
+canvas.addEventListener('mouseup',    () => { dragPoint = null; });
+canvas.addEventListener('mouseleave', () => { dragPoint = null; hoverHit = null; render(); });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { dragPoint = null; render(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    if (currentShape() && currentShape().points.length > 0) {
+      currentShape().points.pop();
+      render();
+    }
+  }
+});
+
+// ─── CURVE BUILDING ─────────────────────────────────────────────────────────
+
+// Catmull-Rom spline → bezier control points
+function crToBezier(p0, p1, p2, p3) {
+  return {
+    cp1x: p1.x + (p2.x - p0.x) / 6,
+    cp1y: p1.y + (p2.y - p0.y) / 6,
+    cp2x: p2.x - (p3.x - p1.x) / 6,
+    cp2y: p2.y - (p3.y - p1.y) / 6,
+  };
+}
+
+function buildPath(shape) {
+  const pts = shape.points;
+  if (pts.length === 0) return false;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+
+  if (pts.length === 1) return true;
+
+  if (pts.length === 2 || !shape.smooth) {
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    if (shape.closed) ctx.closePath();
+  } else {
+    const closed = shape.closed;
+    const n = pts.length;
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = pts[i - 1] || (closed ? pts[n - 1] : pts[i]);
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || (closed ? pts[0] : pts[i + 1]);
+      const c = crToBezier(p0, p1, p2, p3);
+      ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, p2.x, p2.y);
+    }
+    if (closed) {
+      const p0 = pts[n - 2];
+      const p1 = pts[n - 1];
+      const p2 = pts[0];
+      const p3 = pts[1] || p2;
+      const c = crToBezier(p0, p1, p2, p3);
+      ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, p2.x, p2.y);
+      ctx.closePath();
+    }
+  }
+  return true;
+}
+
+function drawShapeGraphics(shape) {
+  if (!shape.visible) return;
+  if (!buildPath(shape)) return;
+
+  if (shape.fillEnabled) {
+    ctx.fillStyle = shape.fillColor;
+    ctx.fill();
+  }
+  if (shape.strokeEnabled) {
+    ctx.strokeStyle = shape.strokeColor;
+    ctx.lineWidth   = shape.strokeWidth;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+    ctx.stroke();
+  }
+}
+
+// ─── MAIN RENDER ────────────────────────────────────────────────────────────
+function render() {
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Reference image (fit, preserve aspect ratio)
+  if (referenceImage) {
+    ctx.save();
+    ctx.globalAlpha = referenceOpacity;
+    const imgRatio = referenceImage.width / referenceImage.height;
+    const canRatio = W / H;
+    let dW, dH, dX, dY;
+    if (imgRatio > canRatio) { dW = W; dH = W / imgRatio; dX = 0; dY = (H - dH) / 2; }
+    else                     { dH = H; dW = H * imgRatio; dY = 0; dX = (W - dW) / 2; }
+    ctx.drawImage(referenceImage, dX, dY, dW, dH);
+    ctx.restore();
+  }
+
+  // Draw all shapes
+  for (const s of shapes) drawShapeGraphics(s);
+
+  if (previewMode) return;
+
+  // Faint dots for non-current shapes
+  for (let si = 0; si < shapes.length; si++) {
+    if (si === currentIdx) continue;
+    if (!shapes[si].visible) continue;
+    for (const p of shapes[si].points) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(90,95,120,0.55)';
+      ctx.fill();
+    }
+  }
+
+  // Current shape's points (highlighted, numbered)
+  if (currentShape()) {
+    const s = currentShape();
+    for (let i = 0; i < s.points.length; i++) {
+      const p = s.points[i];
+      const isHover = hoverHit && hoverHit.point === p;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, isHover ? 7 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = isHover ? '#ff4060' : '#e02050';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#1a1a24';
+      ctx.font      = 'bold 10px monospace';
+      ctx.fillText(i + 1, p.x + 9, p.y - 5);
+    }
+  }
+}
+
+// ─── UI WIRING ──────────────────────────────────────────────────────────────
+function updateUI() {
+  const list = document.getElementById('shapeList');
+  list.innerHTML = '';
+  shapes.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'shape-row' + (i === currentIdx ? ' active' : '');
+    row.innerHTML = `<span>${s.name} <span style="opacity:.5">(${s.points.length} pts)</span></span>`;
+    const vis = document.createElement('button');
+    vis.textContent = s.visible ? '👁' : '·';
+    vis.title = s.visible ? 'Hide' : 'Show';
+    vis.onclick = ev => { ev.stopPropagation(); s.visible = !s.visible; updateUI(); render(); };
+    row.appendChild(vis);
+    const del = document.createElement('button');
+    del.textContent = '✕';
+    del.title = 'Delete shape';
+    del.onclick = ev => { ev.stopPropagation(); if (confirm('Delete ' + s.name + '?')) deleteShape(i); };
+    row.appendChild(del);
+    row.onclick = () => { currentIdx = i; updateUI(); render(); };
+    list.appendChild(row);
+  });
+
+  const s = currentShape();
+  const enable = !!s;
+  document.querySelectorAll('#shapeName, #shapeClosed, #shapeSmooth, #strokeColor, #strokeEnabled, #fillColor, #fillEnabled, #strokeWidth').forEach(el => el.disabled = !enable);
+
+  if (s) {
+    document.getElementById('shapeName').value     = s.name;
+    document.getElementById('shapeClosed').checked = s.closed;
+    document.getElementById('shapeSmooth').checked = s.smooth;
+    document.getElementById('strokeColor').value   = s.strokeColor;
+    document.getElementById('strokeEnabled').checked = s.strokeEnabled;
+    document.getElementById('fillColor').value     = s.fillColor;
+    document.getElementById('fillEnabled').checked = s.fillEnabled;
+    document.getElementById('strokeWidth').value   = s.strokeWidth;
+    document.getElementById('swVal').textContent   = s.strokeWidth;
+  }
+}
+
+// Buttons
+document.getElementById('newShape').onclick   = () => newShape();
+document.getElementById('undoPoint').onclick  = () => {
+  if (currentShape() && currentShape().points.length > 0) {
+    currentShape().points.pop();
+    updateUI();
+    render();
+  }
+};
+document.getElementById('clearShape').onclick = () => {
+  if (currentShape() && confirm('Clear all points in current shape?')) {
+    currentShape().points = [];
+    updateUI();
+    render();
+  }
+};
+document.getElementById('clearAll').onclick   = () => {
+  if (confirm('Clear ALL shapes?')) {
+    shapes = []; currentIdx = -1; updateUI(); render();
+  }
+};
+document.getElementById('previewToggle').onclick = () => {
+  previewMode = !previewMode;
+  document.getElementById('previewToggle').textContent = previewMode ? 'Edit Mode (show handles)' : 'Preview Mode (hide handles)';
+  render();
+};
+
+document.getElementById('refImage').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => { referenceImage = img; render(); };
+  img.src = URL.createObjectURL(f);
+};
+document.getElementById('refOpacity').oninput = e => {
+  referenceOpacity = e.target.value / 100;
+  document.getElementById('opVal').textContent = e.target.value + '%';
+  render();
+};
+document.getElementById('clearRef').onclick = () => { referenceImage = null; render(); };
+
+// Current shape settings
+document.getElementById('shapeName').oninput      = e => { if (currentShape()) { currentShape().name = e.target.value; updateUI(); } };
+document.getElementById('shapeClosed').onchange   = e => { if (currentShape()) { currentShape().closed = e.target.checked; render(); } };
+document.getElementById('shapeSmooth').onchange   = e => { if (currentShape()) { currentShape().smooth = e.target.checked; render(); } };
+document.getElementById('strokeColor').oninput    = e => { if (currentShape()) { currentShape().strokeColor = e.target.value; render(); } };
+document.getElementById('strokeEnabled').onchange = e => { if (currentShape()) { currentShape().strokeEnabled = e.target.checked; render(); } };
+document.getElementById('fillColor').oninput      = e => { if (currentShape()) { currentShape().fillColor = e.target.value; render(); } };
+document.getElementById('fillEnabled').onchange   = e => { if (currentShape()) { currentShape().fillEnabled = e.target.checked; render(); } };
+document.getElementById('strokeWidth').oninput    = e => {
+  if (currentShape()) {
+    currentShape().strokeWidth = parseFloat(e.target.value);
+    document.getElementById('swVal').textContent = e.target.value;
+    render();
+  }
+};
+
+// ─── EXPORT ────────────────────────────────────────────────────────────────
+document.getElementById('exportBtn').onclick = () => {
+  let code = '// === Character drawing — paste this into a JS file ===\n';
+  code += '// Call drawCharacter(ctx) to render her at her exported coordinates.\n\n';
+  code += 'function drawCharacter(ctx) {\n';
+
+  for (const shape of shapes) {
+    if (shape.points.length === 0) continue;
+    code += `\n  // ─── ${shape.name} ───\n`;
+    code += '  ctx.beginPath();\n';
+
+    const pts = shape.points;
+    code += `  ctx.moveTo(${pts[0].x.toFixed(1)}, ${pts[0].y.toFixed(1)});\n`;
+
+    if (pts.length >= 2) {
+      if (!shape.smooth) {
+        for (let i = 1; i < pts.length; i++) {
+          code += `  ctx.lineTo(${pts[i].x.toFixed(1)}, ${pts[i].y.toFixed(1)});\n`;
+        }
+        if (shape.closed) code += '  ctx.closePath();\n';
+      } else {
+        const closed = shape.closed;
+        const n = pts.length;
+        for (let i = 0; i < n - 1; i++) {
+          const p0 = pts[i - 1] || (closed ? pts[n - 1] : pts[i]);
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const p3 = pts[i + 2] || (closed ? pts[0] : pts[i + 1]);
+          const c = crToBezier(p0, p1, p2, p3);
+          code += `  ctx.bezierCurveTo(${c.cp1x.toFixed(1)}, ${c.cp1y.toFixed(1)}, ${c.cp2x.toFixed(1)}, ${c.cp2y.toFixed(1)}, ${p2.x.toFixed(1)}, ${p2.y.toFixed(1)});\n`;
+        }
+        if (closed) {
+          const p0 = pts[n - 2];
+          const p1 = pts[n - 1];
+          const p2 = pts[0];
+          const p3 = pts[1] || p2;
+          const c = crToBezier(p0, p1, p2, p3);
+          code += `  ctx.bezierCurveTo(${c.cp1x.toFixed(1)}, ${c.cp1y.toFixed(1)}, ${c.cp2x.toFixed(1)}, ${c.cp2y.toFixed(1)}, ${p2.x.toFixed(1)}, ${p2.y.toFixed(1)});\n`;
+          code += '  ctx.closePath();\n';
+        }
+      }
+    }
+
+    if (shape.fillEnabled) {
+      code += `  ctx.fillStyle = '${shape.fillColor}';\n`;
+      code += '  ctx.fill();\n';
+    }
+    if (shape.strokeEnabled) {
+      code += `  ctx.strokeStyle = '${shape.strokeColor}';\n`;
+      code += `  ctx.lineWidth = ${shape.strokeWidth};\n`;
+      code += `  ctx.lineCap = 'round';\n`;
+      code += `  ctx.lineJoin = 'round';\n`;
+      code += '  ctx.stroke();\n';
+    }
+  }
+  code += '}\n';
+
+  document.getElementById('output').value = code;
+};
+
+document.getElementById('copyOutput').onclick = () => {
+  const ta = document.getElementById('output');
+  ta.select();
+  document.execCommand('copy');
+  document.getElementById('copyOutput').textContent = 'Copied ✓';
+  setTimeout(() => { document.getElementById('copyOutput').textContent = 'Copy to Clipboard'; }, 1200);
+};
+
+// ─── SAVE / LOAD ────────────────────────────────────────────────────────────
+document.getElementById('saveJSON').onclick = () => {
+  const data = JSON.stringify({ shapes, canvasW: W, canvasH: H }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'character.json'; a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById('loadJSON').onclick = () => document.getElementById('loadFile').click();
+document.getElementById('loadFile').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      shapes = data.shapes || [];
+      currentIdx = shapes.length > 0 ? 0 : -1;
+      updateUI(); render();
+    } catch (err) {
+      alert('Failed to load file: ' + err.message);
+    }
+  };
+  reader.readAsText(f);
+};
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
+newShape();
+render();
+</script>
+</body>
+</html>
