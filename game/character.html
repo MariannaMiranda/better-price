@@ -2,277 +2,198 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Character Portrait</title>
+<title>Character — Line Drawing</title>
 <style>
   html, body {
     margin: 0;
     padding: 0;
-    background: #14121d;
+    background: #ffffff;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: monospace;
   }
   canvas { display: block; }
 </style>
 </head>
 <body>
-<canvas id="c" width="420" height="680"></canvas>
+<canvas id="c" width="460" height="820"></canvas>
 <script>
 const ctx = document.getElementById('c').getContext('2d');
-const W = 420, H = 680;
-const cx = W / 2;
+const W = 460, H = 820;
 
-// Palette ────────────────────────────────────────────────
-const C = {
-  bg:              '#14121d',
-  headFill1:       '#fdfcf7',
-  headFill2:       '#f4f1e8',
-  headFill3:       '#dcd7cb',
-  headEdge:        '#1c1a1a',
-  eyeInner:        '#dadae0',
-  eyeMid:          '#a8a8b2',
-  eyeOuter:        '#6e6e7a',
-  eyeDeep:         '#3a3a44',
-  eyeEdge:         '#161618',
-  daisyPetal:      '#dedcd2',
-  daisyPetalEdge:  '#a3a098',
-  daisyCenter1:    '#8c6132',
-  daisyCenter2:    '#4e2e10',
-  daisyCenterEdge: '#321a08',
-  neckSkin:        '#ece8df',
-  ring:            '#d8a820',
-  ringEdge:        '#8a6610',
-  cloakBack:       '#1d1138',
-  cloakMid:        '#251841',
-  cloakFront:      '#2d1f4a',
-  cloakSheen:      '#3a2a5e',
-  cloakEdge:       '#0d061c',
-  leg:             '#080810',
-  legEdge:         '#040408',
-};
-
-// Background fill
-ctx.fillStyle = C.bg;
+// ── SETUP ────────────────────────────────────────────────────────────────────
+ctx.fillStyle   = '#ffffff';
 ctx.fillRect(0, 0, W, H);
+ctx.strokeStyle = '#161616';
+ctx.lineWidth   = 2.2;
+ctx.lineCap     = 'round';
+ctx.lineJoin    = 'round';
 
-// Soft vignette behind character (subtle warm glow)
-const halo = ctx.createRadialGradient(cx, 290, 20, cx, 290, 300);
-halo.addColorStop(0, 'rgba(80,60,140,0.10)');
-halo.addColorStop(1, 'transparent');
-ctx.fillStyle = halo;
-ctx.fillRect(0, 0, W, H);
+// ── 1. HEAD (large circle, tiny gap near top to keep the hand-drawn feel) ────
+const HEAD_X = 215, HEAD_Y = 150, HEAD_R = 90;
+ctx.beginPath();
+ctx.arc(HEAD_X, HEAD_Y, HEAD_R, -1.50, -1.55 + Math.PI * 2);
+ctx.stroke();
 
-// ─── 1. LEGS (drawn first, peek out below the cloak) ───────────────────────
-function drawLegs() {
-  ctx.fillStyle   = C.leg;
-  ctx.strokeStyle = C.legEdge;
-  ctx.lineWidth   = 1;
-  ctx.lineJoin    = 'round';
+// ── 2. DAISY (upper-right of head: 5 petals + small center) ─────────────────
+const DX = 318, DY = 80;
+const PETAL_DIST = 20;
+const PETAL_LEN  = 18;
+const PETAL_WID  = 9;
+const NUM_PETALS = 5;
+const START_ANG  = -Math.PI / 2 - 0.35;
 
-  // Left leg — thin tapered shape
+for (let i = 0; i < NUM_PETALS; i++) {
+  const a  = START_ANG + (i / NUM_PETALS) * Math.PI * 2;
+  const px = DX + Math.cos(a) * PETAL_DIST;
+  const py = DY + Math.sin(a) * PETAL_DIST;
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(a + Math.PI / 2);
   ctx.beginPath();
-  ctx.moveTo(196, 480);
-  ctx.bezierCurveTo(190, 525, 184, 565, 176, 600);
-  ctx.bezierCurveTo(178, 605, 184, 605, 186, 600);
-  ctx.bezierCurveTo(194, 565, 200, 525, 204, 482);
-  ctx.closePath();
-  ctx.fill();
+  ctx.ellipse(0, 0, PETAL_WID, PETAL_LEN, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+// Daisy center
+ctx.beginPath();
+ctx.arc(DX, DY, 6, 0, Math.PI * 2);
+ctx.stroke();
+
+// ── 3. EYES (two big ovals + wavy upper line + zig-zag hatching inside) ─────
+function drawEye(ex, ey, mirror) {
+  const s = mirror ? -1 : 1;
+
+  // Eye outer oval
+  ctx.beginPath();
+  ctx.ellipse(ex, ey, 28, 36, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Right leg
+  // Wavy "M" line across the top inside of the eye
   ctx.beginPath();
-  ctx.moveTo(224, 480);
-  ctx.bezierCurveTo(230, 525, 236, 565, 244, 600);
-  ctx.bezierCurveTo(242, 605, 236, 605, 234, 600);
-  ctx.bezierCurveTo(226, 565, 220, 525, 216, 482);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(ex - s * 20, ey - 22);
+  ctx.bezierCurveTo(
+    ex - s * 14, ey - 32,
+    ex - s * 8,  ey - 18,
+    ex - s * 2,  ey - 24
+  );
+  ctx.bezierCurveTo(
+    ex + s * 4,  ey - 30,
+    ex + s * 10, ey - 18,
+    ex + s * 16, ey - 24
+  );
+  ctx.stroke();
+
+  // Scribbled zig-zag hatching (top row)
+  ctx.beginPath();
+  let zx = ex - 14, zy = ey - 2;
+  ctx.moveTo(zx, zy);
+  for (let i = 1; i <= 7; i++) {
+    zx += 4;
+    zy += (i % 2 === 0 ? 5 : -5);
+    ctx.lineTo(zx, zy);
+  }
+  ctx.stroke();
+
+  // Scribbled zig-zag hatching (bottom row)
+  ctx.beginPath();
+  zx = ex - 13; zy = ey + 10;
+  ctx.moveTo(zx, zy);
+  for (let i = 1; i <= 7; i++) {
+    zx += 4;
+    zy += (i % 2 === 0 ? -4 : 4);
+    ctx.lineTo(zx, zy);
+  }
   ctx.stroke();
 }
 
-// ─── 2. CLOAK — overlapping dark-purple leaf shapes ───────────────────────
-function drawLeaf(originX, originY, tipX, tipY, halfWidth, fill, withSheen) {
-  // Smooth elongated leaf shape from origin (attachment) to tip
-  // Bulges outward by halfWidth at the midpoint
-  const midX = (originX + tipX) / 2;
-  const midY = (originY + tipY) / 2;
-  const dx = tipX - originX, dy = tipY - originY;
-  const len = Math.hypot(dx, dy);
+drawEye(190, 148, false); // left eye
+drawEye(248, 148, true);  // right eye
+
+// ── 4. RING (small horizontal oval just below the head) ─────────────────────
+ctx.beginPath();
+ctx.ellipse(235, 258, 19, 7, 0, 0, Math.PI * 2);
+ctx.stroke();
+
+// ── 5. NECK (two short parallel lines connecting head to ring) ──────────────
+ctx.beginPath();
+ctx.moveTo(224, 244); ctx.lineTo(225, 253);
+ctx.moveTo(244, 244); ctx.lineTo(243, 253);
+ctx.stroke();
+
+// ── 6. CLOAK (overlapping leaf shapes) ──────────────────────────────────────
+// Each leaf is an elongated teardrop from the neck-attachment down to a tip.
+// White fill so back leaves are hidden behind front ones — only outlines visible.
+
+function drawLeaf(ox, oy, tx, ty, halfWidth) {
+  const midX = (ox + tx) / 2;
+  const midY = (oy + ty) / 2;
+  const dx = tx - ox, dy = ty - oy;
+  const len = Math.hypot(dx, dy) || 1;
   const perpX = -dy / len, perpY = dx / len;
 
-  // Bulge points
   const leftMidX  = midX + perpX * halfWidth;
   const leftMidY  = midY + perpY * halfWidth;
   const rightMidX = midX - perpX * halfWidth;
   const rightMidY = midY - perpY * halfWidth;
 
   ctx.beginPath();
-  ctx.moveTo(originX, originY);
+  ctx.moveTo(ox, oy);
   // Left side: origin → bulge → tip
   ctx.bezierCurveTo(
-    originX + perpX * halfWidth * 0.45, originY + perpY * halfWidth * 0.45,
+    ox + perpX * halfWidth * 0.45, oy + perpY * halfWidth * 0.45,
     leftMidX, leftMidY,
-    tipX, tipY
+    tx, ty
   );
   // Right side: tip → bulge → origin
   ctx.bezierCurveTo(
     rightMidX, rightMidY,
-    originX - perpX * halfWidth * 0.45, originY - perpY * halfWidth * 0.45,
-    originX, originY
+    ox - perpX * halfWidth * 0.45, oy - perpY * halfWidth * 0.45,
+    ox, oy
   );
   ctx.closePath();
-  ctx.fillStyle = fill;
+  ctx.fillStyle = '#ffffff';
   ctx.fill();
-  ctx.strokeStyle = C.cloakEdge;
-  ctx.lineWidth = 1.3;
   ctx.stroke();
-
-  // Optional sheen line down the center for depth
-  if (withSheen) {
-    ctx.beginPath();
-    ctx.moveTo(originX + (tipX - originX) * 0.1, originY + (tipY - originY) * 0.15);
-    ctx.bezierCurveTo(
-      originX + (tipX - originX) * 0.35, originY + (tipY - originY) * 0.45,
-      originX + (tipX - originX) * 0.65, originY + (tipY - originY) * 0.7,
-      tipX, tipY
-    );
-    ctx.strokeStyle = C.cloakSheen;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
 }
 
-function drawCloak() {
-  // Order: far back → front. Overlap creates a fan of leaves.
-  const origin = { x: cx, y: 240 };
+const COX = 233, COY = 258; // cloak attachment point
 
-  // Far left & far right (deepest layer)
-  drawLeaf(origin.x - 4, origin.y, 145, 525, 26, C.cloakBack);
-  drawLeaf(origin.x + 4, origin.y, 275, 525, 26, C.cloakBack);
+// Back layer first, then forward layers
+drawLeaf(COX - 12, COY,  158, 580, 30); // far left leaf
+drawLeaf(COX + 12, COY,  335, 640, 34); // far right leaf (long trailing)
+drawLeaf(COX - 6,  COY,  198, 620, 24); // inner left leaf
+drawLeaf(COX + 6,  COY,  282, 625, 26); // inner right leaf
+drawLeaf(COX,      COY,  235, 645, 30); // center main leaf
 
-  // Inner left & inner right (mid layer)
-  drawLeaf(origin.x - 2, origin.y, 180, 555, 22, C.cloakMid);
-  drawLeaf(origin.x + 2, origin.y, 240, 555, 22, C.cloakMid);
-
-  // Center main piece (front layer — biggest, with sheen)
-  drawLeaf(origin.x, origin.y, 210, 570, 28, C.cloakFront, true);
-}
-
-// ─── 3. NECK + YELLOW RING ─────────────────────────────────────────────────
-function drawNeck() {
-  // Tiny neck stub
-  ctx.fillStyle = C.neckSkin;
+// ── 7. LEGS (two thin tapered shapes peeking out at the bottom) ─────────────
+function drawLeg(topX, topY, bottomX, bottomY, topWidth) {
   ctx.beginPath();
-  ctx.moveTo(205, 218);
-  ctx.lineTo(205, 238);
-  ctx.lineTo(225, 238);
-  ctx.lineTo(225, 218);
+  // outer edge
+  ctx.moveTo(topX - topWidth, topY);
+  ctx.bezierCurveTo(
+    topX - topWidth * 0.9, topY + (bottomY - topY) * 0.4,
+    bottomX - 1.5, bottomY - 8,
+    bottomX, bottomY
+  );
+  // inner edge
+  ctx.bezierCurveTo(
+    bottomX + 1.5, bottomY - 8,
+    topX + topWidth * 0.9, topY + (bottomY - topY) * 0.4,
+    topX + topWidth, topY
+  );
   ctx.closePath();
+  ctx.fillStyle = '#ffffff';
   ctx.fill();
-  ctx.strokeStyle = C.headEdge;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Yellow ring (oval collar)
-  ctx.beginPath();
-  ctx.ellipse(cx + 5, 235, 22, 9, 0, 0, Math.PI * 2);
-  ctx.fillStyle = C.ring;
-  ctx.fill();
-  ctx.strokeStyle = C.ringEdge;
-  ctx.lineWidth = 1.4;
   ctx.stroke();
 }
 
-// ─── 4. HEAD (white circle with subtle gradient) ──────────────────────────
-function drawHead() {
-  const grad = ctx.createRadialGradient(cx - 22, 100, 4, cx, 138, 88);
-  grad.addColorStop(0,    C.headFill1);
-  grad.addColorStop(0.55, C.headFill2);
-  grad.addColorStop(1,    C.headFill3);
+// Left leg (shorter)
+drawLeg(213, 580, 205, 660, 4);
+// Right leg (longer, sticks down further)
+drawLeg(235, 580, 247, 690, 4);
 
-  ctx.beginPath();
-  ctx.arc(cx, 138, 80, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-  ctx.strokeStyle = C.headEdge;
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
-}
-
-// ─── 5. EYES (milky-gray gradient, no white highlight) ─────────────────────
-function drawSingleEye(ex, ey) {
-  // Milky gray radial gradient — lighter center, darker edge
-  const eg = ctx.createRadialGradient(ex - 2, ey - 1, 1, ex, ey, 28);
-  eg.addColorStop(0,    C.eyeInner);
-  eg.addColorStop(0.4,  C.eyeMid);
-  eg.addColorStop(0.78, C.eyeOuter);
-  eg.addColorStop(1,    C.eyeDeep);
-
-  ctx.beginPath();
-  ctx.ellipse(ex, ey, 20, 27, 0, 0, Math.PI * 2);
-  ctx.fillStyle = eg;
-  ctx.fill();
-  ctx.strokeStyle = C.eyeEdge;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-}
-
-function drawEyes() {
-  drawSingleEye(cx - 25, 135);
-  drawSingleEye(cx + 25, 135);
-}
-
-// ─── 6. DAISY (upper-right of head) ────────────────────────────────────────
-function drawDaisy() {
-  const dx = cx + 58;
-  const dy = 72;
-
-  // Petals — grayish-white with gray edges
-  const petalCount = 5;
-  const petalDist  = 22;
-  for (let i = 0; i < petalCount; i++) {
-    const a  = (i / petalCount) * Math.PI * 2 - Math.PI / 2 + 0.15;
-    const pX = dx + Math.cos(a) * petalDist;
-    const pY = dy + Math.sin(a) * petalDist;
-
-    ctx.save();
-    ctx.translate(pX, pY);
-    ctx.rotate(a + Math.PI / 2);
-
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 9, 16, 0, 0, Math.PI * 2);
-    ctx.fillStyle   = C.daisyPetal;
-    ctx.fill();
-    ctx.strokeStyle = C.daisyPetalEdge;
-    ctx.lineWidth   = 1.4;
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  // Brown center
-  const cg = ctx.createRadialGradient(dx - 3, dy - 3, 1, dx, dy, 14);
-  cg.addColorStop(0, C.daisyCenter1);
-  cg.addColorStop(1, C.daisyCenter2);
-
-  ctx.beginPath();
-  ctx.arc(dx, dy, 13, 0, Math.PI * 2);
-  ctx.fillStyle   = cg;
-  ctx.fill();
-  ctx.strokeStyle = C.daisyCenterEdge;
-  ctx.lineWidth   = 1.3;
-  ctx.stroke();
-}
-
-// ─── RENDER (back → front) ─────────────────────────────────────────────────
-drawLegs();
-drawCloak();
-drawNeck();
-drawHead();
-drawEyes();
-drawDaisy();
 </script>
 </body>
 </html>
