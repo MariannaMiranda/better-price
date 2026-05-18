@@ -214,6 +214,13 @@
     <button id="loadJSON">Load Project (.json)</button>
     <input type="file" id="loadFile" accept=".json" style="display:none;">
   </div>
+
+  <div class="section">
+    <h3>Import from JS Code</h3>
+    <textarea id="importCode" rows="8" placeholder="Paste exported drawCharacter(ctx) code here…"></textarea>
+    <button class="primary" id="importJSBtn">IMPORT JS CODE ▲</button>
+    <div id="importStatus" style="font-size:10px;color:#8bc;margin-top:4px;"></div>
+  </div>
 </div>
 
 <div id="canvas-wrap">
@@ -674,6 +681,110 @@ document.getElementById('loadFile').onchange = e => {
     }
   };
   reader.readAsText(f);
+};
+
+// ─── IMPORT FROM JS CODE ────────────────────────────────────────────────────
+function parseJSCode(code) {
+  const imported = [];
+  let cur = null;
+  let hasBezier = false;
+  let hasLine   = false;
+
+  const num = '([\\-\\d.]+)';
+  const reComment  = /\/\/\s*─+\s*(.+?)\s*─+/;
+  const reMoveTo   = new RegExp(`ctx\\.moveTo\\(${num},\\s*${num}\\)`);
+  const reBezier   = new RegExp(`ctx\\.bezierCurveTo\\(${num},\\s*${num},\\s*${num},\\s*${num},\\s*${num},\\s*${num}\\)`);
+  const reLineTo   = new RegExp(`ctx\\.lineTo\\(${num},\\s*${num}\\)`);
+  const reClose    = /ctx\.closePath\(\)/;
+  const reFill     = /ctx\.fill\(\)/;
+  const reFillStyle= /ctx\.fillStyle\s*=\s*['"]([^'"]+)['"]/;
+  const reStroke   = /ctx\.stroke\(\)/;
+  const reStrokeSt = /ctx\.strokeStyle\s*=\s*['"]([^'"]+)['"]/;
+  const reLineW    = /ctx\.lineWidth\s*=\s*([\d.]+)/;
+
+  function commitShape() {
+    if (!cur) return;
+    // If mixed or only bezier → smooth; only lineTo → not smooth
+    cur.smooth = hasBezier || (!hasBezier && !hasLine);
+    imported.push(cur);
+  }
+
+  for (const rawLine of code.split('\n')) {
+    const line = rawLine.trim();
+
+    // New shape block starts with a ─── name ─── comment
+    const mComment = line.match(reComment);
+    if (mComment) {
+      commitShape();
+      cur = {
+        name:          mComment[1].trim(),
+        points:        [],
+        closed:        false,
+        smooth:        true,
+        strokeColor:   '#000000',
+        strokeEnabled: false,
+        fillColor:     '#ffffff',
+        fillEnabled:   false,
+        strokeWidth:   2,
+        visible:       true,
+      };
+      hasBezier = false;
+      hasLine   = false;
+      continue;
+    }
+
+    if (!cur) continue;
+
+    const mMove = line.match(reMoveTo);
+    if (mMove) { cur.points.push({ x: parseFloat(mMove[1]), y: parseFloat(mMove[2]) }); continue; }
+
+    const mBez = line.match(reBezier);
+    if (mBez) {
+      // endpoint is the last two numbers (args 5 & 6)
+      cur.points.push({ x: parseFloat(mBez[5]), y: parseFloat(mBez[6]) });
+      hasBezier = true;
+      continue;
+    }
+
+    const mLine = line.match(reLineTo);
+    if (mLine) { cur.points.push({ x: parseFloat(mLine[1]), y: parseFloat(mLine[2]) }); hasLine = true; continue; }
+
+    if (reClose.test(line))     { cur.closed = true; continue; }
+
+    const mFs = line.match(reFillStyle);
+    if (mFs) { cur.fillColor = mFs[1]; continue; }
+
+    if (reFill.test(line))      { cur.fillEnabled = true; continue; }
+
+    const mSs = line.match(reStrokeSt);
+    if (mSs) { cur.strokeColor = mSs[1]; continue; }
+
+    const mLw = line.match(reLineW);
+    if (mLw) { cur.strokeWidth = parseFloat(mLw[1]); continue; }
+
+    if (reStroke.test(line))    { cur.strokeEnabled = true; continue; }
+  }
+  commitShape();
+  return imported;
+}
+
+document.getElementById('importJSBtn').onclick = () => {
+  const code = document.getElementById('importCode').value.trim();
+  if (!code) { document.getElementById('importStatus').textContent = 'Paste code first.'; return; }
+
+  const imported = parseJSCode(code);
+  const valid = imported.filter(s => s.points.length > 0);
+  if (valid.length === 0) {
+    document.getElementById('importStatus').textContent = 'Nothing found — check the pasted code.';
+    return;
+  }
+
+  shapes = shapes.concat(valid);
+  currentIdx = shapes.length - 1;
+  updateUI();
+  render();
+  document.getElementById('importStatus').textContent = `Imported ${valid.length} shape(s) ✓`;
+  document.getElementById('importCode').value = '';
 };
 
 // ─── INIT ───────────────────────────────────────────────────────────────────
