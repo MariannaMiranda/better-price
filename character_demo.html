@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Character Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #050508; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+  canvas { display: block; }
+  #controls { color: #334; font: 11px 'Courier New', monospace; letter-spacing: 0.05em; margin-top: 8px; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="controls">← → move &nbsp;·&nbsp; SPACE / ↑ jump</div>
+<script>
+
+// ─── POSE DATA (stand_motion.json) ───────────────────────────────────────────
+const STAND_SHAPES = [
+  { name:"shape_1", points:[{x:230,y:62.5},{x:202,y:69.5},{x:177,y:80.5},{x:163,y:98.5},{x:141,y:137.5},{x:138,y:193.5},{x:161,y:232.5},{x:199,y:251.5},{x:250,y:255.5},{x:304,y:230.5},{x:330,y:188.5},{x:330,y:125.5},{x:296,y:81.5},{x:261,y:64.5},{x:230,y:62.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#ffffff", fillEnabled:false, strokeWidth:2, visible:true },
+  { name:"shape_2", points:[{x:186,y:108.5},{x:163,y:121.5},{x:152,y:139.5},{x:142,y:169.5},{x:145,y:197.5},{x:170,y:203.5},{x:193,y:201.5},{x:202,y:181.5},{x:208,y:156.5},{x:208,y:131.5},{x:202,y:115.5},{x:186,y:107.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#ffffff", fillEnabled:false, strokeWidth:2, visible:true },
+  { name:"shape_3", points:[{x:252,y:120.5},{x:235,y:143.5},{x:222,y:178.5},{x:230,y:206.5},{x:248,y:220.5},{x:281,y:222.5},{x:303,y:210.5},{x:309,y:185.5},{x:305,y:156.5},{x:294,y:132.5},{x:279,y:120.5},{x:268,y:113.5},{x:252,y:120.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#ffffff", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_4", points:[{x:216,y:270.5},{x:212,y:283.5},{x:232,y:288.5},{x:253,y:284.5},{x:258,y:274.5},{x:244,y:268.5},{x:235,y:270.5},{x:217,y:271.5}], closed:false, smooth:true, strokeColor:"#ffeb8a", strokeEnabled:true, fillColor:"#ffffff", fillEnabled:false, strokeWidth:5, visible:true },
+  { name:"shape_5", points:[{x:210,y:298.5},{x:208,y:336.5},{x:196,y:381.5},{x:182,y:422.5},{x:168,y:482.5},{x:162,y:539.5},{x:160,y:590.5},{x:164,y:623.5},{x:168,y:646.5},{x:184,y:607.5},{x:186,y:576.5},{x:195,y:533.5},{x:202,y:485.5},{x:206,y:458.5},{x:209,y:412.5},{x:209,y:384.5},{x:205,y:351.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#4d0d5e", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_6", points:[{x:258,y:298.5},{x:258,y:337.5},{x:262,y:392.5},{x:282,y:474.5},{x:295,y:541.5},{x:315,y:643.5},{x:318,y:689.5},{x:309,y:667.5},{x:290,y:615.5},{x:284,y:605.5},{x:270,y:580.5},{x:249,y:541.5},{x:243,y:481.5},{x:245,y:438.5},{x:250,y:415.5},{x:260,y:392.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#4d0d5e", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_7", points:[{x:187,y:575.5},{x:200,y:552.5},{x:216,y:491.5},{x:218,y:422.5},{x:231,y:370.5},{x:250,y:331.5},{x:259,y:305.5},{x:231,y:301.5},{x:209,y:297.5},{x:208,y:336.5},{x:204,y:352.5},{x:209,y:385.5},{x:207,y:437.5},{x:191,y:483.5},{x:188,y:531.5},{x:189,y:553.5},{x:187,y:575.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#4d0d5e", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_8", points:[{x:198,y:560.5},{x:213,y:595.5},{x:237,y:629.5},{x:260,y:659.5},{x:281,y:682.5},{x:283,y:661.5},{x:285,y:637.5},{x:290,y:615.5},{x:282,y:597.5},{x:271,y:579.5},{x:248,y:540.5},{x:244,y:480.5},{x:246,y:438.5},{x:251,y:413.5},{x:262,y:391.5},{x:258,y:337.5},{x:259,y:305.5},{x:249,y:332.5},{x:230,y:368.5},{x:217,y:424.5},{x:217,y:490.5},{x:207,y:526.5},{x:198,y:561.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#4d0d5e", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_9", points:[{x:172,y:638.5},{x:190,y:660.5},{x:210,y:667.5},{x:196,y:701.5},{x:181,y:754.5},{x:172,y:789.5},{x:185,y:776.5},{x:196,y:766.5},{x:206,y:756.5},{x:224,y:697.5},{x:235,y:654.5},{x:228,y:640.5},{x:220,y:630.5},{x:220,y:616.5},{x:222,y:606.5},{x:209,y:589.5},{x:198,y:562.5},{x:187,y:579.5},{x:184,y:608.5},{x:172,y:638.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#000000", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_10", points:[{x:245,y:641.5},{x:243,y:663.5},{x:251,y:675.5},{x:264,y:678.5},{x:276,y:688.5},{x:273,y:706.5},{x:268,y:721.5},{x:256,y:757.5},{x:250,y:787.5},{x:251,y:793.5},{x:262,y:784.5},{x:270,y:774.5},{x:277,y:764.5},{x:288,y:735.5},{x:301,y:714.5},{x:310,y:697.5},{x:314,y:683.5},{x:304,y:656.5},{x:296,y:653.5},{x:295,y:641.5},{x:297,y:631.5},{x:290,y:613.5},{x:284,y:638.5},{x:284,y:661.5},{x:281,y:681.5},{x:259,y:657.5},{x:245,y:641.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#000000", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_11", points:[{x:326,y:95.5},{x:316,y:93.5},{x:308,y:101.5},{x:314,y:115.5},{x:323,y:125.5},{x:338,y:120.5},{x:336,y:111.5},{x:327,y:95.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#603d0b", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_12", points:[{x:311,y:94.5},{x:298,y:90.5},{x:285,y:87.5},{x:274,y:102.5},{x:288,y:111.5},{x:303,y:115.5},{x:314,y:115.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#e8e8e8", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_13", points:[{x:319,y:122.5},{x:316,y:137.5},{x:318,y:153.5},{x:326,y:166.5},{x:337,y:150.5},{x:336,y:135.5},{x:331,y:124.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#e8e8e8", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_14", points:[{x:329,y:96.5},{x:340,y:94.5},{x:348,y:99.5},{x:351,y:108.5},{x:340,y:116.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#e8e8e8", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_15", points:[{x:315,y:67.5},{x:306,y:81.5},{x:311,y:95.5},{x:320,y:91.5},{x:328,y:96.5},{x:329,y:81.5},{x:316,y:67.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#e8e8e8", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_16", points:[{x:330,y:124.5},{x:342,y:142.5},{x:350,y:150.5},{x:360,y:149.5},{x:356,y:139.5},{x:350,y:130.5},{x:339,y:119.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#e8e8e8", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_17", points:[{x:235,y:141.5},{x:250,y:141.5},{x:260,y:150.5},{x:267,y:167.5},{x:267,y:185.5},{x:263,y:201.5},{x:253,y:212.5},{x:235,y:214.5},{x:228,y:205.5},{x:222,y:185.5},{x:226,y:162.5},{x:235,y:140.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#d6d6d6", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_18", points:[{x:185,y:131.5},{x:171,y:138.5},{x:160,y:157.5},{x:155,y:180.5},{x:156,y:195.5},{x:171,y:204.5},{x:194,y:202.5},{x:203,y:180.5},{x:209,y:156.5},{x:210,y:136.5},{x:185,y:130.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#d6d6d6", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_19", points:[{x:164,y:148.5},{x:171,y:165.5},{x:183,y:171.5},{x:196,y:172.5},{x:207,y:167.5},{x:210,y:148.5},{x:208,y:136.5},{x:186,y:129.5},{x:169,y:137.5},{x:163,y:148.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#ffffff", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_20", points:[{x:224,y:171.5},{x:234,y:178.5},{x:250,y:180.5},{x:268,y:176.5},{x:267,y:162.5},{x:258,y:148.5},{x:250,y:141.5},{x:235,y:141.5},{x:227,y:156.5},{x:224,y:171.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#ffffff", fillEnabled:true, strokeWidth:2, visible:true },
+  { name:"shape_21", points:[{x:320,y:91.5},{x:312,y:98.5},{x:313,y:114.5},{x:323,y:125.5},{x:334,y:120.5},{x:336,y:110.5},{x:329,y:98.5},{x:320,y:91.5}], closed:false, smooth:true, strokeColor:"#000000", strokeEnabled:true, fillColor:"#603d0b", fillEnabled:false, strokeWidth:2, visible:true }
+];
+
+// ─── CANVAS ───────────────────────────────────────────────────────────────────
+const GW = 800, GH = 520;
+const canvas = document.getElementById('game');
+canvas.width = GW; canvas.height = GH;
+const ctx = canvas.getContext('2d');
+
+// Character scale: maps 800px-tall pose space → ~175px on screen
+const CHAR_SCALE = 0.22;
+// Pose-space anchor: feet of character
+const POSE_CX = 235, POSE_FEET_Y = 793;
+
+// ─── SPLINE RENDERER ─────────────────────────────────────────────────────────
+function crToBez(p0, p1, p2, p3) {
+  return {
+    cp1x: p1.x + (p2.x - p0.x) / 6, cp1y: p1.y + (p2.y - p0.y) / 6,
+    cp2x: p2.x - (p3.x - p1.x) / 6, cp2y: p2.y - (p3.y - p1.y) / 6,
+  };
+}
+
+// Draw a shape from screen-space points (pre-transformed)
+function renderShape(pts, closed, smooth, fillColor, fillOn, strokeColor, strokeOn, sw) {
+  if (pts.length === 0) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  const n = pts.length;
+  if (n === 1) { /* dot */ }
+  else if (n === 2 || !smooth) {
+    for (let i = 1; i < n; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    if (closed) ctx.closePath();
+  } else {
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = pts[i - 1] || (closed ? pts[n - 1] : pts[i]);
+      const p1 = pts[i], p2 = pts[i + 1];
+      const p3 = pts[i + 2] || (closed ? pts[0] : pts[i + 1]);
+      const c = crToBez(p0, p1, p2, p3);
+      ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, p2.x, p2.y);
+    }
+    if (closed) {
+      const c = crToBez(pts[n - 2], pts[n - 1], pts[0], pts[1] || pts[0]);
+      ctx.bezierCurveTo(c.cp1x, c.cp1y, c.cp2x, c.cp2y, pts[0].x, pts[0].y);
+      ctx.closePath();
+    }
+  }
+  if (fillOn)   { ctx.fillStyle = fillColor; ctx.fill(); }
+  if (strokeOn) {
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = sw;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+}
+
+// ─── SPRING ──────────────────────────────────────────────────────────────────
+class Spring {
+  constructor(v = 0, k = 0.12, d = 0.75) { this.v = v; this.vel = 0; this.k = k; this.d = d; }
+  step(target) {
+    this.vel = this.vel * this.d + (target - this.v) * this.k;
+    this.v += this.vel;
+    return this.v;
+  }
+  snap(val) { this.v = val; this.vel = 0; }
+}
+
+// ─── SHAPE GROUP MAP ─────────────────────────────────────────────────────────
+// Groups by index into STAND_SHAPES array
+// head=0 | eyeSockets=1,2 | collar=3 | body(purple+feet)=4..9 | hair=10..15 | eyeFills=16..20
+const GROUP_OF = shape => {
+  if (shape === 0)               return 'head';
+  if (shape === 1 || shape === 2) return 'eyeSocket';
+  if (shape === 3)               return 'collar';
+  if (shape >= 4 && shape <= 9) return 'body';
+  if (shape >= 10 && shape <= 15) return 'hair';
+  return 'eyeFill'; // 16-20
+};
+
+// ─── ANIMATOR ────────────────────────────────────────────────────────────────
+class Animator {
+  constructor() {
+    // Springs: body is master, others follow with lag
+    this.springs = {
+      head:      { x: new Spring(0,.07,.68), y: new Spring(0,.08,.70) },
+      eyeSocket: { x: new Spring(0,.09,.72), y: new Spring(0,.09,.72) },
+      eyeFill:   { x: new Spring(0,.09,.72), y: new Spring(0,.09,.72) },
+      collar:    { x: new Spring(0,.14,.74), y: new Spring(0,.14,.74) },
+      body:      { x: new Spring(0,.22,.80), y: new Spring(0,.22,.80) },
+      hair:      { x: new Spring(0,.04,.60), y: new Spring(0,.05,.62) },
+    };
+    this.scaleY = new Spring(1.0, .15, .68);
+    this.scaleX = new Spring(1.0, .15, .68);
+    this.lean   = new Spring(0.0, .09, .70);
+
+    this.runPhase  = 0;
+    this.idlePhase = 0;
+    this.hairWindX = new Spring(0, .06, .62); // hair swept by velocity
+  }
+
+  update(state, vx, vy, onGround, dt) {
+    this.idlePhase += dt * 1.25;
+    if (state === 'run') this.runPhase += dt * 9.5;
+
+    this.hairWindX.step(-vx * 0.45);
+    this.lean.step(state === 'run' ? vx * 0.011 : 0);
+
+    // Squash / stretch
+    if (!onGround) {
+      this.scaleY.step(vy < -2 ? 1.13 : 0.95);
+      this.scaleX.step(vy < -2 ? 0.90 : 1.04);
+    } else if (state === 'run') {
+      const bob = Math.sin(this.runPhase * 2) * 0.028;
+      this.scaleY.step(1.0 + bob); this.scaleX.step(1.0 - bob * 0.5);
+    } else {
+      const breathe = Math.sin(this.idlePhase) * 0.010;
+      this.scaleY.step(1.0 + breathe); this.scaleX.step(1.0 - breathe * 0.3);
+    }
+
+    // Targets per group (pose-space pixels)
+    const R = this.runPhase, I = this.idlePhase;
+    const runAmt = Math.min(Math.abs(vx) / 3.5, 1.0);
+    let tgt;
+
+    if (state === 'run') {
+      const bob = Math.sin(R * 2) * 9 * runAmt;
+      tgt = {
+        body:      { x: 0,                      y: bob },
+        collar:    { x: 0,                      y: bob * 0.9 },
+        head:      { x: 0,                      y: bob * 0.65 },
+        eyeSocket: { x: 0,                      y: bob * 0.65 },
+        eyeFill:   { x: 0,                      y: bob * 0.65 },
+        hair:      { x: this.hairWindX.v * 14,  y: bob * 0.45 },
+      };
+    } else {
+      const breathe = Math.sin(I) * 3.5;
+      tgt = {
+        body:      { x: 0, y: breathe },
+        collar:    { x: 0, y: breathe * 0.9 },
+        head:      { x: 0, y: breathe * 0.7 },
+        eyeSocket: { x: 0, y: breathe * 0.7 },
+        eyeFill:   { x: 0, y: breathe * 0.7 },
+        hair:      { x: this.hairWindX.v * 7,   y: Math.sin(I * 0.7 + 1.8) * 2.2 },
+      };
+    }
+
+    for (const [g, t] of Object.entries(tgt)) {
+      this.springs[g].x.step(t.x);
+      this.springs[g].y.step(t.y);
+    }
+  }
+
+  // Map a single pose-space point → screen coords
+  pt(px, py, dx, dy, charX, charY, facing) {
+    const ox = (px + dx - POSE_CX) * this.scaleX.v;
+    const oy = (py + dy - POSE_FEET_Y) * this.scaleY.v;
+    const lean = this.lean.v * facing;
+    const c = Math.cos(lean), s = Math.sin(lean);
+    return {
+      x: (ox * c - oy * s) * facing * CHAR_SCALE + charX,
+      y: (ox * s + oy * c)          * CHAR_SCALE + charY,
+    };
+  }
+
+  draw(charX, charY, facing) {
+    for (let i = 0; i < STAND_SHAPES.length; i++) {
+      const sh = STAND_SHAPES[i];
+      if (!sh.visible || sh.points.length === 0) continue;
+
+      const g  = GROUP_OF(i);
+      const sp = this.springs[g];
+      const dx = sp.x.v, dy = sp.y.v;
+
+      const pts = sh.points.map(p => this.pt(p.x, p.y, dx, dy, charX, charY, facing));
+      const sw  = Math.max(0.8, sh.strokeWidth * CHAR_SCALE);
+      renderShape(pts, sh.closed, sh.smooth, sh.fillColor, sh.fillEnabled, sh.strokeColor, sh.strokeEnabled, sw);
+    }
+  }
+}
+
+const anim = new Animator();
+
+// ─── WORLD ───────────────────────────────────────────────────────────────────
+const GROUND_Y = 458;
+const PLATFORMS = [
+  { x: 0,   y: GROUND_Y, w: GW,  h: 62 },
+  { x: 80,  y: 348,      w: 130, h: 14 },
+  { x: 340, y: 295,      w: 150, h: 14 },
+  { x: 570, y: 365,      w: 110, h: 14 },
+  { x: 210, y: 210,      w: 100, h: 14 },
+  { x: 490, y: 198,      w: 95,  h: 14 },
+];
+
+const char = { x: 240, y: GROUND_Y, vx: 0, vy: 0, onGround: false, facing: 1, state: 'idle', coyote: 0, jumpLock: 0 };
+
+// ─── PARTICLES ───────────────────────────────────────────────────────────────
+const dust = [];
+function spawnDust(x, y, n, col) {
+  for (let i = 0; i < n; i++) {
+    dust.push({ x, y, vx: (Math.random() - .5) * 2.8, vy: -Math.random() * 2.8 - .3, life: 1, max: .35 + Math.random() * .25, r: 1.5 + Math.random() * 2.5, col: col || (Math.random() > .5 ? '#9060cc' : '#c0a0ff') });
+  }
+}
+
+// Background stars
+const stars = Array.from({ length: 90 }, () => ({ x: Math.random() * GW, y: Math.random() * GH * .72, r: Math.random() * 1.3 + .2, phase: Math.random() * Math.PI * 2, spd: Math.random() * .7 + .3 }));
+
+// ─── INPUT ───────────────────────────────────────────────────────────────────
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
+window.addEventListener('keyup',   e => { keys[e.code] = false; });
+
+// ─── PHYSICS ─────────────────────────────────────────────────────────────────
+const GRAVITY = 0.54, MOVE = 3.4, JUMP_V = -11.8, FRIC = 0.78;
+
+function physics(dt) {
+  const left  = keys['ArrowLeft']  || keys['KeyA'];
+  const right = keys['ArrowRight'] || keys['KeyD'];
+  const jump  = keys['ArrowUp']    || keys['KeyW'] || keys['Space'];
+
+  if (left)              { char.vx -= 2.2; char.facing = -1; }
+  if (right)             { char.vx += 2.2; char.facing =  1; }
+  if (!left && !right)   { char.vx *= FRIC; }
+  char.vx = Math.max(-MOVE, Math.min(MOVE, char.vx));
+
+  char.vy += GRAVITY;
+
+  if (char.onGround) char.coyote = 0.11; else char.coyote = Math.max(0, char.coyote - dt);
+  if (jump && char.coyote > 0 && char.jumpLock <= 0) {
+    char.vy = JUMP_V;
+    char.coyote = 0; char.jumpLock = 0.18;
+    anim.scaleY.snap(0.60); anim.scaleX.snap(1.38);
+    spawnDust(char.x, char.y, 7, '#b090ff');
+  }
+  char.jumpLock = Math.max(0, char.jumpLock - dt);
+
+  char.x += char.vx; char.y += char.vy;
+  char.x = Math.max(18, Math.min(GW - 18, char.x));
+
+  const wasOn = char.onGround;
+  char.onGround = false;
+  for (const p of PLATFORMS) {
+    const inX = char.x > p.x + 8 && char.x < p.x + p.w - 8;
+    if (inX && char.vy >= 0 && char.y - char.vy <= p.y + 4 && char.y >= p.y - 6) {
+      char.y = p.y; char.vy = 0; char.onGround = true;
+      if (!wasOn) {
+        anim.scaleY.snap(0.68); anim.scaleX.snap(1.28);
+        spawnDust(char.x, char.y, 5);
+      }
+      break;
+    }
+  }
+
+  char.state = !char.onGround ? 'jump' : Math.abs(char.vx) > 0.45 ? 'run' : 'idle';
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+let lastTS = 0;
+function frame(ts) {
+  const dt = Math.min((ts - lastTS) / 1000, 0.05);
+  lastTS = ts;
+
+  physics(dt);
+  anim.update(char.state, char.vx, char.vy, char.onGround, dt);
+
+  // Dust update
+  for (let i = dust.length - 1; i >= 0; i--) {
+    const p = dust[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.06;
+    p.life -= dt / p.max;
+    if (p.life <= 0) dust.splice(i, 1);
+  }
+
+  // ── Background ──
+  const bg = ctx.createLinearGradient(0, 0, 0, GH);
+  bg.addColorStop(0, '#06070f'); bg.addColorStop(1, '#0c0d1c');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, GW, GH);
+
+  // Ambient purple glow near ground
+  const grd = ctx.createRadialGradient(GW / 2, GROUND_Y, 0, GW / 2, GROUND_Y, 420);
+  grd.addColorStop(0, 'rgba(55,8,75,0.14)'); grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, GW, GH);
+
+  // Stars
+  for (const s of stars) {
+    s.phase += 0.020;
+    ctx.globalAlpha = 0.35 + Math.sin(s.phase * s.spd) * 0.28;
+    ctx.fillStyle = '#ccc0ff';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // ── Platforms ──
+  for (const p of PLATFORMS) {
+    ctx.fillStyle = '#11122a'; ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.fillStyle = '#32345a'; ctx.fillRect(p.x, p.y, p.w, 2);   // top edge
+    // Purple rim glow
+    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#6030a0';
+    ctx.fillRect(p.x, p.y, p.w, 1); ctx.restore();
+  }
+
+  // ── Dust particles ──
+  for (const p of dust) {
+    ctx.save(); ctx.globalAlpha = p.life * 0.65; ctx.fillStyle = p.col;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+
+  // ── Character ──
+  anim.draw(char.x, char.y, char.facing);
+
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(ts => { lastTS = ts; frame(ts); });
+</script>
+</body>
+</html>
