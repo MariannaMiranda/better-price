@@ -6025,8 +6025,8 @@ window.onload=async ()=>{
   const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
   const isFreshAuth = hashParams.get('access_token') || hashParams.get('type') === 'signup';
 
-  _sb.auth.onAuthStateChange((event, session) => {
-    if(!_appStarted) handleSession(session, event === 'SIGNED_IN');
+ _sb.auth.onAuthStateChange((event, session) => {
+    if(!_appStarted && session) handleSession(session, true);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
