@@ -2780,6 +2780,7 @@ async function handleAuth(){
 
   try {
     if(authMode==='signup'){
+      // ── SIGN UP FLOW ──
       const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
       if(!pass||!hLen||!hU||!hL||!hN||!hS){
         const miss=[];
@@ -2794,7 +2795,7 @@ async function handleAuth(){
         options: { data: { firstName, lastName, name }, emailRedirectTo: window.location.origin }
       });
 
-      // 1. Catch existing user error from Supabase
+      // Catch existing user on Sign Up
       if(error){
         if(error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists') || error.status === 400){
           return showErr('email', 'An account with this email already exists. Try logging in!');
@@ -2802,12 +2803,10 @@ async function handleAuth(){
         return showErr('email', error.message);
       }
 
-      // 2. Catch identity obfuscation (Supabase security feature for existing users)
       if(data?.user && data.user.identities && data.user.identities.length === 0){
         return showErr('email', 'An account with this email already exists. Try logging in!');
       }
 
-      // 3. Save onboarding flag for BRAND NEW users only
       localStorage.setItem('bp_needs_onboarding', '1');
 
       if(data.session){
@@ -2816,13 +2815,22 @@ async function handleAuth(){
       } else {
         showCheckEmail(email);
       }
+
     } else {
+      // ── LOGIN FLOW ──
       if(!pass) return showErr('pass',t.errPassLogin);
+      
       const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
+      
       if(error){
-        if(error.message.toLowerCase().includes('invalid login')) return showErr('pass', t.errWrongPass);
+        const errMsg = error.message.toLowerCase();
+        // Catch when user does not exist in database
+        if(errMsg.includes('invalid login credentials') || errMsg.includes('user not found')){
+          return showErr('email', 'No account found with this email. Try signing up!');
+        }
         return showErr('pass', error.message);
       }
+
       const meta = data.user.user_metadata || {};
       const fName = meta.firstName || '';
       const lName = meta.lastName || '';
