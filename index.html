@@ -6032,7 +6032,6 @@ window.onload=async ()=>{
     if(session){
       const { data: { user }, error } = await _sb.auth.getUser();
       if(error || !user){
-        // User was deleted or token is invalid — force sign out & wipe local storage
         await _sb.auth.signOut();
         localStorage.removeItem('bp_session');
         session = null;
@@ -6053,10 +6052,13 @@ window.onload=async ()=>{
     const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
+    
+    // ── ONBOARDING FIX ──
+    // Check if this specific user account has completed onboarding yet
     const onboardedKey = 'bp_onboarded_' + session.user.id;
-    const needsOnboarding = freshSignIn && localStorage.getItem('bp_needs_onboarding');
-    if(needsOnboarding) localStorage.removeItem('bp_needs_onboarding');
-    const isNewUser = !!needsOnboarding;
+    const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
+    const isNewUser = !hasCompletedOnboarding;
+
     showApp(isNewUser);
   }
 
