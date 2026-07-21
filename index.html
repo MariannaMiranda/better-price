@@ -6068,7 +6068,11 @@ let _appStarted = false;
     const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
     
     // If they haven't completed onboarding OR if this is a fresh confirmation link sign-in:
-    const isNewUser = !hasCompletedOnboarding || freshSignIn;
+    // Whether this account has finished onboarding is the ONLY thing that
+    // decides whether the quiz shows. Don't let "freshSignIn" override it —
+    // that flag can get set just by clicking Google/Apple while sitting on
+    // the Sign Up tab, even for an account that already finished the quiz.
+    const isNewUser = !hasCompletedOnboarding;
 
     showApp(isNewUser);
   }
