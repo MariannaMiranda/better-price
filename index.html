@@ -5987,6 +5987,7 @@ window.onload=async ()=>{
   currRate = 1;
   setMode('signup');
   applyLang();
+
   // Handle OAuth error redirects (e.g. bad_oauth_state)
   const urlParams = new URLSearchParams(window.location.search);
   const hashErrorParams = new URLSearchParams(window.location.hash.replace('#',''));
@@ -5998,8 +5999,20 @@ window.onload=async ()=>{
   }
 
   let _appStarted = false;
-  function handleSession(session, freshSignIn = false){
+  async function handleSession(session, freshSignIn = false){
     if(_appStarted) return;
+
+    // Validate with Supabase that the user actually exists in the database
+    if(session){
+      const { data: { user }, error } = await _sb.auth.getUser();
+      if(error || !user){
+        // User was deleted or token is invalid — force sign out & wipe local storage
+        await _sb.auth.signOut();
+        localStorage.removeItem('bp_session');
+        session = null;
+      }
+    }
+
     if(!session){
       localStorage.removeItem('bp_session');
       document.getElementById('auth-screen').style.display='flex';
@@ -6007,6 +6020,7 @@ window.onload=async ()=>{
       document.getElementById('landing-penny-fab').style.display='flex';
       return;
     }
+
     _appStarted = true;
     const meta = session.user.user_metadata || {};
     const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
@@ -6014,7 +6028,6 @@ window.onload=async ()=>{
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
     const onboardedKey = 'bp_onboarded_' + session.user.id;
-    // Only check the onboarding flag on a fresh sign-in, not a page reload
     const needsOnboarding = freshSignIn && localStorage.getItem('bp_needs_onboarding');
     if(needsOnboarding) localStorage.removeItem('bp_needs_onboarding');
     const isNewUser = !!needsOnboarding;
@@ -6025,12 +6038,12 @@ window.onload=async ()=>{
   const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
   const isFreshAuth = hashParams.get('access_token') || hashParams.get('type') === 'signup';
 
- _sb.auth.onAuthStateChange((event, session) => {
-    if(!_appStarted && session) handleSession(session, true);
+  _sb.auth.onAuthStateChange(async (event, session) => {
+    if(!_appStarted && session) await handleSession(session, true);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
-  handleSession(session, !!isFreshAuth);
+  await handleSession(session, !!isFreshAuth);
 };
 </script>
 </body>
