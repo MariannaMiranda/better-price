@@ -2780,7 +2780,6 @@ async function handleAuth(){
 
   try {
     if(authMode==='signup'){
-      // ── SIGN UP FLOW ──
       const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
       if(!pass||!hLen||!hU||!hL||!hN||!hS){
         const miss=[];
@@ -2795,7 +2794,6 @@ async function handleAuth(){
         options: { data: { firstName, lastName, name }, emailRedirectTo: window.location.origin }
       });
 
-      // Catch existing user on Sign Up
       if(error){
         if(error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists') || error.status === 400){
           return showErr('email', 'An account with this email already exists. Try logging in!');
@@ -2815,28 +2813,25 @@ async function handleAuth(){
       } else {
         showCheckEmail(email);
       }
-
     } else {
-      // ── LOGIN FLOW ──
       if(!pass) return showErr('pass',t.errPassLogin);
-      
       const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
-      
       if(error){
         const errMsg = error.message.toLowerCase();
-        // Catch when user does not exist in database
         if(errMsg.includes('invalid login credentials') || errMsg.includes('user not found')){
           return showErr('email', 'No account found with this email. Try signing up!');
         }
         return showErr('pass', error.message);
       }
-
       const meta = data.user.user_metadata || {};
       const fName = meta.firstName || '';
       const lName = meta.lastName || '';
       const uName = meta.name || [fName, lName].filter(Boolean).join(' ') || email;
       localStorage.setItem('bp_session', JSON.stringify({email: data.user.email, name: uName, firstName: fName, lastName: lName}));
-      showApp();
+      
+      const onboardedKey = 'bp_onboarded_' + data.user.id;
+      const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
+      showApp(!hasCompletedOnboarding);
     }
   } finally {
     if(btn) { btn.disabled = false; btn.textContent = origText; }
@@ -6014,7 +6009,7 @@ window.onload=async ()=>{
   setMode('signup');
   applyLang();
 
-  // Handle OAuth error redirects (e.g. bad_oauth_state)
+  // Handle OAuth error redirects
   const urlParams = new URLSearchParams(window.location.search);
   const hashErrorParams = new URLSearchParams(window.location.hash.replace('#',''));
   const oauthError = urlParams.get('error_description') || urlParams.get('error')
@@ -6024,11 +6019,10 @@ window.onload=async ()=>{
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 
-  let _appStarted = false;
+ let _appStarted = false;
   async function handleSession(session, freshSignIn = false){
     if(_appStarted) return;
 
-    // Validate with Supabase that the user actually exists in the database
     if(session){
       const { data: { user }, error } = await _sb.auth.getUser();
       if(error || !user){
@@ -6053,16 +6047,19 @@ window.onload=async ()=>{
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
     
-    // ── ONBOARDING FIX ──
-    // Check if this specific user account has completed onboarding yet
+    // Check hash parameter from Supabase confirmation link (#type=signup)
+    const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
+    const isEmailConfirm = hashParams.get('type') === 'signup';
+    
     const onboardedKey = 'bp_onboarded_' + session.user.id;
     const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
-    const isNewUser = !hasCompletedOnboarding;
+    
+    // Trigger onboarding if they haven't completed it OR if confirming account
+    const isNewUser = !hasCompletedOnboarding || isEmailConfirm;
 
     showApp(isNewUser);
   }
 
-  // Detect if this page load is coming from an email confirmation or OAuth redirect
   const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
   const isFreshAuth = hashParams.get('access_token') || hashParams.get('type') === 'signup';
 
