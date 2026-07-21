@@ -6018,8 +6018,7 @@ window.onload=async ()=>{
     history.replaceState(null, '', window.location.pathname);
     showToast(oauthError.replace(/\+/g,' '), '');
   }
-
- let _appStarted = false;
+let _appStarted = false;
   async function handleSession(session, freshSignIn = false){
     if(_appStarted) return;
 
@@ -6047,29 +6046,27 @@ window.onload=async ()=>{
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
     
-    // Check hash parameter from Supabase confirmation link (#type=signup)
-    const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
-    const isEmailConfirm = hashParams.get('type') === 'signup';
-    
+    // ── FIX: Check if this account has completed onboarding in localStorage ──
     const onboardedKey = 'bp_onboarded_' + session.user.id;
     const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
     
-    // Trigger onboarding if they haven't completed it OR if confirming account
-    const isNewUser = !hasCompletedOnboarding || isEmailConfirm;
+    // If they haven't completed onboarding OR if this is a fresh confirmation link sign-in:
+    const isNewUser = !hasCompletedOnboarding || freshSignIn;
 
     showApp(isNewUser);
   }
 
-  const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
-  const isFreshAuth = hashParams.get('access_token') || hashParams.get('type') === 'signup';
+  // Detect if URL contains access token or confirmation type BEFORE Supabase clears the hash
+  const currentHash = window.location.hash.replace('#','');
+  const hashParams = new URLSearchParams(currentHash);
+  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup'));
 
   _sb.auth.onAuthStateChange(async (event, session) => {
     if(!_appStarted && session) await handleSession(session, true);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
-  await handleSession(session, !!isFreshAuth);
-};
+  await handleSession(session, isFreshAuth);
 </script>
 </body>
 </html>
