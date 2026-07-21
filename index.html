@@ -6018,6 +6018,22 @@ window.onload=async ()=>{
     history.replaceState(null, '', window.location.pathname);
     showToast(oauthError.replace(/\+/g,' '), '');
   }
+
+  // Handle modern Supabase confirmation links, which land back here as
+  // ?code=xxxxx instead of the old #access_token=... hash. Nothing else
+  // in this file converts that code into a real session, so without this
+  // the confirm link just drops the user back at the login screen.
+  const confirmCode = urlParams.get('code');
+  let codeExchangeSucceeded = false;
+  if(confirmCode){
+    try {
+      const { error } = await _sb.auth.exchangeCodeForSession(window.location.href);
+      if(error){ showToast(error.message, ''); }
+      else { codeExchangeSucceeded = true; }
+    } catch(e){ console.warn('exchangeCodeForSession failed', e); }
+    history.replaceState(null, '', window.location.pathname);
+  }
+
 let _appStarted = false;
   async function handleSession(session, freshSignIn = false){
     if(_appStarted) return;
@@ -6059,7 +6075,7 @@ let _appStarted = false;
   // Detect if URL contains access token or confirmation type BEFORE Supabase clears the hash
   const currentHash = window.location.hash.replace('#','');
   const hashParams = new URLSearchParams(currentHash);
-  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup'));
+  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup') || codeExchangeSucceeded);
 
   _sb.auth.onAuthStateChange(async (event, session) => {
     if(!_appStarted && session) await handleSession(session, true);
