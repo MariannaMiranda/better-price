@@ -2809,6 +2809,7 @@ async function handleAuth(){
 
       if(data.session){
         localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
+        localStorage.removeItem('bp_needs_onboarding'); // consumed immediately via showApp(true) below
         showApp(true);
       } else {
         showCheckEmail(email);
@@ -6075,10 +6076,16 @@ let _appStarted = false;
   // Detect if URL contains access token or confirmation type BEFORE Supabase clears the hash
   const currentHash = window.location.hash.replace('#','');
   const hashParams = new URLSearchParams(currentHash);
-  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup') || codeExchangeSucceeded);
+  // bp_needs_onboarding is set right before a signup (password OR Google/Apple)
+  // and is the only reliable signal for OAuth, since Google/Apple logins always
+  // come back through this same code path whether the account is brand new or
+  // has logged in a hundred times before.
+  const needsOnboardingFlag = localStorage.getItem('bp_needs_onboarding') === '1';
+  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup') || codeExchangeSucceeded || needsOnboardingFlag);
+  if(needsOnboardingFlag) localStorage.removeItem('bp_needs_onboarding'); // consume so it can't affect a later login
 
   _sb.auth.onAuthStateChange(async (event, session) => {
-    if(!_appStarted && session) await handleSession(session, true);
+    if(!_appStarted && session) await handleSession(session, isFreshAuth);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
