@@ -2747,7 +2747,6 @@ document.addEventListener('click', e=>{
 });
 
 
-
 async function handleAuth(){
   const t=T();
   const firstName=(document.getElementById('authFirstName')?.value||'').trim();
@@ -2755,8 +2754,10 @@ async function handleAuth(){
   const name=(firstName+' '+lastName).trim();
   const email=document.getElementById('authEmail').value.trim().toLowerCase();
   const pass=document.getElementById('authPass').value;
+
   if(authMode==='signup'&&!firstName) return showErr('firstname', t.errName||'Please enter your first name.');
   if(authMode==='signup'&&!lastName) return showErr('lastname', t.errLastName||'Please enter your last name.');
+
   if(!email){ return showErr('email',t.errEmailReq); }
   else if(!email.includes('@')){ return showErr('email',t.errEmailAt); }
   else {
@@ -2771,10 +2772,12 @@ async function handleAuth(){
     if(!ext||ext.length<2) return showErr('email',t.errEmailShort);
     if(provider==='gmail'&&ext==='co') return showErr('email',t.errGmail);
   }
+
   const btn = document.getElementById('authBtn');
   const origText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = authMode === 'signup' ? 'Creating account\u2026' : 'Signing in\u2026';
+  btn.textContent = authMode === 'signup' ? 'Creating account…' : 'Signing in…';
+
   try {
     if(authMode==='signup'){
       const hU=/[A-Z]/.test(pass),hL=/[a-z]/.test(pass),hN=/\d/.test(pass),hS=/[\W_]/.test(pass),hLen=pass.length>=8;
@@ -2784,13 +2787,29 @@ async function handleAuth(){
         if(!hL)miss.push(t.passReqs[2]);if(!hN)miss.push(t.passReqs[3]);if(!hS)miss.push(t.passReqs[4]);
         return showErr('pass',t.errPassMissing+miss.join(', ')+'.');
       }
+
       const { data, error } = await _sb.auth.signUp({
         email,
         password: pass,
         options: { data: { firstName, lastName, name }, emailRedirectTo: window.location.origin }
       });
-      if(error) return showErr('email', error.message);
+
+      // 1. Catch existing user error from Supabase
+      if(error){
+        if(error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists') || error.status === 400){
+          return showErr('email', 'An account with this email already exists. Try logging in!');
+        }
+        return showErr('email', error.message);
+      }
+
+      // 2. Catch identity obfuscation (Supabase security feature for existing users)
+      if(data?.user && data.user.identities && data.user.identities.length === 0){
+        return showErr('email', 'An account with this email already exists. Try logging in!');
+      }
+
+      // 3. Save onboarding flag for BRAND NEW users only
       localStorage.setItem('bp_needs_onboarding', '1');
+
       if(data.session){
         localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
         showApp(true);
@@ -2815,7 +2834,6 @@ async function handleAuth(){
     if(btn) { btn.disabled = false; btn.textContent = origText; }
   }
 }
-
 let _pendingConfirmEmail = '';
 let _resendTimer = null;
 function startResendCountdown(){
