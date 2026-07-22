@@ -1849,49 +1849,6 @@ let currRate = 1;
 let currSymbol = '$';
 let lastAnalysis = '';
 
-// ── Freemium plan state ──
-// 'free' until proven otherwise. Loaded from the `subscriptions` table (server-writable
-// only) right after login — see loadUserPlan(). Free-tier caps: 20 Penny messages / 3hr,
-// 5 scans/day (enforced server-side in /api/penny), and 3 grocery lists (enforced here,
-// client-side, since list storage costs nothing to protect against real abuse).
-let userPlan = 'free';
-const FREE_LIST_LIMIT = 3;
-
-async function loadUserPlan(){
-  try {
-    const { data: { user } } = await _sb.auth.getUser();
-    if(!user){ userPlan = 'free'; updateAdVisibility(); return; }
-    const { data } = await _sb.from('subscriptions').select('plan,status').eq('user_id', user.id).maybeSingle();
-    userPlan = (data && data.plan === 'pro' && data.status === 'active') ? 'pro' : 'free';
-  } catch(e){
-    userPlan = 'free';
-  }
-  updateAdVisibility();
-}
-
-function updateAdVisibility(){
-  const banner = document.getElementById('adBanner');
-  if(banner) banner.style.display = (userPlan === 'pro') ? 'none' : 'flex';
-}
-
-function openUpgradeModal(reason){
-  const msgEl = document.getElementById('upgradeModalMsg');
-  if(msgEl){
-    msgEl.textContent = reason === 'scan'
-      ? "You've used all 5 free scans for today. Go Pro for unlimited scanning, unlimited Penny messages, unlimited lists, and no ads."
-      : reason === 'lists'
-      ? `Free accounts get up to ${FREE_LIST_LIMIT} grocery lists. Go Pro for unlimited lists, unlimited Penny, and no ads.`
-      : "You've used your free Penny messages for now. Go Pro for unlimited Penny, unlimited scans, unlimited lists, and no ads.";
-  }
-  openModal('upgradeModal');
-}
-
-function startUpgradeCheckout(){
-  // TODO: wire this up to a real Stripe Checkout session once the Stripe account
-  // and /api/create-checkout-session endpoint are set up.
-  showToast("Checkout isn't connected yet — coming soon!", '');
-}
-
 function saveU(k, v){
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
   const prefix = session.email ? 'bp_'+session.email+'_' : 'bp_';
@@ -2852,6 +2809,7 @@ async function handleAuth(){
 
       if(data.session){
         localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
+        localStorage.removeItem('bp_needs_onboarding'); // consumed immediately via showApp(true) below
         showApp(true);
       } else {
         showCheckEmail(email);
@@ -4762,27 +4720,15 @@ async function anthropicFetch(fetchOptions){
       : body.messages
   };
 
-  // Attach the signed-in user's Supabase access token so the server can enforce
-  // free-tier usage limits. Logged-out (landing page) calls just omit this.
-  let authHeaders = {};
-  try {
-    const { data: { session } } = await _sb.auth.getSession();
-    if(session?.access_token) authHeaders = { Authorization: 'Bearer ' + session.access_token };
-  } catch(e){}
-
   const r = await fetch('/api/penny', {
     method: 'POST',
     signal,
-    headers: { 'Content-Type': 'application/json', ...authHeaders },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(groqBody)
   });
 
   const data = await r.json();
-  if (!r.ok) {
-    const err = new Error('HTTP ' + r.status + ': ' + (data?.error || 'Unknown error'));
-    if (data?.limitReached) { err.limitReached = true; err.limitKind = data.kind; err.friendlyMessage = data.error; }
-    throw err;
-  }
+  if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + (data?.error || 'Unknown error'));
   const text = data.text || '';
   return { ok: true, json: async () => ({ content: [{ type: 'text', text }] }) };
 }
@@ -6073,6 +6019,22 @@ window.onload=async ()=>{
     history.replaceState(null, '', window.location.pathname);
     showToast(oauthError.replace(/\+/g,' '), '');
   }
+
+  // Handle modern Supabase confirmation links, which land back here as
+  // ?code=xxxxx instead of the old #access_token=... hash. Nothing else
+  // in this file converts that code into a real session, so without this
+  // the confirm link just drops the user back at the login screen.
+  const confirmCode = urlParams.get('code');
+  let codeExchangeSucceeded = false;
+  if(confirmCode){
+    try {
+      const { error } = await _sb.auth.exchangeCodeForSession(window.location.href);
+      if(error){ showToast(error.message, ''); }
+      else { codeExchangeSucceeded = true; }
+    } catch(e){ console.warn('exchangeCodeForSession failed', e); }
+    history.replaceState(null, '', window.location.pathname);
+  }
+
 let _appStarted = false;
   async function handleSession(session, freshSignIn = false){
     if(_appStarted) return;
@@ -6104,24 +6066,28 @@ let _appStarted = false;
     // ── FIX: Check if this account has completed onboarding in localStorage ──
     const onboardedKey = 'bp_onboarded_' + session.user.id;
     const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
-    
-    // If they haven't completed onboarding OR if this is a fresh confirmation link sign-in:
-    const isNewUser = !hasCompletedOnboarding || freshSignIn;
+
+    const isNewUser = !hasCompletedOnboarding;
 
     showApp(isNewUser);
   }
 
-  // Detect if URL contains access token or confirmation type BEFORE Supabase clears the hash
+ 
   const currentHash = window.location.hash.replace('#','');
   const hashParams = new URLSearchParams(currentHash);
-  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup'));
+  // bp_needs_onboarding is set right before a signup (password OR Google/Apple)
+
+  const needsOnboardingFlag = localStorage.getItem('bp_needs_onboarding') === '1';
+  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup') || codeExchangeSucceeded || needsOnboardingFlag);
+  if(needsOnboardingFlag) localStorage.removeItem('bp_needs_onboarding'); // consume so it can't affect a later login
 
   _sb.auth.onAuthStateChange(async (event, session) => {
-    if(!_appStarted && session) await handleSession(session, true);
+    if(!_appStarted && session) await handleSession(session, isFreshAuth);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
   await handleSession(session, isFreshAuth);
+};
 </script>
 </body>
 </html>
