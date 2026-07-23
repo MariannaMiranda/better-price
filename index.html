@@ -433,7 +433,12 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 
 .products-wrap { padding: 0 20px 20px; max-width: 1420px; margin: 0 auto; }
 
-.products-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start;
+.products-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start; /* ADD THIS LINE */
 }
 .product-card{flex:0 1 320px;}
 @media(max-width:680px){.product-card{flex:1 1 100%;}.products-wrap{padding:0 14px 20px;}}
@@ -6185,18 +6190,19 @@ window.onload=async ()=>{
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 let _appStarted = false;
+
 async function handleSession(session, freshSignIn) {
+  if (_appStarted) return;
   _appStarted = true;
-  
-  // Save user session details
+
   const meta = session.user.user_metadata || {};
   const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
   const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
   const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
   
-  localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
+  localStorage.setItem('bp_session', JSON.stringify({ email: session.user.email, name, firstName, lastName }));
 
-  // Clean hash/query params from URL so clean refreshes work
+  // Clean URL parameters so reloads don't re-trigger token validation errors
   if (window.location.hash || window.location.search.includes('type=')) {
     window.history.replaceState(null, '', window.location.pathname);
   }
@@ -6208,6 +6214,17 @@ async function handleSession(session, freshSignIn) {
   await loadUserPlan();
   showApp(isNewUser);
 }
+
+// Listen for Supabase auth state changes
+_sb.auth.onAuthStateChange(async (event, session) => {
+  if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || !_appStarted)) {
+    await handleSession(session, event === 'SIGNED_IN');
+  } else if (event === 'SIGNED_OUT') {
+    _appStarted = false;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+});
 
     _appStarted = true;
     const meta = session.user.user_metadata || {};
