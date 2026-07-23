@@ -1606,8 +1606,9 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
       </div>
       <div id="profilePlanStatus" style="font-size:14px;margin-bottom:12px;">Free plan</div>
       <div id="profilePlanFreeBtns" style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('monthly')">Try free for 7 days — then $4.99/mo</button>
-        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('yearly')">Try free for 7 days — then $39.99/yr</button>
+        <button class="mbtn-ok" style="width:auto;padding:10px 18px;background:#10b981;" onclick="startUpgradeCheckout('trial')">Try free for 7 days</button>
+        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('monthly')">Monthly — $4.99/mo</button>
+        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('yearly')">Yearly — $39.99/yr</button>
       </div>
       <button id="profilePlanManageBtn" style="display:none;width:auto;padding:10px 18px;" class="mbtn-cancel" onclick="openBillingPortal()">Manage billing / Cancel plan</button>
     </div>
@@ -1852,8 +1853,9 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
     <li>No ads</li>
   </ul>
   <div class="modal-btn-row" style="flex-direction:column;gap:8px;">
-    <button class="mbtn-ok" onclick="startUpgradeCheckout('monthly')">Try free for 7 days — then $4.99/mo</button>
-    <button class="mbtn-ok" onclick="startUpgradeCheckout('yearly')">Try free for 7 days — then $39.99/yr</button>
+    <button class="mbtn-ok" style="background:#10b981;" onclick="startUpgradeCheckout('trial')">Try free for 7 days</button>
+    <button class="mbtn-ok" onclick="startUpgradeCheckout('monthly')">Monthly — $4.99/mo</button>
+    <button class="mbtn-ok" onclick="startUpgradeCheckout('yearly')">Yearly — $39.99/yr</button>
     <button class="mbtn-cancel" onclick="closeModals()">Not now</button>
   </div>
 </div>
