@@ -1601,6 +1601,19 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
 
     <div class="profile-section">
       <div class="profile-section-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+        <span>Plan &amp; Billing</span>
+      </div>
+      <div id="profilePlanStatus" style="font-size:14px;margin-bottom:12px;">Free plan</div>
+      <div id="profilePlanFreeBtns" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('monthly')">Upgrade — $4.99/mo</button>
+        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('yearly')">Upgrade — $39.99/yr</button>
+      </div>
+      <button id="profilePlanManageBtn" style="display:none;width:auto;padding:10px 18px;" class="mbtn-cancel" onclick="openBillingPortal()">Manage billing</button>
+    </div>
+
+    <div class="profile-section">
+      <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         <span class="prof-lbl-account">Account Info</span>
       </div>
@@ -1838,8 +1851,9 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
     <li>Unlimited grocery lists</li>
     <li>No ads</li>
   </ul>
-  <div class="modal-btn-row">
-    <button class="mbtn-ok" onclick="startUpgradeCheckout()">Upgrade — $4.99/mo</button>
+  <div class="modal-btn-row" style="flex-direction:column;gap:8px;">
+    <button class="mbtn-ok" onclick="startUpgradeCheckout('monthly')">Upgrade — $4.99/mo</button>
+    <button class="mbtn-ok" onclick="startUpgradeCheckout('yearly')">Upgrade — $39.99/yr</button>
     <button class="mbtn-cancel" onclick="closeModals()">Not now</button>
   </div>
 </div>
@@ -1881,13 +1895,36 @@ const FREE_LIST_LIMIT = 3;
 async function loadUserPlan(){
   try {
     const { data: { user } } = await _sb.auth.getUser();
-    if(!user){ userPlan = 'free'; updateAdVisibility(); return; }
-    const { data } = await _sb.from('subscriptions').select('plan,status').eq('user_id', user.id).maybeSingle();
+    if(!user){ userPlan = 'free'; updateAdVisibility(); updateProfilePlanUI(); return; }
+    const { data } = await _sb.from('subscriptions').select('plan,status,current_period_end').eq('user_id', user.id).maybeSingle();
     userPlan = (data && data.plan === 'pro' && data.status === 'active') ? 'pro' : 'free';
+    lastSubRow = data || null;
   } catch(e){
     userPlan = 'free';
   }
   updateAdVisibility();
+  updateProfilePlanUI();
+}
+
+let lastSubRow = null;
+
+function updateProfilePlanUI(){
+  const statusEl = document.getElementById('profilePlanStatus');
+  const freeBtns = document.getElementById('profilePlanFreeBtns');
+  const manageBtn = document.getElementById('profilePlanManageBtn');
+  if(!statusEl) return;
+  if(userPlan === 'pro'){
+    const renews = lastSubRow?.current_period_end
+      ? ' — renews ' + new Date(lastSubRow.current_period_end).toLocaleDateString()
+      : '';
+    statusEl.textContent = 'Pro plan ⭐' + renews;
+    freeBtns.style.display = 'none';
+    manageBtn.style.display = 'inline-block';
+  } else {
+    statusEl.textContent = 'Free plan';
+    freeBtns.style.display = 'flex';
+    manageBtn.style.display = 'none';
+  }
 }
 
 function updateAdVisibility(){
@@ -1907,10 +1944,37 @@ function openUpgradeModal(reason){
   openModal('upgradeModal');
 }
 
-function startUpgradeCheckout(){
-  // TODO: wire this up to a real Stripe Checkout session once the Stripe account
-  // and /api/create-checkout-session endpoint are set up.
-  showToast("Checkout isn't connected yet — coming soon!", '');
+async function startUpgradeCheckout(plan){
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if(!session){ showToast('Please log in first', ''); return; }
+    const r = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ plan })
+    });
+    const data = await r.json();
+    if(!r.ok || !data.url){ showToast(data.error || 'Could not start checkout', ''); return; }
+    window.location.href = data.url;
+  } catch(e){
+    showToast('Could not start checkout', '');
+  }
+}
+
+async function openBillingPortal(){
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if(!session){ showToast('Please log in first', ''); return; }
+    const r = await fetch('/api/create-portal-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    });
+    const data = await r.json();
+    if(!r.ok || !data.url){ showToast(data.error || 'Could not open billing portal', ''); return; }
+    window.location.href = data.url;
+  } catch(e){
+    showToast('Could not open billing portal', '');
+  }
 }
 
 function saveU(k, v){
