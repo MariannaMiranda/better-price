@@ -1606,10 +1606,10 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
       </div>
       <div id="profilePlanStatus" style="font-size:14px;margin-bottom:12px;">Free plan</div>
       <div id="profilePlanFreeBtns" style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('monthly')">Upgrade — $4.99/mo</button>
-        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('yearly')">Upgrade — $39.99/yr</button>
+        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('monthly')">Try free for 7 days — then $4.99/mo</button>
+        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('yearly')">Try free for 7 days — then $39.99/yr</button>
       </div>
-      <button id="profilePlanManageBtn" style="display:none;width:auto;padding:10px 18px;" class="mbtn-cancel" onclick="openBillingPortal()">Manage billing</button>
+      <button id="profilePlanManageBtn" style="display:none;width:auto;padding:10px 18px;" class="mbtn-cancel" onclick="openBillingPortal()">Manage billing / Cancel plan</button>
     </div>
 
     <div class="profile-section">
@@ -1852,8 +1852,8 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
     <li>No ads</li>
   </ul>
   <div class="modal-btn-row" style="flex-direction:column;gap:8px;">
-    <button class="mbtn-ok" onclick="startUpgradeCheckout('monthly')">Upgrade — $4.99/mo</button>
-    <button class="mbtn-ok" onclick="startUpgradeCheckout('yearly')">Upgrade — $39.99/yr</button>
+    <button class="mbtn-ok" onclick="startUpgradeCheckout('monthly')">Try free for 7 days — then $4.99/mo</button>
+    <button class="mbtn-ok" onclick="startUpgradeCheckout('yearly')">Try free for 7 days — then $39.99/yr</button>
     <button class="mbtn-cancel" onclick="closeModals()">Not now</button>
   </div>
 </div>
@@ -1886,7 +1886,7 @@ let lastAnalysis = '';
 
 // ── Freemium plan state ──
 // 'free' until proven otherwise. Loaded from the `subscriptions` table (server-writable
-// only) right after login — see loadUserPlan(). Free-tier caps: 20 Penny messages / 3hr,
+// only) right after login — see loadUserPlan(). Free-tier caps: 10 Penny messages / day,
 // 5 scans/day (enforced server-side in /api/penny), and 3 grocery lists (enforced here,
 // client-side, since list storage costs nothing to protect against real abuse).
 let userPlan = 'free';
@@ -1896,8 +1896,8 @@ async function loadUserPlan(){
   try {
     const { data: { user } } = await _sb.auth.getUser();
     if(!user){ userPlan = 'free'; updateAdVisibility(); updateProfilePlanUI(); return; }
-    const { data } = await _sb.from('subscriptions').select('plan,status,current_period_end').eq('user_id', user.id).maybeSingle();
-    userPlan = (data && data.plan === 'pro' && data.status === 'active') ? 'pro' : 'free';
+    const { data } = await _sb.from('subscriptions').select('plan,status,current_period_end,trial_end').eq('user_id', user.id).maybeSingle();
+    userPlan = (data && data.plan === 'pro' && (data.status === 'active' || data.status === 'trialing')) ? 'pro' : 'free';
     lastSubRow = data || null;
   } catch(e){
     userPlan = 'free';
@@ -1914,10 +1914,14 @@ function updateProfilePlanUI(){
   const manageBtn = document.getElementById('profilePlanManageBtn');
   if(!statusEl) return;
   if(userPlan === 'pro'){
-    const renews = lastSubRow?.current_period_end
-      ? ' — renews ' + new Date(lastSubRow.current_period_end).toLocaleDateString()
-      : '';
-    statusEl.textContent = 'Pro plan ⭐' + renews;
+    if(lastSubRow?.status === 'trialing' && lastSubRow?.trial_end){
+      statusEl.textContent = 'Free trial ⭐ — ends ' + new Date(lastSubRow.trial_end).toLocaleDateString();
+    } else {
+      const renews = lastSubRow?.current_period_end
+        ? ' — renews ' + new Date(lastSubRow.current_period_end).toLocaleDateString()
+        : '';
+      statusEl.textContent = 'Pro plan ⭐' + renews;
+    }
     freeBtns.style.display = 'none';
     manageBtn.style.display = 'inline-block';
   } else {
