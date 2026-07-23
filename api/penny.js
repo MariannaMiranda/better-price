@@ -3,7 +3,7 @@
 // photo (barcode/price-tag photo reads, landing-page image chat, etc).
 // Free-tier caps live here so they're easy to tweak in one place.
 const LIMITS = {
-  chat: { max: 10, windowMs: 3 * 60 * 60 * 1000 },  // 20 messages / 3 hours
+  chat: { max: 10, windowMs: 24 * 60 * 60 * 1000 }, // 10 messages / day
   scan: { max: 5,  windowMs: 24 * 60 * 60 * 1000 }, // 5 scans / day
 };
 
@@ -41,7 +41,7 @@ async function getPlan(userId) {
     if (!r.ok) return 'free';
     const rows = await r.json();
     const row = rows && rows[0];
-    return (row && row.plan === 'pro' && row.status === 'active') ? 'pro' : 'free';
+    return (row && row.plan === 'pro' && (row.status === 'active' || row.status === 'trialing')) ? 'pro' : 'free';
   } catch (e) {
     return 'free';
   }
@@ -127,7 +127,7 @@ export default async function handler(req, res) {
           if (!usage.allowed) {
             const friendly = kind === 'scan'
               ? "You've used all 5 of your free scans today. Upgrade to Pro for unlimited scanning."
-              : "You've used your 20 free messages for this 3-hour window. Upgrade to Pro for unlimited Penny.";
+              : "You've used your 10 free Penny messages for today. Upgrade to Pro for unlimited Penny.";
             return res.status(402).json({ error: friendly, limitReached: true, kind, resetAt: usage.resetAt });
           }
         }
