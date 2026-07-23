@@ -5706,6 +5706,7 @@ function buildSys(){
 
   const contextLines=[
     firstName?'User\'s first name: '+firstName:'',
+    'Plan: '+(userPlan==='pro'?'Pro':'Free'),
     'Household: '+hh+' person'+(hh>1?'s':''),
     'Preferred stores: '+(stores.length?stores.join(', '):'not set'),
     'Zip: '+(zip||'not set'),
@@ -5877,13 +5878,12 @@ When a user asks about prices at specific stores (Walmart, Sam's Club, Costco, e
 4. For Sam's Club: remind user that membership is required ($50/year) — factor that into bulk savings math
 
 RECEIPT & IMAGE SCANNING:
-When the user sends an image, analyze it immediately. If it looks like a grocery receipt or store shelf tag:
-  - Extract every grocery/food item you can read, with name, price, quantity, and any relevant notes (sale price, unit price, brand)
-  - State the store name and date if visible
-  - Offer to add items to a list: "I can see your receipt from [store]. Want me to add these items to a list?" Then on confirmation output ADDLIST.
-  - If it's a shelf tag or price label, identify the product, calculate unit price if possible, and compare to typical retail prices.
-  - If it's a product label, read the name, size/weight, and any relevant nutritional info the user might care about for price comparison.
-  - If the image isn't recognizable, ask the user what they'd like help with.`;
+When the user sends an image, first work out what kind of image it is.
+- A barcode, shelf tag, or single product label → available to every plan. Identify the product, read its size/price if visible, calculate unit price if possible, and compare to typical retail prices.
+- A full paper or digital RECEIPT showing a multi-item purchase → itemized receipt parsing is a PRO-ONLY feature. Check the "Plan" line above before doing anything with it:
+  - If Plan is Free: do NOT extract items, prices, or totals from the receipt, and do NOT output an ADDLIST command. Instead decline warmly and briefly, in your own words — something like: "Ooh, I can see that's a receipt, but reading the whole thing and adding every item is a Pro feature! Upgrade for unlimited receipt scanning — for now I'm happy to help with a single item or barcode instead." Keep it light, not preachy, and don't repeat this every message if they keep sending receipts — just remind them once per conversation.
+  - If Plan is Pro: extract every grocery/food item you can read, with name, price, quantity, and any relevant notes (sale price, unit price, brand). State the store name and date if visible. Offer to add items to a list: "I can see your receipt from [store]. Want me to add these items to a list?" Then on confirmation output ADDLIST.
+- If the image isn't recognizable, ask the user what they'd like help with.`;
 }
 
 let _lpHistory = [];
