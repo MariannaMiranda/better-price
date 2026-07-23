@@ -187,10 +187,11 @@ export default async function handler(req, res) {
       }
     }
 
-    // Live web search — Pro only, and only when the message actually looks
-    // time-sensitive, to keep search-credit spend in line with paid users.
+    // Live web search — available to every plan. Free users are already capped
+    // at 10 Penny messages/day (5 scans/day), so that existing limit doubles as
+    // the natural throttle on search-credit spend — no separate Pro gate needed.
     let messages = body.messages || [];
-    if (plan === 'pro' && !hasImages && SERPER_API_KEY) {
+    if (!hasImages && SERPER_API_KEY) {
       const query = getLatestUserText(messages);
       if (shouldSearch(query)) {
         const results = await webSearch(query);
