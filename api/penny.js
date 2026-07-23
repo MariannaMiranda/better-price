@@ -7,9 +7,61 @@ const LIMITS = {
   scan: { max: 5,  windowMs: 24 * 60 * 60 * 1000 }, // 5 scans / day
 };
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://viemououczppxevejtvs.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://viemououczppxevejtvs.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
+
+// ── Live web search (Pro only) ──
+// Cheap heuristic: only spend a search credit when the message actually looks
+// time-sensitive. General/how-to/recipe questions never trigger a search.
+const SEARCH_TRIGGER_RX = /\b(today|currently|current price|current cost|latest|this week|this month|this year|right now|recent(ly)?|as of (today|now)|price of|cost of|on sale|any (deals|sales)|new (price|update)|update(d)? price|202[4-9]|what'?s new|happening now)\b/i;
+
+function shouldSearch(text) {
+  return !!text && SEARCH_TRIGGER_RX.test(text);
+}
+
+// Pulls the plain text out of the most recent user message, whether its
+// content is a bare string or a vision-style array of {type, text} parts.
+function getLatestUserText(messages) {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role !== 'user') continue;
+    if (typeof m.content === 'string') return m.content;
+    if (Array.isArray(m.content)) {
+      const textPart = m.content.find(c => c.type === 'text');
+      if (textPart) return textPart.text;
+    }
+  }
+  return '';
+}
+
+// Real-time Google results via Serper.dev. Returns a short text block ready
+// to drop into the model's context, or null if search isn't configured/fails
+// (failing silently here is intentional — Penny should still answer without
+// search rather than error out over a search hiccup).
+async function webSearch(query) {
+  if (!SERPER_API_KEY) return null;
+  try {
+    const r = await fetch('https://google.serper.dev/search', {
+      method: 'POST',
+      headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: query }),
+    });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const bits = [];
+    if (data.answerBox?.answer) bits.push(`Featured answer: ${data.answerBox.answer}`);
+    else if (data.answerBox?.snippet) bits.push(`Featured answer: ${data.answerBox.snippet}`);
+    (data.organic || []).slice(0, 4).forEach(o => {
+      if (o.title && o.snippet) bits.push(`${o.title} — ${o.snippet} (${o.link})`);
+    });
+    if (!bits.length) return null;
+    return bits.join('\n');
+  } catch (e) {
+    return null;
+  }
+}
 
 // Verify the user's Supabase access token and return their user object (or null).
 async function getUserFromToken(token) {
@@ -118,10 +170,11 @@ export default async function handler(req, res) {
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
+    let plan = 'free';
     if (token && SERVICE_ROLE_KEY) {
       const user = await getUserFromToken(token);
       if (user) {
-        const plan = await getPlan(user.id);
+        plan = await getPlan(user.id);
         if (plan !== 'pro') {
           const usage = await checkAndIncrementUsage(user.id, kind);
           if (!usage.allowed) {
@@ -130,6 +183,23 @@ export default async function handler(req, res) {
               : "You've used your 10 free Penny messages for today. Upgrade to Pro for unlimited Penny.";
             return res.status(402).json({ error: friendly, limitReached: true, kind, resetAt: usage.resetAt });
           }
+        }
+      }
+    }
+
+    // Live web search — Pro only, and only when the message actually looks
+    // time-sensitive, to keep search-credit spend in line with paid users.
+    let messages = body.messages || [];
+    if (plan === 'pro' && !hasImages && SERPER_API_KEY) {
+      const query = getLatestUserText(messages);
+      if (shouldSearch(query)) {
+        const results = await webSearch(query);
+        if (results) {
+          const searchMsg = {
+            role: 'system',
+            content: `Live web search results for "${query}" (retrieved ${new Date().toDateString()}):\n\n${results}\n\nUse this real information — not older training knowledge — for anything time-sensitive like prices, sales, or recent news. If these results don't actually answer the question, say so honestly instead of guessing.`,
+          };
+          messages = [...messages.slice(0, -1), searchMsg, messages[messages.length - 1]];
         }
       }
     }
@@ -187,7 +257,7 @@ export default async function handler(req, res) {
     }
 
     for (const model of tryModels) {
-      const groqBody = { ...body, model };
+      const groqBody = { ...body, messages, model };
 
       const response = await fetchGroqWithRetry(groqBody);
 
