@@ -3,7 +3,7 @@
 // photo (barcode/price-tag photo reads, landing-page image chat, etc).
 // Free-tier caps live here so they're easy to tweak in one place.
 const LIMITS = {
-  chat: { max: 20, windowMs: 3 * 60 * 60 * 1000 },  // 20 messages / 3 hours
+  chat: { max: 10, windowMs: 3 * 60 * 60 * 1000 },  // 20 messages / 3 hours
   scan: { max: 5,  windowMs: 24 * 60 * 60 * 1000 }, // 5 scans / day
 };
 
@@ -113,10 +113,7 @@ export default async function handler(req, res) {
       m.content.some(c => c.type === 'image_url')
     );
 
-    // ── Freemium enforcement ──
-    // Only applies to logged-in users (the client sends a Supabase access token
-    // in the Authorization header). The logged-out landing-page widget is not
-    // gated here — it's a lighter marketing chat, not the main app experience.
+
     const kind = hasImages ? 'scan' : 'chat';
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -163,17 +160,36 @@ export default async function handler(req, res) {
     let lastError = null;
     let lastStatus = 500;
 
+    function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+    async function fetchGroqWithRetry(groqBody, maxRetries = 3) {
+      let attempt = 0;
+      while (true) {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + process.env.GROQ_API_KEY,
+          },
+          body: JSON.stringify(groqBody),
+        });
+
+        if (response.status !== 429 || attempt >= maxRetries) {
+          return response;
+        }
+
+        const retryAfterHeader = response.headers.get('retry-after');
+        const waitMs = retryAfterHeader
+          ? Math.min(parseFloat(retryAfterHeader) * 1000, 4000)
+          : 500 * Math.pow(2, attempt); // 500ms, 1000ms, 2000ms
+        await sleep(waitMs);
+        attempt++;
+      }
+    }
+
     for (const model of tryModels) {
       const groqBody = { ...body, model };
 
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + process.env.GROQ_API_KEY,
-        },
-        body: JSON.stringify(groqBody),
-      });
+      const response = await fetchGroqWithRetry(groqBody);
 
       const data = await response.json();
 
@@ -186,7 +202,8 @@ export default async function handler(req, res) {
       lastError = errMsg;
       lastStatus = response.status;
 
-      // Rate limit — surface immediately so frontend can show a friendly wait message
+      // Rate limit that survived the retries — surface it so the frontend can
+      // show a friendly wait message.
       if (response.status === 429) {
         return res.status(429).json({ error: 'Rate limit reached. Please wait a moment and try again.' });
       }
