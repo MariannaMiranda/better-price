@@ -103,6 +103,9 @@ export default async function handler(req, res) {
             current_period_end: sub.current_period_end
               ? new Date(sub.current_period_end * 1000).toISOString()
               : null,
+            trial_end: sub.trial_end
+              ? new Date(sub.trial_end * 1000).toISOString()
+              : null,
             updated_at: new Date().toISOString(),
           });
         }
