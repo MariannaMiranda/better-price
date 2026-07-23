@@ -1,9 +1,11 @@
 // POST /api/create-checkout-session
-// Body: { plan: 'monthly' | 'yearly' }
+// Body: { plan: 'trial' | 'monthly' | 'yearly' }
+// 'trial' = 7 days free, no card required, auto-cancels if never upgraded.
+// 'monthly' / 'yearly' = billed immediately, no trial.
 // Requires Authorization: Bearer <supabase access token>
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://viemououczppxevejtvs.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://viemououczppxevejtvs.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_PRICE_MONTHLY = process.env.STRIPE_PRICE_MONTHLY || '';
 const STRIPE_PRICE_YEARLY = process.env.STRIPE_PRICE_YEARLY || '';
@@ -60,7 +62,14 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Please log in first.' });
     }
 
-    const plan = req.body?.plan === 'yearly' ? 'yearly' : 'monthly';
+    const plan = req.body?.plan === 'yearly' ? 'yearly'
+      : req.body?.plan === 'trial' ? 'trial'
+      : 'monthly';
+
+    // Trial checkouts anchor to the monthly price but never actually charge it —
+    // Stripe skips card collection when trial_period_days makes the due-today total $0,
+    // and trial_settings.end_behavior cancels the subscription automatically if the
+    // trial ends with no payment method on file (i.e. the person never upgraded).
     const priceId = plan === 'yearly' ? STRIPE_PRICE_YEARLY : STRIPE_PRICE_MONTHLY;
     if (!priceId) {
       return res.status(500).json({ error: `Stripe price for "${plan}" is not configured yet.` });
@@ -75,9 +84,18 @@ export default async function handler(req, res) {
       success_url: `${origin}/?upgraded=1`,
       cancel_url: `${origin}/`,
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: { trial_period_days: 7, metadata: { user_id: user.id } },
+      subscription_data: plan === 'trial'
+        ? {
+            trial_period_days: 7,
+            trial_settings: { end_behavior: { missing_payment_method: 'cancel' } },
+            metadata: { user_id: user.id },
+          }
+        : { metadata: { user_id: user.id } },
       metadata: { user_id: user.id },
     };
+    if (plan === 'trial') {
+      params.payment_method_collection = 'if_required';
+    }
 
     const r = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
