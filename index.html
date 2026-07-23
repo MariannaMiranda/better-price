@@ -6185,25 +6185,29 @@ window.onload=async ()=>{
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 let _appStarted = false;
-  async function handleSession(session, freshSignIn = false){
-    if(_appStarted) return;
+async function handleSession(session, freshSignIn) {
+  _appStarted = true;
+  
+  // Save user session details
+  const meta = session.user.user_metadata || {};
+  const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
+  const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
+  const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
+  
+  localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
 
-    if(session){
-      const { data: { user }, error } = await _sb.auth.getUser();
-      if(error || !user){
-        await _sb.auth.signOut();
-        localStorage.removeItem('bp_session');
-        session = null;
-      }
-    }
+  // Clean hash/query params from URL so clean refreshes work
+  if (window.location.hash || window.location.search.includes('type=')) {
+    window.history.replaceState(null, '', window.location.pathname);
+  }
 
-    if(!session){
-      localStorage.removeItem('bp_session');
-      document.getElementById('auth-screen').style.display='flex';
-      document.getElementById('app').style.display='none';
-      document.getElementById('landing-penny-fab').style.display='flex';
-      return;
-    }
+  const onboardedKey = 'bp_onboarded_' + session.user.id;
+  const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
+  const isNewUser = !hasCompletedOnboarding;
+
+  await loadUserPlan();
+  showApp(isNewUser);
+}
 
     _appStarted = true;
     const meta = session.user.user_metadata || {};
@@ -6228,9 +6232,17 @@ let _appStarted = false;
   const hashParams = new URLSearchParams(currentHash);
   const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup'));
 
-  _sb.auth.onAuthStateChange(async (event, session) => {
-    if(!_appStarted && session) await handleSession(session, true);
-  });
+ _sb.auth.onAuthStateChange(async (event, session) => {
+  if (session) {
+    // If the user just signed in or confirmed their email
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || !_appStarted) {
+      await handleSession(session, event === 'SIGNED_IN');
+    }
+  } else if (event === 'SIGNED_OUT') {
+    _appStarted = false;
+    showAuthModal(); 
+  }
+});
 
   const { data: { session } } = await _sb.auth.getSession();
   await handleSession(session, isFreshAuth);
