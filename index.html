@@ -1089,7 +1089,7 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
     <div class="auth-top-bar">
       <button class="icon-btn" onclick="toggleTheme()"><svg id="themeIcon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
       <select class="lang-sel" id="authLang" onchange="changeLang('auth')">
-        <option value="en">English</option><option value="es">Español</option><option value="pt">Português</option>
+        <option value="en">🇺🇸 English</option><option value="es">🇪🇸 Español</option><option value="pt">🇧🇷 Português</option>
       </select>
     </div>
     <div class="auth-card">
@@ -1794,7 +1794,7 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Settings</div>
   <div class="setting-row"><span class="s-label">Dark Mode</span><label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label></div>
-  <div class="setting-row"><span class="s-label">Language</span><select class="s-select" id="setLang" onchange="changeLang('settings')"><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option></select></div>
+  <div class="setting-row"><span class="s-label">Language</span><select class="s-select" id="setLang" onchange="changeLang('settings')"><option value="en">🇺🇸 English</option><option value="es">🇪🇸 Español</option><option value="pt">🇧🇷 Português</option></select></div>
   <div class="setting-row"><span class="s-label">Number of Items</span><select class="s-select" id="setCount"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
   <input type="hidden" id="setCurr" value="$">
   <button class="auth-btn" style="margin-top:20px" onclick="applySettings()">Apply</button>
@@ -5863,18 +5863,18 @@ Rules:
 - If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency
 
 RULE 11 — PRICE ACCURACY & AVAILABILITY HONESTY:
-Your price knowledge comes from training data and may be months or years old. You do NOT have live access to store inventory or current prices. ALWAYS:
-- Use hedged language: "typically around", "usually priced at", "last I saw about $X", "based on typical pricing" — never state a price as a guaranteed fact
-- Add at least one caveat per price conversation: "Prices vary by location and may have changed — worth checking the store app or website before you go"
-- Never promise an item will be in stock. For anything specialty, seasonal, or limited: "Availability varies — worth calling ahead or checking online before making the trip"
-- If the user asks "is this in stock at Walmart?" be honest: "I can't check live inventory, but [Walmart.com / Sam's Club app / store.brand.com] will show real-time stock for your location"
-- After giving estimated prices, naturally invite them to verify: "Want to plug these into the Compare tab so you can track the real prices when you check?"
+Your own training knowledge may be months or years old and you don't have live access to store inventory. However — some messages will include a "Live web search results" system note above with real, freshly-retrieved information. Check for that first:
+- If live search results ARE present for this question: treat them as current and trustworthy, answer from them directly, and cite the source site names naturally (e.g. "according to [site]..."). You don't need to hedge these with "typically" language, since they're real retrieved data, not a guess.
+- If NO live search results are present (which is most of the time — search only fires for messages that look time-sensitive): fall back to hedged language for anything price/availability related: "typically around", "usually priced at", "last I saw about $X", "based on typical pricing" — never state a price as a guaranteed fact. Add at least one caveat: "Prices vary by location and may have changed — worth checking the store app or website before you go."
+- Never promise an item will be in stock unless a live search result explicitly confirms it. For anything specialty, seasonal, or limited without search results: "Availability varies — worth calling ahead or checking online before making the trip"
+- If the user asks "is this in stock at Walmart?" and there's no live search result answering it: "I can't check live inventory for that, but [Walmart.com / Sam's Club app / store.brand.com] will show real-time stock for your location"
+- After giving estimated (non-searched) prices, naturally invite them to verify: "Want to plug these into the Compare tab so you can track the real prices when you check?"
 
 RULE 12 — CHECKING REAL STORE PRICES:
 When a user asks about prices at specific stores (Walmart, Sam's Club, Costco, etc.):
-1. Give your best estimate from training knowledge, clearly labeled as an estimate
-2. Always follow with: "For current prices, check [store name]'s app or website — or I can help you set up a comparison in the Compare tab once you find the real numbers"
-3. If they want a side-by-side, build it with your estimates but remind them to verify before shopping
+1. If live search results are present, use them directly — they're real, current numbers, not an estimate.
+2. If not, give your best estimate from training knowledge, clearly labeled as an estimate, and follow with: "For current prices, check [store name]'s app or website — or I can help you set up a comparison in the Compare tab once you find the real numbers"
+3. If they want a side-by-side without search results, build it with your estimates but remind them to verify before shopping
 4. For Sam's Club: remind user that membership is required ($50/year) — factor that into bulk savings math
 
 RECEIPT & IMAGE SCANNING:
