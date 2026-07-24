@@ -3,6 +3,8 @@
 // 'trial' = 7 days free, no card required, auto-cancels if never upgraded.
 // 'monthly' / 'yearly' = billed immediately, no trial.
 // Requires Authorization: Bearer <supabase access token>
+// Returns { clientSecret } for Stripe's EMBEDDED checkout (mounted in-page via
+// Stripe.js) instead of a redirect URL — the person never leaves the app.
 
 const SUPABASE_URL = 'https://viemououczppxevejtvs.supabase.co'; // public project URL — hardcoded, not env-driven, to avoid a stale/wrong Vercel env var silently overriding it
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZW1vdW91Y3pwcHhldmVqdHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDI4ODEsImV4cCI6MjA5MzQ3ODg4MX0.R90TUuaKTmXC9lObM3BccqNQzAuo_2K683dOFGPgARU'; // public anon key — hardcoded for the same reason
@@ -79,10 +81,10 @@ export default async function handler(req, res) {
 
     const params = {
       mode: 'subscription',
+      ui_mode: 'embedded',
       client_reference_id: user.id,
       customer_email: user.email,
-      success_url: `${origin}/?upgraded=1`,
-      cancel_url: `${origin}/`,
+      return_url: `${origin}/?embedded_return=1`,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: plan === 'trial'
         ? {
@@ -111,7 +113,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: data?.error?.message || 'Could not create checkout session.' });
     }
 
-    return res.status(200).json({ url: data.url });
+    return res.status(200).json({ clientSecret: data.client_secret });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
