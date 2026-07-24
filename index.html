@@ -430,11 +430,8 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 .price-err-msg{display:none;color:var(--danger);font-size:12px;font-weight:600;margin-top:5px;margin-bottom:2px;padding:6px 11px;background:#fff0f0;border-radius:7px;border:1px solid #fca5a5;align-items:center;gap:6px;}
 
 /* ── PRODUCT CARDS ── */
-
-.products-wrap { padding: 0 20px 20px; max-width: 1420px; margin: 0 auto; }
-
-.products-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start;
-}
+.products-wrap{padding:0 20px 20px;max-width:1420px;margin:0 auto;}
+.products-grid{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:flex-start;}
 .product-card{flex:0 1 320px;}
 @media(max-width:680px){.product-card{flex:1 1 100%;}.products-wrap{padding:0 14px 20px;}}
 
@@ -459,7 +456,7 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 .product-card.collapsed .card-summary{display:flex;align-items:center;gap:8px;justify-content:space-between;}
 .card-summary-name{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .card-summary-price{font-size:13px;font-weight:600;color:var(--brand);white-space:nowrap;font-family:var(--font-m);}
-.product-card.collapsed{padding-bottom:12px; height: fit-content;}
+.product-card.collapsed{padding-bottom:12px;}
 .card-num{width:30px;height:30px;background:var(--brand-light);color:var(--brand);border-radius:8px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);}
 .card-icon-btn{width:30px;height:30px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:.2s;}
 .card-icon-btn:hover{color:var(--brand);border-color:var(--brand);background:var(--brand-light);}
@@ -1348,6 +1345,7 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
       <button class="tool-btn" onclick="openModal('settingsModal')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span id="txt-settings">Settings</span></button>
       <button class="tool-btn" onclick="openModal('calcModal')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="14"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg><span id="txt-calc">Calculator</span></button>
       <button class="tool-btn" onclick="openModal('exportModal')"><svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span id="txt-export">Export</span></button>
+      <button class="tool-btn" id="collapseAllBtn" onclick="toggleAllCards()"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg><span id="txt-collapse-all">Collapse All</span></button>
       <button class="tool-btn danger" onclick="resetAll()"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.33"/></svg><span id="txt-reset">Reset</span></button>
     </div>
     <div class="products-wrap"><div class="products-grid" id="grid"></div></div>
@@ -1953,22 +1951,10 @@ function openUpgradeModal(reason){
   openModal('upgradeModal');
 }
 
-async function getValidSession(){
-  // getSession() only reads the locally cached token. If it has expired since
-  // the page was loaded, it can come back null even though the user is still
-  // signed in — so try a refresh before giving up.
-  let { data: { session } } = await _sb.auth.getSession();
-  if(!session){
-    const { data: refreshed } = await _sb.auth.refreshSession().catch(()=>({data:null}));
-    session = refreshed?.session || null;
-  }
-  return session;
-}
-
 async function startUpgradeCheckout(plan){
   try {
-    const session = await getValidSession();
-    if(!session){ showToast('Your session expired — please log in again.', ''); return; }
+    const { data: { session } } = await _sb.auth.getSession();
+    if(!session){ showToast('Please log in first', ''); return; }
     const r = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
@@ -1984,8 +1970,8 @@ async function startUpgradeCheckout(plan){
 
 async function openBillingPortal(){
   try {
-    const session = await getValidSession();
-    if(!session){ showToast('Your session expired — please log in again.', ''); return; }
+    const { data: { session } } = await _sb.auth.getSession();
+    if(!session){ showToast('Please log in first', ''); return; }
     const r = await fetch('/api/create-portal-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
@@ -2088,7 +2074,7 @@ const TRANSLATIONS = {
     joinHighlight:'smart shoppers',
     logout:'Log out',
     compare:'Compare', history:'History', grocery:'Grocery', presets:'Presets', help:'Help',
-    settings:'Settings', calc:'Calculator', exportBtn:'Export', reset:'Reset',
+    settings:'Settings', calc:'Calculator', exportBtn:'Export', reset:'Reset', collapseAll:'Collapse All', expandAll:'Expand All',
     compareBtn:'COMPARE',
     analysisPh:'Results will appear here...',
     historyTitle:'Comparison History', clearAll:'Clear All',
@@ -2242,7 +2228,7 @@ const TRANSLATIONS = {
     joinHighlight:'compradores inteligentes',
     logout:'Cerrar sesión',
     compare:'Comparar', history:'Historial', grocery:'Compras', presets:'Preajustes', help:'Ayuda',
-    settings:'Ajustes', calc:'Calculadora', exportBtn:'Exportar', reset:'Reiniciar',
+    settings:'Ajustes', calc:'Calculadora', exportBtn:'Exportar', reset:'Reiniciar', collapseAll:'Contraer Todo', expandAll:'Expandir Todo',
     compareBtn:'COMPARAR',
     analysisPh:'Los resultados aparecerán aquí...',
     historyTitle:'Historial de comparaciones', clearAll:'Borrar todo',
@@ -2394,7 +2380,7 @@ const TRANSLATIONS = {
     joinHighlight:'compradores inteligentes',
     logout:'Sair',
     compare:'Comparar', history:'Histórico', grocery:'Compras', presets:'Predefinições', help:'Ajuda',
-    settings:'Configurações', calc:'Calculadora', exportBtn:'Exportar', reset:'Redefinir',
+    settings:'Configurações', calc:'Calculadora', exportBtn:'Exportar', reset:'Redefinir', collapseAll:'Recolher Tudo', expandAll:'Expandir Tudo',
     compareBtn:'COMPARAR',
     analysisPh:'Os resultados aparecerão aqui...',
     historyTitle:'Histórico de comparações', clearAll:'Limpar tudo',
@@ -3884,6 +3870,7 @@ function updateGrid(){
   grid.innerHTML=html;
 
   for(let i=0;i<items;i++) catPickerInit(i);
+  syncCollapseAllLabel();
 }
 
 function getCard(i){ return {p:document.getElementById(`p-${i}`)?.value||'',dv:document.getElementById(`dv-${i}`)?.value||'0',dt:document.getElementById(`dt-${i}`)?.value||'p',s:document.getElementById(`s-${i}`)?.value||'',u:document.getElementById(`u-${i}`)?.value||'oz',q:document.getElementById(`q-${i}`)?.value||'1',n:document.getElementById(`n-${i}`)?.value||''}; }
@@ -3919,6 +3906,28 @@ function toggleCardCollapse(i){
     if(nameEl) nameEl.textContent=name;
     if(priceEl) priceEl.textContent=price;
   }
+  syncCollapseAllLabel();
+}
+
+function toggleAllCards(){
+  if(!items) return;
+  let anyExpanded=false;
+  for(let i=0;i<items;i++){ if(!document.getElementById('card-'+i)?.classList.contains('collapsed')) anyExpanded=true; }
+  for(let i=0;i<items;i++){
+    const card=document.getElementById('card-'+i);
+    if(!card) continue;
+    const isCollapsed=card.classList.contains('collapsed');
+    if(anyExpanded && !isCollapsed) toggleCardCollapse(i);
+    else if(!anyExpanded && isCollapsed) toggleCardCollapse(i);
+  }
+}
+
+function syncCollapseAllLabel(){
+  if(!items) return;
+  let anyExpanded=false;
+  for(let i=0;i<items;i++){ if(!document.getElementById('card-'+i)?.classList.contains('collapsed')) anyExpanded=true; }
+  const span=document.getElementById('txt-collapse-all');
+  if(span) span.textContent = anyExpanded ? (T().collapseAll||'Collapse All') : (T().expandAll||'Expand All');
 }
 
 function uncompareCard(i){
@@ -6247,6 +6256,7 @@ let _appStarted = false;
   const { data: { session } } = await _sb.auth.getSession();
   await handleSession(session, isFreshAuth);
 };
+</script>
 </script>
 </body>
 </html>
