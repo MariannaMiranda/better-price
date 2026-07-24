@@ -6206,17 +6206,8 @@ window.onload=async ()=>{
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 let _appStarted = false;
-  async function handleSession(session, freshSignIn = false){
+  async function handleSession(session){
     if(_appStarted) return;
-
-    if(session){
-      const { data: { user }, error } = await _sb.auth.getUser();
-      if(error || !user){
-        await _sb.auth.signOut();
-        localStorage.removeItem('bp_session');
-        session = null;
-      }
-    }
 
     if(!session){
       localStorage.removeItem('bp_session');
@@ -6233,28 +6224,25 @@ let _appStarted = false;
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
     localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
 
-    // ── FIX: Check if this account has completed onboarding in localStorage ──
+    // Onboarding shows only if THIS account has never completed it on this device.
+    // (A brand-new signup naturally has no bp_onboarded_<id> key yet, so this
+    // already covers first-time users correctly without needing a separate
+    // "fresh sign-in" override — that override was the bug causing onboarding
+    // to reappear on every login.)
     const onboardedKey = 'bp_onboarded_' + session.user.id;
     const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
-
-    // If they haven't completed onboarding OR if this is a fresh confirmation link sign-in:
-    const isNewUser = !hasCompletedOnboarding || freshSignIn;
+    const isNewUser = !hasCompletedOnboarding;
 
     await loadUserPlan();
     showApp(isNewUser);
   }
 
-  // Detect if URL contains access token or confirmation type BEFORE Supabase clears the hash
-  const currentHash = window.location.hash.replace('#','');
-  const hashParams = new URLSearchParams(currentHash);
-  const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup'));
-
   _sb.auth.onAuthStateChange(async (event, session) => {
-    if(!_appStarted && session) await handleSession(session, true);
+    if(!_appStarted && session) await handleSession(session);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
-  await handleSession(session, isFreshAuth);
+  await handleSession(session);
 };
 </script>
 </script>
