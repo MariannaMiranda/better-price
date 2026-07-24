@@ -10,6 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Barlow:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1861,6 +1862,19 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
   </div>
 </div>
 
+<div class="modal-box" id="checkoutEmbedModal" style="max-width:480px;">
+  <button class="modal-x" onclick="closeEmbeddedCheckout()">&#10005;</button>
+  <div class="modal-title">Complete your upgrade</div>
+  <div id="checkoutEmbedContainer" style="min-height:420px;"></div>
+</div>
+
+<div class="modal-box" id="checkoutSuccessModal" style="max-width:380px;text-align:center;">
+  <div style="font-size:44px;margin-bottom:8px;">🎉</div>
+  <div class="modal-title" style="margin-bottom:8px;">You're Pro!</div>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Unlimited Penny, unlimited scans, unlimited lists, no ads. Enjoy!</p>
+  <button class="mbtn-ok" onclick="closeModals()">Let's go</button>
+</div>
+
 <div class="modal-box" id="confirmModal">
   <div class="modal-title" id="confirmTitle">Are you sure?</div>
   <div class="confirm-msg" id="confirmMsg"></div>
@@ -1951,6 +1965,10 @@ function openUpgradeModal(reason){
   openModal('upgradeModal');
 }
 
+const STRIPE_PUBLISHABLE_KEY = 'PASTE_YOUR_STRIPE_PUBLISHABLE_KEY_HERE'; // pk_test_... in sandbox, pk_live_... in production — safe to expose, it's public by design
+let _stripeJs = null;
+let _embeddedCheckout = null;
+
 async function startUpgradeCheckout(plan){
   try {
     const { data: { session } } = await _sb.auth.getSession();
@@ -1961,11 +1979,38 @@ async function startUpgradeCheckout(plan){
       body: JSON.stringify({ plan })
     });
     const data = await r.json();
-    if(!r.ok || !data.url){ showToast(data.error || 'Could not start checkout', ''); return; }
-    window.location.href = data.url;
+    if(!r.ok || !data.clientSecret){ showToast(data.error || 'Could not start checkout', ''); return; }
+    await mountEmbeddedCheckout(data.clientSecret);
   } catch(e){
     showToast('Could not start checkout', '');
   }
+}
+
+async function mountEmbeddedCheckout(clientSecret){
+  if(!window.Stripe){ showToast('Payment form failed to load — check your connection and try again.', ''); return; }
+  if(!_stripeJs) _stripeJs = Stripe(STRIPE_PUBLISHABLE_KEY);
+
+  closeModals();
+  const container = document.getElementById('checkoutEmbedContainer');
+  container.innerHTML = '';
+  openModal('checkoutEmbedModal');
+
+  if(_embeddedCheckout){ try{ _embeddedCheckout.destroy(); }catch(e){} _embeddedCheckout = null; }
+
+  _embeddedCheckout = await _stripeJs.initEmbeddedCheckout({
+    clientSecret,
+    onComplete: async () => {
+      closeEmbeddedCheckout();
+      await loadUserPlan();
+      openModal('checkoutSuccessModal');
+    }
+  });
+  _embeddedCheckout.mount('#checkoutEmbedContainer');
+}
+
+function closeEmbeddedCheckout(){
+  if(_embeddedCheckout){ try{ _embeddedCheckout.destroy(); }catch(e){} _embeddedCheckout = null; }
+  closeModals();
 }
 
 async function openBillingPortal(){
