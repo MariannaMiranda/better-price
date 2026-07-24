@@ -433,12 +433,7 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 
 .products-wrap { padding: 0 20px 20px; max-width: 1420px; margin: 0 auto; }
 
-.products-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  align-items: flex-start; /* ADD THIS LINE */
+.products-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-start;
 }
 .product-card{flex:0 1 320px;}
 @media(max-width:680px){.product-card{flex:1 1 100%;}.products-wrap{padding:0 14px 20px;}}
@@ -1958,10 +1953,22 @@ function openUpgradeModal(reason){
   openModal('upgradeModal');
 }
 
+async function getValidSession(){
+  // getSession() only reads the locally cached token. If it has expired since
+  // the page was loaded, it can come back null even though the user is still
+  // signed in — so try a refresh before giving up.
+  let { data: { session } } = await _sb.auth.getSession();
+  if(!session){
+    const { data: refreshed } = await _sb.auth.refreshSession().catch(()=>({data:null}));
+    session = refreshed?.session || null;
+  }
+  return session;
+}
+
 async function startUpgradeCheckout(plan){
   try {
-    const { data: { session } } = await _sb.auth.getSession();
-    if(!session){ showToast('Please log in first', ''); return; }
+    const session = await getValidSession();
+    if(!session){ showToast('Your session expired — please log in again.', ''); return; }
     const r = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
@@ -1977,8 +1984,8 @@ async function startUpgradeCheckout(plan){
 
 async function openBillingPortal(){
   try {
-    const { data: { session } } = await _sb.auth.getSession();
-    if(!session){ showToast('Please log in first', ''); return; }
+    const session = await getValidSession();
+    if(!session){ showToast('Your session expired — please log in again.', ''); return; }
     const r = await fetch('/api/create-portal-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
@@ -6190,41 +6197,25 @@ window.onload=async ()=>{
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 let _appStarted = false;
+  async function handleSession(session, freshSignIn = false){
+    if(_appStarted) return;
 
-async function handleSession(session, freshSignIn) {
-  if (_appStarted) return;
-  _appStarted = true;
+    if(session){
+      const { data: { user }, error } = await _sb.auth.getUser();
+      if(error || !user){
+        await _sb.auth.signOut();
+        localStorage.removeItem('bp_session');
+        session = null;
+      }
+    }
 
-  const meta = session.user.user_metadata || {};
-  const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
-  const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
-  const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
-  
-  localStorage.setItem('bp_session', JSON.stringify({ email: session.user.email, name, firstName, lastName }));
-
-  // Clean URL parameters so reloads don't re-trigger token validation errors
-  if (window.location.hash || window.location.search.includes('type=')) {
-    window.history.replaceState(null, '', window.location.pathname);
-  }
-
-  const onboardedKey = 'bp_onboarded_' + session.user.id;
-  const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
-  const isNewUser = !hasCompletedOnboarding;
-
-  await loadUserPlan();
-  showApp(isNewUser);
-}
-
-// Listen for Supabase auth state changes
-_sb.auth.onAuthStateChange(async (event, session) => {
-  if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || !_appStarted)) {
-    await handleSession(session, event === 'SIGNED_IN');
-  } else if (event === 'SIGNED_OUT') {
-    _appStarted = false;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
-  }
-});
+    if(!session){
+      localStorage.removeItem('bp_session');
+      document.getElementById('auth-screen').style.display='flex';
+      document.getElementById('app').style.display='none';
+      document.getElementById('landing-penny-fab').style.display='flex';
+      return;
+    }
 
     _appStarted = true;
     const meta = session.user.user_metadata || {};
@@ -6249,22 +6240,13 @@ _sb.auth.onAuthStateChange(async (event, session) => {
   const hashParams = new URLSearchParams(currentHash);
   const isFreshAuth = !!(hashParams.get('access_token') || hashParams.get('type') === 'signup' || window.location.search.includes('type=signup'));
 
- _sb.auth.onAuthStateChange(async (event, session) => {
-  if (session) {
-    // If the user just signed in or confirmed their email
-    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || !_appStarted) {
-      await handleSession(session, event === 'SIGNED_IN');
-    }
-  } else if (event === 'SIGNED_OUT') {
-    _appStarted = false;
-    showAuthModal(); 
-  }
-});
+  _sb.auth.onAuthStateChange(async (event, session) => {
+    if(!_appStarted && session) await handleSession(session, true);
+  });
 
   const { data: { session } } = await _sb.auth.getSession();
   await handleSession(session, isFreshAuth);
 };
-</script>
 </script>
 </body>
 </html>
