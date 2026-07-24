@@ -81,7 +81,7 @@ export default async function handler(req, res) {
 
     const params = {
       mode: 'subscription',
-      ui_mode: 'embedded',
+      ui_mode: 'embedded_page',
       client_reference_id: user.id,
       customer_email: user.email,
       return_url: `${origin}/?embedded_return=1`,
