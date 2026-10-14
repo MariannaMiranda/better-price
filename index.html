@@ -1040,19 +1040,6 @@ body.dark .oauth-btn{background:#162535;border-color:#2a4060;color:#eef2ff;}
 body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
 .auth-divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:2px 0;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-#terms-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:2100;align-items:center;justify-content:center;padding:20px;}
-.tm-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);max-width:440px;width:100%;padding:32px 28px;text-align:center;font-family:var(--font);}
-body.dark .tm-card{background:var(--input-bg);}
-.tm-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;}
-.tm-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
-.tm-check{display:flex;gap:12px;align-items:flex-start;text-align:left;font-size:14px;color:var(--text);line-height:1.5;margin-bottom:22px;cursor:pointer;}
-.tm-check input{width:20px;height:20px;margin-top:1px;flex-shrink:0;accent-color:var(--brand);cursor:pointer;}
-.tm-check a{color:var(--brand-mid);font-weight:600;}
-.tm-btn{width:100%;background:var(--brand);color:#fff;border:none;border-radius:var(--rsm);padding:13px;font-size:15px;font-weight:600;font-family:var(--font);cursor:pointer;margin-bottom:10px;transition:.2s;}
-.tm-btn:hover:not(:disabled){background:var(--brand-h);}
-.tm-btn:disabled{opacity:.45;cursor:not-allowed;}
-.tm-cancel{background:none;border:none;color:var(--muted);font-size:14px;font-family:var(--font);cursor:pointer;text-decoration:underline;}
-.tm-cancel:hover{color:var(--brand);}
 #check-email-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:2000;flex-direction:row;}
 .ce-left{flex:1;display:none;flex-direction:column;justify-content:center;padding:60px;background:linear-gradient(135deg,#003366 0%,#1a4a8a 50%,#002244 100%);position:relative;overflow:hidden;}
 .ce-left::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0,rgba(255,255,255,.015) 1px,transparent 1px,transparent 80px),repeating-linear-gradient(90deg,rgba(255,255,255,.015) 0,rgba(255,255,255,.015) 1px,transparent 1px,transparent 80px);}
@@ -1152,19 +1139,6 @@ body.dark .tm-card{background:var(--input-bg);}
     </div>
   </div>
 
-</div>
-
-<div id="terms-screen">
-  <div class="tm-card">
-    <div class="tm-title">One last step</div>
-    <div class="tm-sub">Please review and accept our Terms and Privacy Policy to start using Better Price.</div>
-    <label class="tm-check">
-      <input type="checkbox" id="tmCheck" onchange="document.getElementById('tmAccept').disabled=!this.checked">
-      <span>I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span>
-    </label>
-    <button class="tm-btn" id="tmAccept" disabled onclick="acceptTerms()">Accept &amp; Continue</button>
-    <button class="tm-cancel" onclick="declineTerms()">Cancel</button>
-  </div>
 </div>
 
 <div id="check-email-screen">
@@ -3090,38 +3064,6 @@ async function resendConfirmation(){
   const { error } = await _sb.auth.resend({ type: 'signup', email: _pendingConfirmEmail, options: { emailRedirectTo: window.location.origin } });
   showToast(error ? error.message : 'Email resent!', error ? '' : 'ok');
   if(!error) startResendCountdown();
-}
-const TERMS_VERSION = '2026-10-14';
-let _pendingTermsSession = null;
-function needsTerms(session){
-  const m = session?.user?.user_metadata || {};
-  return m.terms_version !== TERMS_VERSION;
-}
-function showTermsScreen(session){
-  _pendingTermsSession = session;
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('landing-penny-fab').style.display = 'none';
-  document.getElementById('tmCheck').checked = false;
-  document.getElementById('tmAccept').disabled = true;
-  document.getElementById('terms-screen').style.display = 'flex';
-}
-async function acceptTerms(){
-  if(!document.getElementById('tmCheck').checked || !_pendingTermsSession) return;
-  const btn = document.getElementById('tmAccept');
-  btn.disabled = true;
-  const { data, error } = await _sb.auth.updateUser({ data: { terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString() } });
-  if(error){ btn.disabled = false; showToast(error.message, ''); return; }
-  const session = { ..._pendingTermsSession, user: data.user };
-  _pendingTermsSession = null;
-  document.getElementById('terms-screen').style.display = 'none';
-  await window.__handleSession(session);
-}
-async function declineTerms(){
-  _pendingTermsSession = null;
-  await _sb.auth.signOut();
-  localStorage.removeItem('bp_session');
-  location.reload();
 }
 async function signInWithGoogle(){
   if(authMode === 'signup') localStorage.setItem('bp_needs_onboarding', '1');
@@ -6358,8 +6300,6 @@ let _appStarted = false;
       return;
     }
 
-    if(needsTerms(session)){ showTermsScreen(session); return; }
-
     _appStarted = true;
     const meta = session.user.user_metadata || {};
     const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
@@ -6380,7 +6320,6 @@ let _appStarted = false;
     showApp(isNewUser);
   }
 
-  window.__handleSession = handleSession;
   _sb.auth.onAuthStateChange(async (event, session) => {
     if(!_appStarted && session) await handleSession(session);
   });
