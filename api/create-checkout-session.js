@@ -26,26 +26,22 @@ async function getUserFromToken(token) {
   }
 }
 
-// Stripe's API takes application/x-www-form-urlencoded, including nested params
-// like line_items[0][price]. This little helper flattens a JS object into that form.
+// Recursively converts nested JavaScript objects into application/x-www-form-urlencoded
+// format required by Stripe's API (e.g., subscription_data[trial_settings][end_behavior][missing_payment_method]=cancel)
 function toFormBody(obj, prefix) {
   const parts = [];
   for (const key in obj) {
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
     const val = obj[key];
     const fullKey = prefix ? `${prefix}[${key}]` : key;
     if (val === undefined || val === null) continue;
-    if (typeof val === 'object' && !Array.isArray(val)) {
+    if (typeof val === 'object') {
       parts.push(toFormBody(val, fullKey));
-    } else if (Array.isArray(val)) {
-      val.forEach((item, i) => {
-        if (typeof item === 'object') parts.push(toFormBody(item, `${fullKey}[${i}]`));
-        else parts.push(`${encodeURIComponent(`${fullKey}[${i}]`)}=${encodeURIComponent(item)}`);
-      });
     } else {
       parts.push(`${encodeURIComponent(fullKey)}=${encodeURIComponent(val)}`);
     }
   }
-  return parts.join('&');
+  return parts.filter(Boolean).join('&');
 }
 
 export default async function handler(req, res) {
@@ -95,7 +91,7 @@ export default async function handler(req, res) {
 
     const params = {
       mode: 'subscription',
-      ui_mode: 'embedded_page',
+      ui_mode: 'embedded', // Fixed: was 'embedded_page', Stripe requires 'embedded'
       client_reference_id: user.id,
       ...(existing?.stripe_customer_id
         ? { customer: existing.stripe_customer_id }
@@ -134,4 +130,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message });
   }
 }
-```[cite: 18]
