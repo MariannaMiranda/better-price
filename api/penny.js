@@ -166,9 +166,10 @@ export default async function handler(req, res) {
     }
   }
 
+  // Active models on Groq
   const models = hasImages
-    ? ['meta-llama/llama-4-scout-17b-16e-instruct', 'meta-llama/llama-4-maverick-17b-128e-instruct']
-    : ['llama-3.3-70b-versatile'];
+    ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
+    : ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
   for (const model of models) {
     try {
@@ -189,8 +190,13 @@ export default async function handler(req, res) {
       if (response.ok) {
         const data = await response.json();
         return res.status(200).json({ text: data.choices?.[0]?.message?.content || '', remaining: usage?.remaining });
+      } else {
+        const errJson = await response.json().catch(() => ({}));
+        console.error(`Groq error for model ${model}:`, response.status, errJson);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error(`Fetch exception for model ${model}:`, e);
+    }
   }
 
   return res.status(500).json({ error: 'Penny is unavailable right now. Please try again soon.' });
