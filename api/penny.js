@@ -10,6 +10,14 @@ const SUPABASE_URL = 'https://viemououczppxevejtvs.supabase.co';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 
+// Models are env-configurable (comma-separated, first = primary, rest = fallbacks).
+// Next time Groq deprecates something, change the Vercel env var and redeploy — no code edit.
+const TEXT_MODELS = (process.env.GROQ_TEXT_MODELS || 'openai/gpt-oss-120b,openai/gpt-oss-20b')
+  .split(',').map(s => s.trim()).filter(Boolean);
+// No safe default: set GROQ_VISION_MODELS to a vision-capable model ID from console.groq.com/docs/models
+const VISION_MODELS = (process.env.GROQ_VISION_MODELS || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
 const SEARCH_TRIGGER_RX = /\b(today|currently|current price|current cost|latest|this week|this month|this year|right now|recent(ly)?|as of (today|now)|price of|cost of|on sale|any (deals|sales)|new (price|update)|update(d)? price|202[4-9]|what'?s new|happening now)\b/i;
 
 function shouldSearch(text) { return !!text && SEARCH_TRIGGER_RX.test(text); }
@@ -100,7 +108,8 @@ function sanitizeBody(body) {
   if (chars > 24000 || images > 1) return null;
   return {
     messages: raw,
-    max_tokens: Math.min(Number(body.max_tokens) || 600, 800),
+    // gpt-oss models spend tokens on reasoning; allow a bit more headroom than before
+    max_tokens: Math.min(Number(body.max_tokens) || 600, 1200),
     temperature: Math.min(Math.max(Number(body.temperature) || 0.7, 0), 1),
     images,
   };
@@ -128,6 +137,13 @@ export default async function handler(req, res) {
   if (!clean) return res.status(400).json({ error: 'Bad request.' });
 
   const hasImages = clean.images > 0;
+
+  // Check model availability BEFORE bumping usage so a config problem doesn't burn the user's quota
+  const models = hasImages ? VISION_MODELS : TEXT_MODELS;
+  if (!models.length) {
+    return res.status(503).json({ error: 'Scanning is temporarily unavailable. Please try again later.' });
+  }
+
   const token = (req.headers.authorization || '').replace(/^Bearer /, '') || null;
   const user = token ? await getUserFromToken(token) : null;
   const plan = user ? await getPlan(user.id) : 'free';
@@ -166,13 +182,9 @@ export default async function handler(req, res) {
     }
   }
 
-  // Active models on Groq
-  const models = hasImages
-    ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
-    : ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-
   for (const model of models) {
     try {
+      const isGptOss = model.startsWith('openai/gpt-oss');
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -184,15 +196,22 @@ export default async function handler(req, res) {
           messages,
           max_tokens: clean.max_tokens,
           temperature: clean.temperature,
+          // Keep reasoning short so it doesn't eat the token budget and return an empty reply
+          ...(isGptOss ? { reasoning_effort: 'low', include_reasoning: false } : {}),
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        return res.status(200).json({ text: data.choices?.[0]?.message?.content || '', remaining: usage?.remaining });
+        const text = data.choices?.[0]?.message?.content || '';
+        if (!text.trim()) {
+          console.error(`Empty completion from ${model}:`, JSON.stringify(data.choices?.[0] || {}));
+          continue; // try the next model instead of returning a blank bubble
+        }
+        return res.status(200).json({ text, remaining: usage?.remaining });
       } else {
         const errJson = await response.json().catch(() => ({}));
-        console.error(`Groq error for model ${model}:`, response.status, errJson);
+        console.error(`Groq error for model ${model}:`, response.status, JSON.stringify(errJson));
       }
     } catch (e) {
       console.error(`Fetch exception for model ${model}:`, e);
