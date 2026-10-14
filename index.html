@@ -4766,10 +4766,16 @@ function importUserData(input){
       const backup = JSON.parse(e.target.result);
       if(!backup?.data || typeof backup.data !== 'object') throw new Error('Invalid backup file');
 showConfirm('Restore Backup', 'This will overwrite your current data with the backup. Continue?', () => {
+        const session = JSON.parse(localStorage.getItem('bp_session') || '{}');
+        const prefix = 'bp_' + (session.email || '') + '_';
         Object.entries(backup.data).forEach(([key, val]) => {
+          const ok = key.startsWith(prefix) || key === 'bp_lang' || key === 'bp_theme';
+          if (!ok) return; // Disallow importing arbitrary or auth keys like bp_session
           try { localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch(err){}
         });
         showToast('Backup restored! Reloading…', 'ok');
+        setTimeout(() => location.reload(), 1200);
+      });
         setTimeout(() => location.reload(), 1200);
       });
         setTimeout(() => location.reload(), 1200);
