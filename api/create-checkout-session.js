@@ -94,7 +94,9 @@ export default async function handler(req, res) {
       mode: 'subscription',
       ui_mode: 'embedded_page',
       client_reference_id: user.id,
-      customer_email: user.email,
+      ...(existing?.stripe_customer_id
+        ? { customer: existing.stripe_customer_id }
+        : { customer_email: user.email }),
       return_url: `${origin}/?embedded_return=1`,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: plan === 'trial'
