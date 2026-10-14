@@ -4784,6 +4784,24 @@ function confirmDeleteAccount(){
 
 async function deleteAccount(){
   const t = T();
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    if(session?.access_token){
+      const res = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + session.access_token }
+      });
+      if(!res.ok){
+        const err = await res.json();
+        showToast(err.error || 'Failed to delete account on server.', 'warn');
+        return;
+      }
+    }
+  } catch(e) {
+    showToast('Network error while deleting account.', 'warn');
+    return;
+  }
+
   const session = JSON.parse(localStorage.getItem('bp_session') || '{}');
   const email = session.email || '';
   if(email){
