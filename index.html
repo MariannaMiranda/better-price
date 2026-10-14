@@ -1999,9 +1999,14 @@ async function mountEmbeddedCheckout(clientSecret){
 
   _embeddedCheckout = await _stripeJs.initEmbeddedCheckout({
     clientSecret,
-    onComplete: async () => {
+onComplete: async () => {
       closeEmbeddedCheckout();
-      await loadUserPlan();
+
+      for (let i = 0; i < 8; i++) {
+        await loadUserPlan();
+        if (userPlan === 'pro') break;
+        await new Promise((r) => setTimeout(r, 1500));
+      }
       openModal('checkoutSuccessModal');
     }
   });
