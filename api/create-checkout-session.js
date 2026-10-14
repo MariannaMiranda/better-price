@@ -80,7 +80,7 @@ export default async function handler(req, res) {
 
     const params = {
       mode: 'subscription',
-      ui_mode: 'embedded',
+      ui_mode: 'embedded_page',
       client_reference_id: user.id,
       ...(existing?.stripe_customer_id
         ? { customer: existing.stripe_customer_id }
