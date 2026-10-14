@@ -1,13 +1,8 @@
 // POST /api/create-checkout-session
-// Body: { plan: 'trial' | 'monthly' | 'yearly' }
-// 'trial' = 7 days free, no card required, auto-cancels if never upgraded.
-// 'monthly' / 'yearly' = billed immediately, no trial.
-// Requires Authorization: Bearer <supabase access token>
-// Returns { clientSecret } for Stripe's EMBEDDED checkout (mounted in-page via
-// Stripe.js) instead of a redirect URL — the person never leaves the app.
+import crypto from 'crypto';
 
-const SUPABASE_URL = 'https://viemououczppxevejtvs.supabase.co'; // public project URL — hardcoded, not env-driven, to avoid a stale/wrong Vercel env var silently overriding it
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZW1vdW91Y3pwcHhldmVqdHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDI4ODEsImV4cCI6MjA5MzQ3ODg4MX0.R90TUuaKTmXC9lObM3BccqNQzAuo_2K683dOFGPgARU'; // public anon key — hardcoded for the same reason
+const SUPABASE_URL = 'https://viemououczppxevejtvs.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZW1vdW91Y3pwcHhldmVqdHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDI4ODEsImV4cCI6MjA5MzQ3ODg4MX0.R90TUuaKTmXC9lObM3BccqNQzAuo_2K683dOFGPgARU';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_PRICE_MONTHLY = process.env.STRIPE_PRICE_MONTHLY || '';
 const STRIPE_PRICE_YEARLY = process.env.STRIPE_PRICE_YEARLY || '';
@@ -26,8 +21,6 @@ async function getUserFromToken(token) {
   }
 }
 
-// Recursively converts nested JavaScript objects into application/x-www-form-urlencoded
-// format required by Stripe's API (e.g., subscription_data[trial_settings][end_behavior][missing_payment_method]=cancel)
 function toFormBody(obj, prefix) {
   const parts = [];
   for (const key in obj) {
@@ -78,10 +71,6 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: 'Your free trial has already been used.' });
     }
 
-    // Trial checkouts anchor to the monthly price but never actually charge it —
-    // Stripe skips card collection when trial_period_days makes the due-today total $0,
-    // and trial_settings.end_behavior cancels the subscription automatically if the
-    // trial ends with no payment method on file (i.e. the person never upgraded).
     const priceId = plan === 'yearly' ? STRIPE_PRICE_YEARLY : STRIPE_PRICE_MONTHLY;
     if (!priceId) {
       return res.status(500).json({ error: `Stripe price for "${plan}" is not configured yet.` });
@@ -91,7 +80,7 @@ export default async function handler(req, res) {
 
     const params = {
       mode: 'subscription',
-      ui_mode: 'embedded', // Fixed: was 'embedded_page', Stripe requires 'embedded'
+      ui_mode: 'embedded',
       client_reference_id: user.id,
       ...(existing?.stripe_customer_id
         ? { customer: existing.stripe_customer_id }
