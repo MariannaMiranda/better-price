@@ -4993,7 +4993,10 @@ function loadPennySessions(){
 }
 function savePennySessions(){
   if(pennySessions.length > 30) pennySessions = pennySessions.slice(-30);
-  saveU('penny_sessions', pennySessions);
+  saveU('penny_sessions', pennySessions.map(s => ({
+    ...s,
+    messages: (s.messages || []).map(({ image, ...rest }) => rest)
+  })));
 }
 
 function pennyRetry(errorMsgIdx){
