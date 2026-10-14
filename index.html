@@ -6168,7 +6168,14 @@ function pennyExecuteActions(rawText){
   const toasts = [];
   let saveLists = false, saveItms = false;
   let listLink = null; // { name, id } of last list modified — for the "View list" chip
-
+  
+const DESTRUCTIVE = new Set(['DELETELIST', 'CLEARCHECKED', 'REMOVEITEMS']);
+  const lastUser = (pennyActiveSession?.messages || []).filter(m => m.role === 'user').pop()?.content || '';
+  const askedToDestroy = /\b(delete|remove|clear|erase|get rid|take off)\b/i.test(lastUser);
+  for (let i = commands.length - 1; i >= 0; i--) {
+    if (DESTRUCTIVE.has(commands[i].type) && !askedToDestroy) commands.splice(i, 1);
+  }
+  
   commands.forEach(cmd => {
     const d = cmd.data;
     try {
