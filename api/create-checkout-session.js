@@ -63,21 +63,24 @@ export default async function handler(req, res) {
     if (!user) {
       return res.status(401).json({ error: 'Please log in first.' });
     }
+
+    const plan = req.body?.plan === 'yearly' ? 'yearly'
+      : req.body?.plan === 'trial' ? 'trial'
+      : 'monthly';
+
     const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     const er = await fetch(
       `${SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=plan,status,stripe_customer_id`,
       { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
     );
     const existing = er.ok ? (await er.json())?.[0] : null;
+
     if (existing?.plan === 'pro') {
       return res.status(409).json({ error: 'You already have an active plan. Use Manage Billing.' });
     }
     if (plan === 'trial' && existing?.stripe_customer_id) {
       return res.status(409).json({ error: 'Your free trial has already been used.' });
     }
-    const plan = req.body?.plan === 'yearly' ? 'yearly'
-      : req.body?.plan === 'trial' ? 'trial'
-      : 'monthly';
 
     // Trial checkouts anchor to the monthly price but never actually charge it —
     // Stripe skips card collection when trial_period_days makes the due-today total $0,
@@ -131,3 +134,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message });
   }
 }
+```[cite: 18]
