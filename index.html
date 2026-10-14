@@ -4765,7 +4765,7 @@ function importUserData(input){
     try {
       const backup = JSON.parse(e.target.result);
       if(!backup?.data || typeof backup.data !== 'object') throw new Error('Invalid backup file');
-showConfirm('Restore Backup', 'This will overwrite your current data with the backup. Continue?', () => {
+      showConfirm('Restore Backup', 'This will overwrite your current data with the backup. Continue?', () => {
         const session = JSON.parse(localStorage.getItem('bp_session') || '{}');
         const prefix = 'bp_' + (session.email || '') + '_';
         Object.entries(backup.data).forEach(([key, val]) => {
@@ -4774,10 +4774,6 @@ showConfirm('Restore Backup', 'This will overwrite your current data with the ba
           try { localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch(err){}
         });
         showToast('Backup restored! Reloading…', 'ok');
-        setTimeout(() => location.reload(), 1200);
-      });
-        setTimeout(() => location.reload(), 1200);
-      });
         setTimeout(() => location.reload(), 1200);
       });
     } catch(err){ showToast('Could not read backup file. Make sure it\'s a valid Better Price export.', ''); }
