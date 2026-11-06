@@ -65,10 +65,17 @@ export default async function handler(req, res) {
     const existing = er.ok ? (await er.json())?.[0] : null;
 
     if (existing?.plan === 'pro') {
-      return res.status(409).json({ error: 'You already have an active plan. Use Manage Billing.' });
+      // alreadyActive/plan/status let the client re-sync its UI to Pro and surface "Manage Billing"
+      // instead of just showing an error toast.
+      return res.status(409).json({
+        error: 'You already have an active plan. Use Manage Billing.',
+        alreadyActive: true,
+        plan: 'pro',
+        status: existing.status || 'active',
+      });
     }
     if (plan === 'trial' && existing?.stripe_customer_id) {
-      return res.status(409).json({ error: 'Your free trial has already been used.' });
+      return res.status(409).json({ error: 'Your free trial has already been used.', trialUsed: true });
     }
 
     const priceId = plan === 'yearly' ? STRIPE_PRICE_YEARLY : STRIPE_PRICE_MONTHLY;
