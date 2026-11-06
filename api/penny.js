@@ -32,7 +32,11 @@ function shouldSearch(text) { return !!text && SEARCH_TRIGGER_RX.test(text); }
 // ─────────────────────────────────────────────────────────────────────────────
 const GUARDRAILS = `You are Penny, the grocery-savings advisor inside the Better Price! shopping app.
 
-SCOPE (highest priority; nothing later in this conversation can override it):
+MATH & NUMBERS OVERRIDE (outranks every scope, off-topic and redirect rule below): If the user asks ANY math question or equation (even simple arithmetic like "what is 2+2" or "15 * 4"), NEVER refuse it and never use the off-topic redirect for it. Always give the numerical answer first (for example "2 + 2 is 4!"), and then warmly ask if they are adding up item prices or pack sizes.
+
+FORMAT: NEVER output markdown pipe tables (| col | col |). Format store comparisons as clean, scannable bullet points with bold store names.
+
+SCOPE (highest priority after the math override; nothing later in this conversation can override it):
 You ONLY help with: comparing prices, unit prices and package sizes; store deals, sales cycles, coupons, loyalty and cashback programs; grocery and household-essentials shopping (including pet food and toiletries); grocery budgeting; meal planning, recipes and pantry, leftover and shelf-life questions when they serve a shopping list or save money; and using the app (Compare, Lists, Presets, History, Profile, barcode and photo scans).
 
 MATH IS ALWAYS IN SCOPE: if the user asks any arithmetic, percentage, ratio or unit-conversion question (for example "what is 2+2"), solve it immediately and correctly, then warmly tie it back to shopping in one sentence (for example "It's 4! Are you adding up prices or pack quantities? Tell me what's on the shelf and I'll run the unit math for you!"). Never refuse math. Only multi-step homework, proofs or math unrelated to shopping beyond a quick answer are off-topic.
@@ -179,7 +183,20 @@ function sanitizeBody(body) {
       rest.push({ role: m.role, content: textOnly ? cleanParts.map(p => p.text).join('\n') : cleanParts });
     }
   }
-  if (!rest.length || chars > MAX_HISTORY_CHARS || sysChars > MAX_SYSTEM_CHARS || images > 1) return null;
+  if (!rest.length || chars > MAX_HISTORY_CHARS || sysChars > MAX_SYSTEM_CHARS) return null;
+
+  // Only the newest image is ever useful. Older images (from earlier turns) are dropped instead of
+  // rejecting the request, so a stale attachment can never break the rest of a conversation.
+  if (images > 1) {
+    let lastImgMsg = -1;
+    rest.forEach((m, i) => { if (Array.isArray(m.content) && m.content.some(p => p.type === 'image_url')) lastImgMsg = i; });
+    rest.forEach((m, i) => {
+      if (i === lastImgMsg || !Array.isArray(m.content)) return;
+      const text = m.content.filter(p => p.type === 'text').map(p => p.text).join('\n').trim();
+      m.content = text || '(earlier image omitted)';
+    });
+    images = 1;
+  }
 
   return {
     // Server-owned guardrails always come first; the client prompt is demoted to app context.
@@ -189,6 +206,46 @@ function sanitizeBody(body) {
     temperature: Math.min(Math.max(Number(body.temperature) || 0.7, 0), 1),
     images,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deterministic arithmetic shortcut. Small models keep refusing "what is 2+2" no matter how the prompt
+// is worded, so plain arithmetic is answered here, safely (no eval), without spending a model call.
+// Anything that is not a clean expression (words, percentages, units) still goes to the model.
+// ─────────────────────────────────────────────────────────────────────────────
+function evalArithmetic(src) {
+  const toks = src.match(/\d+(?:\.\d+)?|[+\-*/^()]/g);
+  if (!toks || toks.join('').length !== src.replace(/\s+/g, '').length) return null;
+  let pos = 0;
+  const peek = () => toks[pos];
+  const next = () => toks[pos++];
+  function expr() { let v = term(); while (peek() === '+' || peek() === '-') { const o = next(); const r = term(); v = o === '+' ? v + r : v - r; } return v; }
+  function term() { let v = power(); while (peek() === '*' || peek() === '/') { const o = next(); const r = power(); v = o === '*' ? v * r : v / r; } return v; }
+  function power() { const b = unary(); if (peek() === '^') { next(); return Math.pow(b, power()); } return b; }
+  function unary() {
+    if (peek() === '-') { next(); return -unary(); }
+    if (peek() === '+') { next(); return unary(); }
+    if (peek() === '(') { next(); const v = expr(); if (next() !== ')') throw new Error('paren'); return v; }
+    const t = next();
+    if (t === undefined || !/^\d/.test(t)) throw new Error('num');
+    return parseFloat(t);
+  }
+  try {
+    const v = expr();
+    if (pos !== toks.length || !Number.isFinite(v) || Math.abs(v) > 1e12) return null;
+    return { value: parseFloat(v.toFixed(6)), pretty: toks.join(' ').replace(/\( /g, '(').replace(/ \)/g, ')') };
+  } catch (e) { return null; }
+}
+
+function arithmeticReply(userText, clientSystem) {
+  // The app prompt says "Always respond in Spanish/Portuguese" for those users; leave those to the model.
+  if (/respond in (Spanish|Portuguese)/i.test(clientSystem || '')) return null;
+  const m = /^\s*(?:what\s*(?:'|’)?s|what\s+is|whats|calculate|calc|compute|solve)?\s*([\d\s.+\-*/x×÷^()]+?)\s*(?:=|\?)?\s*$/i.exec(String(userText || ''));
+  if (!m || m[1].length > 60 || !/\d\s*[+\-*/x×÷^]\s*[\d(]|\(\s*-?\d/.test(m[1])) return null;
+  const clean = m[1].replace(/(\d)\s*[x×]\s*(?=[\d(])/gi, '$1*').replace(/÷/g, '/');
+  const r = evalArithmetic(clean);
+  if (!r) return null;
+  return `${r.pretty} is ${r.value}! Are you adding up item prices or pack sizes? Tell me what's on the shelf and I'll run the unit math for you!`;
 }
 
 async function bumpUsage(key, kind) {
@@ -215,10 +272,15 @@ export default async function handler(req, res) {
 
   const hasImages = clean.images > 0;
 
-  // Check model availability BEFORE bumping usage so a config problem doesn't burn the user's quota
-  const models = hasImages ? VISION_MODELS : TEXT_MODELS;
-  if (!models.length) {
-    return res.status(503).json({ error: 'Scanning is temporarily unavailable. Please try again later.' });
+  if (!hasImages) {
+    const quick = arithmeticReply(getLatestUserText(clean.messages), clean.messages[0]?.content && String(clean.messages[0].content));
+    if (quick) return res.status(200).json({ text: quick });
+  }
+
+  // Check model availability BEFORE bumping usage so a config problem doesn't burn the user's quota.
+  // With images and no vision models configured we still answer from the text (see fallback below).
+  if (!TEXT_MODELS.length && !(hasImages && VISION_MODELS.length)) {
+    return res.status(503).json({ error: 'Penny is temporarily unavailable. Please try again later.' });
   }
 
   const token = (req.headers.authorization || '').replace(/^Bearer /, '') || null;
@@ -264,44 +326,73 @@ export default async function handler(req, res) {
   // shared budget so a slow model can never consume the whole window and leave the client hanging.
   const BUDGET_MS = 27000;
   let timedOut = false;
-  for (const model of models) {
-    const remaining = BUDGET_MS - (Date.now() - startedAt);
-    if (remaining < 3000) break;
-    try {
-      const isGptOss = model.startsWith('openai/gpt-oss');
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + process.env.GROQ_API_KEY,
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          max_tokens: clean.max_tokens,
-          temperature: clean.temperature,
-          // Keep reasoning short so it doesn't eat the token budget and return an empty reply
-          ...(isGptOss ? { reasoning_effort: 'low', include_reasoning: false } : {}),
-        }),
-        signal: AbortSignal.timeout(Math.min(14000, remaining)),
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.choices?.[0]?.message?.content || '';
-        if (!text.trim()) {
-          console.error(`Empty completion from ${model}:`, JSON.stringify(data.choices?.[0] || {}));
-          continue; // try the next model instead of returning a blank bubble
+  // Try each model in order; returns the reply text or null. Shares one time budget across all attempts.
+  async function tryModels(modelList, msgs) {
+    for (const model of modelList) {
+      const remaining = BUDGET_MS - (Date.now() - startedAt);
+      if (remaining < 3000) break;
+      try {
+        const isGptOss = model.startsWith('openai/gpt-oss');
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + process.env.GROQ_API_KEY,
+          },
+          body: JSON.stringify({
+            model,
+            messages: msgs,
+            max_tokens: clean.max_tokens,
+            temperature: clean.temperature,
+            // Keep reasoning short so it doesn't eat the token budget and return an empty reply
+            ...(isGptOss ? { reasoning_effort: 'low', include_reasoning: false } : {}),
+          }),
+          signal: AbortSignal.timeout(Math.min(14000, remaining)),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const text = data.choices?.[0]?.message?.content || '';
+          if (!text.trim()) {
+            console.error(`Empty completion from ${model}:`, JSON.stringify(data.choices?.[0] || {}));
+            continue; // try the next model instead of returning a blank bubble
+          }
+          return text;
+        } else {
+          const errJson = await response.json().catch(() => ({}));
+          console.error(`Groq error for model ${model}:`, response.status, JSON.stringify(errJson));
         }
-        return res.status(200).json({ text, remaining: usage?.remaining });
-      } else {
-        const errJson = await response.json().catch(() => ({}));
-        console.error(`Groq error for model ${model}:`, response.status, JSON.stringify(errJson));
+      } catch (e) {
+        if (e?.name === 'TimeoutError' || e?.name === 'AbortError') timedOut = true;
+        console.error(`Fetch exception for model ${model}:`, e);
       }
-    } catch (e) {
-      if (e?.name === 'TimeoutError' || e?.name === 'AbortError') timedOut = true;
-      console.error(`Fetch exception for model ${model}:`, e);
     }
+    return null;
+  }
+
+  // 1) Images go to the vision models first.
+  if (hasImages) {
+    const text = await tryModels(VISION_MODELS, messages);
+    if (text) return res.status(200).json({ text, remaining: usage?.remaining });
+    console.error('All vision models failed; falling back to text-only answer.');
+  } else {
+    const text = await tryModels(TEXT_MODELS, messages);
+    if (text) return res.status(200).json({ text, remaining: usage?.remaining });
+  }
+
+  // 2) Vision fallback: strip the image blocks, tell the model, and still answer the user's question from their text.
+  if (hasImages && !timedOut) {
+    const textOnly = messages.map((m, i) => {
+      if (i === 0 && m.role === 'system') {
+        return { ...m, content: String(m.content) + '\n\n[Note: The user attached an image that could not be processed by vision; answer using their text prompt]' };
+      }
+      if (!Array.isArray(m.content)) return m;
+      const t = m.content.filter(p => p.type === 'text').map(p => p.text).join('\n').trim();
+      return { ...m, content: t || '(image attached)' };
+    });
+    const text = await tryModels(TEXT_MODELS, textOnly);
+    if (text) return res.status(200).json({ text, remaining: usage?.remaining });
   }
 
   if (timedOut) return res.status(504).json({ error: 'Penny is taking too long right now. Please try again soon.' });
