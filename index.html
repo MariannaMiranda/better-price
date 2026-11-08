@@ -2253,8 +2253,19 @@ async function _sbDoSync(){
       catch(e){ allData[key.slice(prefix.length)] = localStorage.getItem(key); }
     }
   }
-  await _sb.from('user_data').upsert({ user_id: user.id, data: allData, updated_at: new Date().toISOString() });
+  const row = { user_id: user.id, data: allData, updated_at: new Date().toISOString() };
+  let { error } = await _sb.from('user_data').upsert(row);
+  if(error){ await new Promise(r => setTimeout(r, 800)); ({ error } = await _sb.from('user_data').upsert(row)); }   // one retry
+  if(error) console.error('user_data sync failed:', error.message || error);
 }
+// Push any pending changes NOW (the normal sync is debounced by 1.5s, so signing out right after a message
+// used to throw the unsynced chat away).
+async function _sbFlushSync(){
+  clearTimeout(_sbSyncTimer);
+  try { await _sbDoSync(); } catch(e){ console.error('flush sync failed', e); }
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') _sbFlushSync(); });
+window.addEventListener('pagehide', () => { _sbFlushSync(); });
 async function loadUserDataFromSupabase(){
   const { data: { user } } = await _sb.auth.getUser();
   if(!user) return;
@@ -3289,6 +3300,7 @@ function loadUserData(){
 
 function logout(){
   showConfirm('Sign Out', 'Are you sure you want to sign out?', async () => {
+    await _sbFlushSync();      // save chats/images to Supabase BEFORE the session ends
     await _sb.auth.signOut();
     localStorage.removeItem('bp_session');
     location.reload();
@@ -5366,7 +5378,7 @@ async function saveProfile(){
     if(emailErr){ showToast(emailErr.message, 'error'); return; }
     await _sb.auth.updateUser({ data: { firstName, lastName, name: newName } });
     showToast('Confirmation sent to ' + newEmail + '. Please log in again.', 'ok');
-    setTimeout(async () => { await _sb.auth.signOut(); localStorage.removeItem('bp_session'); location.reload(); }, 2000);
+    setTimeout(async () => { await _sbFlushSync(); await _sb.auth.signOut(); localStorage.removeItem('bp_session'); location.reload(); }, 2000);
     return;
   }
 
@@ -5823,6 +5835,12 @@ async function pennyCallAPI(){
   });
   // the API wants the conversation to start with a user turn
   while(apiMessages.length && apiMessages[0].role !== 'user') apiMessages.shift();
+  if(!apiMessages.length){
+    pennyRemoveTyping(); pennyBusy = false;
+    document.getElementById('pennySendBtn').disabled = false;
+    showToast('Nothing to send. Type a message or attach an image first.');
+    return;
+  }
 
   pennyAbortCtrl = new AbortController();
   try {
@@ -5878,8 +5896,10 @@ async function pennySend(){
   const hasImages = pennyPendingImages.length > 0;
   if(!text && !hasImages) return;
   if(pennyBusy) return;
-  if(!pennyActiveSession) pennyNewChat();
+  // Copy the attachments FIRST: pennyNewChat() clears pennyPendingImages, which used to make the very first
+  // image message in a brand-new chat go out empty (HTTP 400 -> "I had trouble with that request").
   const images = pennyPendingImages.slice();
+  if(!pennyActiveSession) pennyNewChat();
   inp.value = '';
   inp.style.height = 'auto';
   pennyPendingImages = [];
@@ -5888,8 +5908,10 @@ async function pennySend(){
     // Push one message per image (first image gets the text, rest get '(image attached)')
     images.forEach((img, i) => {
       const msgText = i === 0 ? (text || '(image attached)') : '(image attached)';
-      const msg = { role:'user', content: msgText, image: img.dataUrl };
+      const msg = { role:'user', content: msgText, image: img.dataUrl, hadImage: true, ts: Date.now() };
       pennyActiveSession.messages.push(msg);
+      // small thumbnail that is saved + synced (the full image never is), so the picture survives re-login
+      pennyNormalizeImage(img.dataUrl, 200, 0.6).then(t => { if(t){ msg.thumb = t; savePennySessions(); renderPennyMessages(); } });
     });
     if(pennyActiveSession.messages.filter(m=>m.role==='user').length === images.length){
       const tmp = (text||'image').slice(0,45); pennyActiveSession.title=tmp;
