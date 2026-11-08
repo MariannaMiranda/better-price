@@ -317,7 +317,12 @@ export default async function handler(req, res) {
     const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
     const key = user ? user.id : 'ip:' + crypto.createHash('sha256').update(ip + (process.env.IP_SALT || '')).digest('hex').slice(0, 32);
     const kind = !user ? 'anon_chat' : hasImages ? 'scan' : 'chat';
-    usage = await bumpUsage(key, kind);
+    try {
+      usage = await bumpUsage(key, kind);
+    } catch (e) {
+      console.error('bumpUsage failed:', e);
+      return res.status(503).json({ error: 'Penny is warming up. Please try again in a moment.' });
+    }
     if (!usage.allowed) {
       const friendly = kind === 'scan'
         ? "You've used all 5 of your free scans today. Upgrade to Pro for unlimited scanning."
