@@ -328,6 +328,7 @@ export default async function handler(req, res) {
   // shared budget so a slow model can never consume the whole window and leave the client hanging.
   const BUDGET_MS = 27000;
   let timedOut = false;
+  const modelErrors = [];   // per-model failure reasons, surfaced to the client when vision fails
 
   // Try each model in order; returns the reply text or null. Shares one time budget across all attempts.
   async function tryModels(modelList, msgs) {
@@ -358,6 +359,7 @@ export default async function handler(req, res) {
           const text = data.choices?.[0]?.message?.content || '';
           if (!text.trim()) {
             console.error(`Empty completion from ${model}:`, JSON.stringify(data.choices?.[0] || {}));
+            modelErrors.push({ model, status: 200, message: 'empty completion' });
             continue; // try the next model instead of returning a blank bubble
           }
           const cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
@@ -366,10 +368,12 @@ export default async function handler(req, res) {
         } else {
           const errJson = await response.json().catch(() => ({}));
           console.error(`Groq error for model ${model}:`, response.status, JSON.stringify(errJson));
+          modelErrors.push({ model, status: response.status, message: String(errJson?.error?.message || errJson?.error || '').slice(0, 300) });
         }
       } catch (e) {
         if (e?.name === 'TimeoutError' || e?.name === 'AbortError') timedOut = true;
         console.error(`Fetch exception for model ${model}:`, e);
+        modelErrors.push({ model, status: 0, message: String(e?.message || e).slice(0, 300) });
       }
     }
     return null;
@@ -395,8 +399,19 @@ export default async function handler(req, res) {
       const t = m.content.filter(p => p.type === 'text').map(p => p.text).join('\n').trim();
       return { ...m, content: t || '(image attached)' };
     });
+    const visionErrors = modelErrors.slice();
     const text = await tryModels(TEXT_MODELS, textOnly);
-    if (text) return res.status(200).json({ text, remaining: usage?.remaining });
+    if (text) {
+      // Be upfront: the answer below is NOT based on the picture.
+      return res.status(200).json({
+        text: "Heads up: I couldn't view your image just now, so I'm going by your words only. "
+          // TEMPORARY DEBUG: visible reason per vision model (remove once images work)
+          + "[debug: " + (visionErrors.length ? visionErrors.map(e => `${e.model} -> ${e.status} ${e.message}`.slice(0, 220)).join(' | ') : 'no vision model attempted (configured: ' + (VISION_MODELS.join(', ') || 'none') + ')') + "]\n\n" + text,
+        visionFailed: true,
+        visionErrors,
+        remaining: usage?.remaining,
+      });
+    }
   }
 
   if (timedOut) return res.status(504).json({ error: 'Penny is taking too long right now. Please try again soon.' });
