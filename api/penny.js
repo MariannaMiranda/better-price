@@ -14,9 +14,11 @@ const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 // Next time Groq deprecates something, change the Vercel env var and redeploy — no code edit.
 const TEXT_MODELS = (process.env.GROQ_TEXT_MODELS || 'openai/gpt-oss-120b,openai/gpt-oss-20b')
   .split(',').map(s => s.trim()).filter(Boolean);
-// Vision-capable Groq models (first = primary, rest = fallbacks). Override with GROQ_VISION_MODELS
+// Vision-capable Groq models (first = primary, rest = fallbacks). The Llama 4 Scout/Maverick vision models were
+// retired by Groq (Mar/Jul 2026); Qwen 3.8/3.6 27B are the current vision models per console.groq.com/docs/vision.
+// Override with GROQ_VISION_MODELS (NOTE: a stale value of that env var in Vercel overrides this default)
 // (comma-separated) if Groq retires one; see console.groq.com/docs/models.
-const VISION_MODELS = (process.env.GROQ_VISION_MODELS || 'meta-llama/llama-4-scout-17b-16e-instruct,meta-llama/llama-4-maverick-17b-128e-instruct')
+const VISION_MODELS = (process.env.GROQ_VISION_MODELS || 'qwen/qwen3.8-27b,qwen/qwen3.6-27b')
   .split(',').map(s => s.trim()).filter(Boolean);
 
 const SEARCH_TRIGGER_RX = /\b(today|currently|current price|current cost|latest|this week|this month|this year|right now|recent(ly)?|as of (today|now)|price of|cost of|on sale|any (deals|sales)|new (price|update)|update(d)? price|202[4-9]|what'?s new|happening now|nearest|near me|where is|closest|store hours|open now)\b/i;
@@ -358,7 +360,9 @@ export default async function handler(req, res) {
             console.error(`Empty completion from ${model}:`, JSON.stringify(data.choices?.[0] || {}));
             continue; // try the next model instead of returning a blank bubble
           }
-          return text;
+          const cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+          if (!cleaned) { console.error(`Only reasoning text from ${model}`); continue; }
+          return cleaned;
         } else {
           const errJson = await response.json().catch(() => ({}));
           console.error(`Groq error for model ${model}:`, response.status, JSON.stringify(errJson));
