@@ -107,16 +107,26 @@ export default async function handler(req, res) {
       params.payment_method_collection = 'if_required';
     }
 
-    const r = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    // Embedded Checkout lives in a Stripe-owned iframe, so the page's CSS can't reach it. The supported way to
+    // match dark mode is per-session branding colors (matches the app's dark palette).
+    const dark = req.body?.theme === 'dark';
+    const darkBranding = { background_color: '#0d1824', button_color: '#4d8fcc' };
+    const createSession = (p) => fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: toFormBody(params),
+      body: toFormBody(p),
     });
 
-    const data = await r.json();
+    let r = await createSession(dark ? { ...params, branding_settings: darkBranding } : params);
+    let data = await r.json();
+    if (!r.ok && dark && /branding/i.test(data?.error?.message || '')) {
+      // Never block a purchase over cosmetics: retry with the default look.
+      r = await createSession(params);
+      data = await r.json();
+    }
     if (!r.ok) {
       return res.status(500).json({ error: data?.error?.message || 'Could not create checkout session.' });
     }
