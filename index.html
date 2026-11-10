@@ -1223,7 +1223,27 @@ body.dark .bm-num{color:#34d399;}
           </button>
           <div class="err-bubble" id="err-pass"><span class="err-icon">!</span><span class="msg"></span></div>
         </div>
+        <div id="forgotWrap" style="display:none;text-align:right;margin:-4px 0 12px;"><a href="#" id="forgotLink" onclick="openForgotPassword();return false;" style="font-size:13px;color:var(--brand);font-weight:600;text-decoration:none;">Forgot password?</a></div>
         <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign Up</button>
+      </div>
+      <div id="forgotView" style="display:none;">
+        <div id="fpTitle" style="font-size:22px;font-weight:800;margin-bottom:6px;">Reset your password</div>
+        <div id="fpSub" style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Enter the email you signed up with and we'll send you a link to choose a new password.</div>
+        <div class="input-wrap">
+          <input class="auth-input" type="email" id="fpEmail" placeholder="Email" autocomplete="email" onkeydown="if(event.key==='Enter')sendPasswordReset()">
+          <div class="err-bubble" id="err-fpemail"><span class="err-icon">!</span><span class="msg"></span></div>
+        </div>
+        <button class="auth-btn" id="fpBtn" onclick="sendPasswordReset()">Send reset link</button>
+        <div id="fpMsg" style="display:none;margin-top:14px;font-size:13px;line-height:1.5;padding:12px 14px;border-radius:10px;background:var(--brand-light);"></div>
+        <button class="ce-back" id="fpBack" onclick="closeForgotPassword()" style="margin-top:16px;display:block;width:100%;">Back to login</button>
+      </div>
+      <div id="resetView" style="display:none;">
+        <div id="rpTitle" style="font-size:22px;font-weight:800;margin-bottom:6px;">Choose a new password</div>
+        <div id="rpSub" style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Pick a strong password you haven't used before.</div>
+        <div class="input-wrap"><input class="auth-input" type="password" id="rpNew" placeholder="New password" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitNewPassword()"></div>
+        <div class="input-wrap"><input class="auth-input" type="password" id="rpConfirm" placeholder="Confirm new password" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitNewPassword()"></div>
+        <div id="rpErr" style="display:none;color:#e5484d;font-size:13px;margin:-2px 0 12px;line-height:1.4;"></div>
+        <button class="auth-btn" id="rpBtn" onclick="submitNewPassword()">Update password</button>
       </div>
     </div>
   </div>
@@ -2147,7 +2167,7 @@ async function startUpgradeCheckout(plan){
     const r = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-      body: JSON.stringify({ plan })
+      body: JSON.stringify({ plan, theme: document.body.classList.contains('dark') ? 'dark' : 'light' })
     });
     const data = await r.json().catch(() => ({}));
     if(!r.ok || !data.clientSecret){
@@ -2785,6 +2805,7 @@ function applyLang(){
   setPh('authPass', t.passPh);
   const authBtn = document.getElementById('authBtn');
   if(authBtn) authBtn.innerText = authMode==='login' ? t.login : t.signup;
+  if(typeof refreshAuthExtras === 'function') refreshAuthExtras();
 
   const headlineEl = document.querySelector('.al-headline');
   if(headlineEl){
@@ -3107,11 +3128,107 @@ function setMode(mode){
     pill.style.transform='translateX(0)';
     document.getElementById('authBtn').innerText=T().login;
     document.getElementById('nameWrap').style.display='none';
+    document.getElementById('forgotWrap').style.display='block';
   } else {
     pill.style.transform='translateX(100%)';
     document.getElementById('authBtn').innerText=T().signup;
     document.getElementById('nameWrap').style.display='flex';
+    document.getElementById('forgotWrap').style.display='none';
   }
+  refreshAuthExtras();
+}
+
+/* ── Forgot password / reset password ── */
+const _t3 = (en, es, pt) => lang==='es' ? es : lang==='pt' ? pt : en;
+function refreshAuthExtras(){
+  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  set('forgotLink', _t3('Forgot password?', '¿Olvidaste tu contraseña?', 'Esqueceu a senha?'));
+  set('fpTitle', _t3('Reset your password', 'Restablece tu contraseña', 'Redefina sua senha'));
+  set('fpSub', _t3("Enter the email you signed up with and we'll send you a link to choose a new password.", 'Ingresa el correo con el que te registraste y te enviaremos un enlace para elegir una nueva contraseña.', 'Digite o e-mail com o qual você se cadastrou e enviaremos um link para escolher uma nova senha.'));
+  set('fpBtn', _t3('Send reset link', 'Enviar enlace', 'Enviar link'));
+  set('fpBack', _t3('Back to login', 'Volver a iniciar sesión', 'Voltar ao login'));
+  set('rpTitle', _t3('Choose a new password', 'Elige una nueva contraseña', 'Escolha uma nova senha'));
+  set('rpSub', _t3("Pick a strong password you haven't used before.", 'Elige una contraseña segura que no hayas usado antes.', 'Escolha uma senha forte que você ainda não usou.'));
+  set('rpBtn', _t3('Update password', 'Actualizar contraseña', 'Atualizar senha'));
+  const setPh = (id, v) => { const e = document.getElementById(id); if(e) e.placeholder = v; };
+  setPh('fpEmail', _t3('Email', 'Correo electrónico', 'E-mail'));
+  setPh('rpNew', _t3('New password', 'Nueva contraseña', 'Nova senha'));
+  setPh('rpConfirm', _t3('Confirm new password', 'Confirma la nueva contraseña', 'Confirme a nova senha'));
+}
+function _authShowOnly(view){   // view: 'main' | 'forgot' | 'reset'
+  const q = s => document.querySelector('#auth-screen ' + s);
+  q('.auth-tabs').style.display = view === 'main' ? '' : 'none';
+  q('.auth-form').style.display = view === 'main' ? '' : 'none';
+  document.getElementById('forgotView').style.display = view === 'forgot' ? 'block' : 'none';
+  document.getElementById('resetView').style.display = view === 'reset' ? 'block' : 'none';
+  const oa = document.querySelectorAll('#auth-screen .oauth-btn, #auth-screen .auth-divider');
+  oa.forEach(e => e.style.display = view === 'main' ? '' : 'none');
+}
+function openForgotPassword(){
+  _authShowOnly('forgot');
+  const fe = document.getElementById('fpEmail');
+  fe.value = (document.getElementById('authEmail').value || '').trim();
+  document.getElementById('fpMsg').style.display = 'none';
+  refreshAuthExtras(); fe.focus();
+}
+function closeForgotPassword(){ _authShowOnly('main'); setMode('login'); }
+let _fpTimer = null;
+async function sendPasswordReset(){
+  const email = document.getElementById('fpEmail').value.trim().toLowerCase();
+  const t = T();
+  if(!email) return showErr('fpemail', t.errEmailReq);
+  if(!email.includes('@')) return showErr('fpemail', t.errEmailAt);
+  const dom = email.split('@')[1] || '';
+  if(!dom || !dom.includes('.')) return showErr('fpemail', t.errEmailExt);
+  const btn = document.getElementById('fpBtn'), msg = document.getElementById('fpMsg');
+  btn.disabled = true;
+  try {
+    const { error } = await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/' });
+    if(error && (error.status === 429 || /rate|too many|seconds|limit/i.test(error.message || ''))){
+      showToast(error.message || _t3('Too many requests. Please wait a minute and try again.', 'Demasiadas solicitudes. Espera un minuto e inténtalo de nuevo.', 'Muitas solicitações. Aguarde um minuto e tente novamente.'), '');
+      btn.disabled = false; return;
+    }
+    // Same message whether or not the account exists, so this can't be used to discover who has an account.
+    msg.textContent = _t3("If an account exists for that email, we've sent a link to reset your password. Check your spam folder too.", 'Si existe una cuenta con ese correo, enviamos un enlace para restablecer tu contraseña. Revisa también tu carpeta de spam.', 'Se existir uma conta com esse e-mail, enviamos um link para redefinir sua senha. Verifique também o spam.');
+    msg.style.display = 'block';
+    let left = 60; clearInterval(_fpTimer);
+    const base = () => _t3('Send reset link', 'Enviar enlace', 'Enviar link');
+    btn.textContent = base() + ' (' + left + ')';
+    _fpTimer = setInterval(() => { left--; if(left <= 0){ clearInterval(_fpTimer); btn.disabled = false; btn.textContent = base(); } else btn.textContent = base() + ' (' + left + ')'; }, 1000);
+  } catch(e){
+    showToast(_t3('Something went wrong. Please try again.', 'Algo salió mal. Inténtalo de nuevo.', 'Algo deu errado. Tente novamente.'), '');
+    btn.disabled = false;
+  }
+}
+// Opened from the emailed link (Supabase puts #type=recovery in the URL and signs the user in with a short-lived session)
+function showResetPassword(){
+  closeModals();
+  const el = document.getElementById('auth-screen');
+  el.classList.remove('auth-overlay'); el.style.display = 'flex';
+  const back = document.getElementById('authGuestBack'); if(back) back.style.display = 'none';
+  _authShowOnly('reset'); refreshAuthExtras();
+  setTimeout(() => document.getElementById('rpNew')?.focus(), 60);
+}
+async function submitNewPassword(){
+  const t = T(), pass = document.getElementById('rpNew').value, conf = document.getElementById('rpConfirm').value;
+  const err = document.getElementById('rpErr'), btn = document.getElementById('rpBtn');
+  const fail = m => { err.textContent = m; err.style.display = 'block'; };
+  err.style.display = 'none';
+  const miss = [];
+  if(pass.length < 8) miss.push(t.passReqs[0]);
+  if(!/[A-Z]/.test(pass)) miss.push(t.passReqs[1]);
+  if(!/[a-z]/.test(pass)) miss.push(t.passReqs[2]);
+  if(!/\d/.test(pass)) miss.push(t.passReqs[3]);
+  if(!/[\W_]/.test(pass)) miss.push(t.passReqs[4]);
+  if(miss.length) return fail(t.errPassMissing + miss.join(', ') + '.');
+  if(pass !== conf) return fail(_t3('Passwords do not match.', 'Las contraseñas no coinciden.', 'As senhas não coincidem.'));
+  btn.disabled = true;
+  const { error } = await _sb.auth.updateUser({ password: pass });
+  if(error){ btn.disabled = false; return fail(error.message); }
+  window.__recovery = false;
+  try { history.replaceState(null, '', window.location.pathname); } catch(e){}
+  showToast(_t3('Password updated! Signing you in…', '¡Contraseña actualizada! Iniciando sesión…', 'Senha atualizada! Entrando…'), 'ok');
+  setTimeout(() => location.reload(), 900);
 }
 function clearErrs(){
   document.querySelectorAll('.err-bubble').forEach(b=>b.style.display='none');
@@ -3119,8 +3236,8 @@ function clearErrs(){
 }
 function showErr(field, msg){
   clearErrs();
-  const inputMap = { firstname:'authFirstName', lastname:'authLastName', email:'authEmail', pass:'authPass' };
-  const bubbleMap = { firstname:'err-firstname', lastname:'err-lastname', email:'err-email', pass:'err-pass' };
+  const inputMap = { firstname:'authFirstName', lastname:'authLastName', email:'authEmail', pass:'authPass', fpemail:'fpEmail' };
+  const bubbleMap = { firstname:'err-firstname', lastname:'err-lastname', email:'err-email', pass:'err-pass', fpemail:'err-fpemail' };
   const inp = document.getElementById(inputMap[field]);
   const bub = document.getElementById(bubbleMap[field]);
   if(inp && bub){ inp.classList.add('input-error'); bub.querySelector('.msg').innerText=msg; bub.style.display='flex'; }
@@ -5882,6 +5999,8 @@ async function pennyCallAPI(){
         msg = "I had trouble with that request. Please try again.";
       else
         msg = "Can't reach Penny right now. Check your connection and try again.";
+      const dbg = (em.match(/\[debug:[^\]]*\]/) || [])[0];   // TEMPORARY: server-provided reason
+      if(dbg) msg += ' ' + dbg;
       showToast(msg);
       pennyAddMessage('penny', msg, null, null, true /* isError */);
     }
@@ -7352,13 +7471,17 @@ window.onload=async ()=>{
   const hashErrorParams = new URLSearchParams(window.location.hash.replace('#',''));
   const oauthError = urlParams.get('error_description') || urlParams.get('error')
     || hashErrorParams.get('error_description') || hashErrorParams.get('error');
+  const linkExpired = hashErrorParams.get('error_code') === 'otp_expired';
+  // A password-reset email link lands here with #type=recovery: show "choose a new password" instead of the app.
+  window.__recovery = hashErrorParams.get('type') === 'recovery';
+  if(window.__recovery) showResetPassword();
   if(oauthError) {
     history.replaceState(null, '', window.location.pathname);
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 let _appStarted = false;
   async function handleSession(session){
-    if(_appStarted) return;
+    if(_appStarted || window.__recovery) return;
 
     if(!session){
       if(new URLSearchParams(window.location.search).has('embedded_return')){
@@ -7390,12 +7513,14 @@ let _appStarted = false;
   }
 
   _sb.auth.onAuthStateChange(async (event, session) => {
+    if(event === 'PASSWORD_RECOVERY'){ window.__recovery = true; showResetPassword(); return; }
     if(!_appStarted && session) await handleSession(session);
   });
 
   const { data: { session } } = await _sb.auth.getSession();
   await handleSession(session);
   if(oauthError && isGuest) openAuthScreen('login');
+  if(linkExpired && isGuest){ openAuthScreen('login'); openForgotPassword(); }   // expired reset link -> offer a fresh one
 };
 </script>
 </body>
