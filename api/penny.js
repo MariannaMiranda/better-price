@@ -354,11 +354,13 @@ export default async function handler(req, res) {
   // shared budget so a slow model can never consume the whole window and leave the client hanging.
   const BUDGET_MS = 27000;
   let timedOut = false;
+  const retried429 = new Set();
   const modelErrors = [];   // per-model failure reasons, surfaced to the client when vision fails
 
   // Try each model in order; returns the reply text or null. Shares one time budget across all attempts.
   async function tryModels(modelList, msgs) {
-    for (const model of modelList) {
+    for (let mi = 0; mi < modelList.length; mi++) {
+      const model = modelList[mi];
       const remaining = BUDGET_MS - (Date.now() - startedAt);
       if (remaining < 3000) break;
       try {
@@ -380,6 +382,18 @@ export default async function handler(req, res) {
           signal: AbortSignal.timeout(Math.min(14000, remaining)),
         });
 
+        if (response.status === 429 && !retried429.has(model)) {
+          // Groq tells us how long to wait ("Please try again in 2.4s"). Wait once if it fits in our time budget.
+          const errJson429 = await response.clone().json().catch(() => ({}));
+          const wait = parseFloat(/try again in ([\d.]+)\s*s/i.exec(String(errJson429?.error?.message || ''))?.[1]);
+          const left = BUDGET_MS - (Date.now() - startedAt);
+          retried429.add(model);
+          if (wait > 0 && wait * 1000 <= Math.min(6000, left - 8000)) {
+            await new Promise(r => setTimeout(r, Math.ceil(wait * 1000) + 150));
+            mi--;            // try the same model once more
+            continue;
+          }
+        }
         if (response.ok) {
           const data = await response.json();
           const text = data.choices?.[0]?.message?.content || '';
@@ -440,6 +454,10 @@ export default async function handler(req, res) {
     }
   }
 
-  if (timedOut) return res.status(504).json({ error: 'Penny is taking too long right now. Please try again soon.' });
-  return res.status(500).json({ error: 'Penny is unavailable right now. Please try again soon.' });
+  // TEMPORARY DEBUG: short per-model reasons so failures are diagnosable without server logs
+  const dbg = modelErrors.length ? ' [debug: ' + modelErrors.map(e => `${e.model} -> ${e.status} ${e.message}`.slice(0, 160)).join(' | ') + ']' : '';
+  if (timedOut) return res.status(504).json({ error: 'Penny is taking too long right now. Please try again soon.' + dbg });
+  // Groq throttling (429) or oversize (413) is "busy", not "down": report 429 so the app says "wait a moment".
+  if (modelErrors.some(e => e.status === 429)) return res.status(429).json({ error: 'Penny is getting a lot of requests. Please wait a moment and try again.' + dbg });
+  return res.status(500).json({ error: 'Penny is unavailable right now. Please try again soon.' + dbg });
 }
