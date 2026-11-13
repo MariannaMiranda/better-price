@@ -113,6 +113,7 @@ async function webSearch(query) {
     });
     return bits.length ? bits.join('\n') : null;
   } catch (e) {
+    console.warn('web search skipped:', e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'timeout' : String(e?.message || e));
     return null;
   }
 }
@@ -122,6 +123,7 @@ async function getUserFromToken(token) {
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: { Authorization: `Bearer ${token}`, apikey: SERVICE_ROLE_KEY },
+      signal: AbortSignal.timeout(5000),
     });
     if (!r.ok) return null;
     const data = await r.json();
@@ -136,7 +138,7 @@ async function getPlan(userId) {
   try {
     const r = await fetch(
       `${SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${userId}&select=plan,status`,
-      { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
+      { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` }, signal: AbortSignal.timeout(5000) }
     );
     if (!r.ok) return 'free';
     const rows = await r.json();
@@ -271,19 +273,48 @@ function compactForVision(msgs) {
   return [{ role: 'system', content: `${VISION_BRIEF}\nAlways respond in ${lang}.${ctx ? `\nUser context: ${ctx}` : ''}` }, ...rest];
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Retry helpers. Groq's standard signal is the Retry-After header (seconds OR an HTTP date); older/odd responses
+// only say "Please try again in 2.4s" (or "1m2.4s", "350ms") in the error text, so that is the fallback.
+// Every wait gets 0-250 ms of random jitter so simultaneous clients don't retry in lock-step.
+// ─────────────────────────────────────────────────────────────────────────────
+function parseRetryAfterMs(headers, message) {
+  const h = headers && typeof headers.get === 'function' ? headers.get('retry-after') : null;
+  if (h) {
+    const secs = Number(h);
+    if (Number.isFinite(secs)) return Math.max(0, secs * 1000);
+    const date = Date.parse(h);
+    if (!Number.isNaN(date)) return Math.max(0, date - Date.now());
+  }
+  const m = /try again in ([0-9hms.\s]+)/i.exec(String(message || ''));
+  if (m) {
+    let total = 0, found = false;
+    for (const t of m[1].matchAll(/(\d+(?:\.\d+)?)\s*(ms|h|m|s)/gi)) {
+      found = true;
+      const n = parseFloat(t[1]), u = t[2].toLowerCase();
+      total += u === 'ms' ? n : u === 's' ? n * 1000 : u === 'm' ? n * 60000 : n * 3600000;
+    }
+    if (found) return total;
+  }
+  return null;
+}
+const withJitter = (ms) => Math.max(0, ms) + Math.floor(Math.random() * 250);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function bumpUsage(key, kind) {
   const { max, windowMs } = LIMITS[kind];
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_usage`, {
     method: 'POST',
     headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ p_key: key, p_kind: kind, p_max: max, p_window: `${windowMs / 1000} seconds` }),
+    signal: AbortSignal.timeout(5000),
   });
   if (!r.ok) throw new Error('usage check failed');
   const [row] = await r.json();
   return { allowed: row.allowed, remaining: row.remaining, resetAt: row.reset_at };
 }
 
-export default async function handler(req, res) {
+async function handleRequest(req, res) {
   const startedAt = Date.now();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   if (!SERVICE_ROLE_KEY || !process.env.GROQ_API_KEY) {
@@ -354,7 +385,7 @@ export default async function handler(req, res) {
   // shared budget so a slow model can never consume the whole window and leave the client hanging.
   const BUDGET_MS = 27000;
   let timedOut = false;
-  const retried429 = new Set();
+  const retried = new Set();
   const modelErrors = [];   // per-model failure reasons, surfaced to the client when vision fails
 
   // Try each model in order; returns the reply text or null. Shares one time budget across all attempts.
@@ -382,16 +413,21 @@ export default async function handler(req, res) {
           signal: AbortSignal.timeout(Math.min(14000, remaining)),
         });
 
-        if (response.status === 429 && !retried429.has(model)) {
-          // Groq tells us how long to wait ("Please try again in 2.4s"). Wait once if it fits in our time budget.
-          const errJson429 = await response.clone().json().catch(() => ({}));
-          const wait = parseFloat(/try again in ([\d.]+)\s*s/i.exec(String(errJson429?.error?.message || ''))?.[1]);
+        if ((response.status === 429 || response.status === 503 || response.status === 502) && !retried.has(model + response.status)) {
+          // One bounded retry per model/status. 429: honour Retry-After (header first, message text second).
+          // 502/503 (provider hiccup): short fixed backoff. Both get jitter and must fit in the remaining budget.
+          retried.add(model + response.status);
+          const errBody = await response.clone().json().catch(() => ({}));
+          const hinted = response.status === 429 ? parseRetryAfterMs(response.headers, errBody?.error?.message) : 400;
           const left = BUDGET_MS - (Date.now() - startedAt);
-          retried429.add(model);
-          if (wait > 0 && wait * 1000 <= Math.min(6000, left - 8000)) {
-            await new Promise(r => setTimeout(r, Math.ceil(wait * 1000) + 150));
-            mi--;            // try the same model once more
-            continue;
+          if (hinted != null) {
+            const wait = withJitter(hinted);
+            if (wait <= Math.min(6000, left - 8000)) {
+              console.warn(`Groq ${response.status} for ${model}; retrying in ${wait}ms`);
+              await sleep(wait);
+              mi--;            // try the same model once more
+              continue;
+            }
           }
         }
         if (response.ok) {
@@ -439,25 +475,33 @@ export default async function handler(req, res) {
       const t = m.content.filter(p => p.type === 'text').map(p => p.text).join('\n').trim();
       return { ...m, content: t || '(image attached)' };
     });
-    const visionErrors = modelErrors.slice();
+    console.error('penny vision unavailable:', JSON.stringify({ configured: VISION_MODELS, errors: modelErrors.slice() }));
     const text = await tryModels(TEXT_MODELS, textOnly);
     if (text) {
-      // Be upfront: the answer below is NOT based on the picture.
+      // Be upfront: the answer below is NOT based on the picture. (Provider details stay in the server log above.)
       return res.status(200).json({
-        text: "Heads up: I couldn't view your image just now, so I'm going by your words only. "
-          // TEMPORARY DEBUG: visible reason per vision model (remove once images work)
-          + "[debug: " + (visionErrors.length ? visionErrors.map(e => `${e.model} -> ${e.status} ${e.message}`.slice(0, 220)).join(' | ') : 'no vision model attempted (configured: ' + (VISION_MODELS.join(', ') || 'none') + ')') + "]\n\n" + text,
+        text: "Heads up: I couldn't view your image just now, so I'm going by your words only.\n\n" + text,
         visionFailed: true,
-        visionErrors,
         remaining: usage?.remaining,
       });
     }
   }
 
-  // TEMPORARY DEBUG: short per-model reasons so failures are diagnosable without server logs
-  const dbg = modelErrors.length ? ' [debug: ' + modelErrors.map(e => `${e.model} -> ${e.status} ${e.message}`.slice(0, 160)).join(' | ') + ']' : '';
-  if (timedOut) return res.status(504).json({ error: 'Penny is taking too long right now. Please try again soon.' + dbg });
-  // Groq throttling (429) or oversize (413) is "busy", not "down": report 429 so the app says "wait a moment".
-  if (modelErrors.some(e => e.status === 429)) return res.status(429).json({ error: 'Penny is getting a lot of requests. Please wait a moment and try again.' + dbg });
-  return res.status(500).json({ error: 'Penny is unavailable right now. Please try again soon.' + dbg });
+  console.error('penny: all models failed:', JSON.stringify({ hasImages, timedOut, errors: modelErrors }));
+  if (timedOut) return res.status(504).json({ error: 'Penny is taking too long right now. Please try again soon.' });
+  // Groq throttling (429) is "busy", not "down": report 429 so the app says "wait a moment".
+  if (modelErrors.some(e => e.status === 429)) {
+    res.setHeader?.('Retry-After', '10');
+    return res.status(429).json({ error: 'Penny is getting a lot of requests. Please wait a moment and try again.' });
+  }
+  return res.status(500).json({ error: 'Penny is unavailable right now. Please try again soon.' });
+}
+
+export default async function handler(req, res) {
+  try {
+    return await handleRequest(req, res);
+  } catch (e) {
+    console.error('penny handler crashed:', e);
+    if (!res.headersSent) return res.status(500).json({ error: 'Penny is unavailable right now. Please try again soon.' });
+  }
 }
