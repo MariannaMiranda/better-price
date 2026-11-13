@@ -2360,6 +2360,40 @@ function _sbRunSync(){
   })();
   return _sbSyncInFlight;
 }
+function _sbSnapshot(prefix){
+  const allData = {};
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith(prefix)){
+      try { allData[key.slice(prefix.length)] = JSON.parse(localStorage.getItem(key)); }
+      catch(e){ allData[key.slice(prefix.length)] = localStorage.getItem(key); }
+    }
+  }
+  return allData;
+}
+// Tab-close write. An async supabase-js call is usually cancelled when the page unloads, so this uses a plain
+// fetch with keepalive (the browser finishes it after the page is gone). It must be fully synchronous up to the
+// fetch call, so the token/user id are cached from auth events instead of awaited. Browsers cap keepalive bodies
+// at 64 KB; anything bigger is skipped here and left to the dirty-key recovery on next load. Dirty markers are
+// NOT cleared (we never see the response), so a later load simply re-syncs the same data.
+let _sbAuthCache = { token: null, userId: null };
+_sb.auth.onAuthStateChange((_ev, session) => { _sbAuthCache = { token: session?.access_token || null, userId: session?.user?.id || null }; });
+_sb.auth.getSession().then(({ data }) => { if(data?.session && !_sbAuthCache.token) _sbAuthCache = { token: data.session.access_token, userId: data.session.user.id }; }).catch(() => {});
+function _sbBeaconSync(){
+  try {
+    const email = _sbSessionEmail();
+    if(!email || !_sbAuthCache.token || !_sbAuthCache.userId) return false;
+    if(!Object.keys(_sbReadDirty(email)).length) return false;       // nothing unsynced
+    const body = JSON.stringify({ user_id: _sbAuthCache.userId, data: _sbSnapshot('bp_' + email + '_'), updated_at: new Date().toISOString() });
+    if(body.length > 60000){ console.warn('unload sync skipped: snapshot too large for keepalive'); return false; }
+    fetch(SUPABASE_URL + '/rest/v1/user_data', {
+      method: 'POST', keepalive: true,
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + _sbAuthCache.token, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body,
+    }).catch(e => console.error('unload sync failed:', e));
+    return true;
+  } catch(e){ console.error('unload sync crashed:', e); return false; }
+}
 // Returns true when there is nothing (more) to do, false when the write failed.
 async function _sbDoSync(){
   const { data: { user } } = await _sb.auth.getUser();
@@ -2369,14 +2403,7 @@ async function _sbDoSync(){
   const prefix = 'bp_' + email + '_';
   _sbWriteCount++;                              // lets hydration detect a write that raced its fetch
   const dirtyAtStart = _sbReadDirty(email);
-  const allData = {};
-  for(let i = 0; i < localStorage.length; i++){
-    const key = localStorage.key(i);
-    if(key && key.startsWith(prefix)){
-      try { allData[key.slice(prefix.length)] = JSON.parse(localStorage.getItem(key)); }
-      catch(e){ allData[key.slice(prefix.length)] = localStorage.getItem(key); }
-    }
-  }
+  const allData = _sbSnapshot(prefix);
   const row = { user_id: user.id, data: allData, updated_at: new Date().toISOString() };
   let { error } = await _sb.from('user_data').upsert(row);
   if(error){ await new Promise(r => setTimeout(r, 800)); ({ error } = await _sb.from('user_data').upsert(row)); }   // quick retry for blips
@@ -2400,8 +2427,8 @@ async function _sbFlushSync(){
     await _sbRunSync();
   } catch(e){ console.error('flush sync failed', e); }
 }
-document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') _sbFlushSync(); });
-window.addEventListener('pagehide', () => { _sbFlushSync(); });
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden'){ _sbBeaconSync(); _sbFlushSync(); } });
+window.addEventListener('pagehide', () => { _sbBeaconSync(); _sbFlushSync(); });
 window.addEventListener('online', () => { _sbRunSync(); });
 
 async function loadUserDataFromSupabase(){
