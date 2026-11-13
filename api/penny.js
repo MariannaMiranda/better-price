@@ -418,7 +418,8 @@ async function handleRequest(req, res) {
           // 502/503 (provider hiccup): short fixed backoff. Both get jitter and must fit in the remaining budget.
           retried.add(model + response.status);
           const errBody = await response.clone().json().catch(() => ({}));
-          const hinted = response.status === 429 ? parseRetryAfterMs(response.headers, errBody?.error?.message) : 400;
+          // Honour Retry-After on 429 AND 502/503 (Groq sends it on both); 502/503 without a hint fall back to 400 ms.
+          const hinted = parseRetryAfterMs(response.headers, errBody?.error?.message) ?? (response.status === 429 ? null : 400);
           const left = BUDGET_MS - (Date.now() - startedAt);
           if (hinted != null) {
             const wait = withJitter(hinted);
