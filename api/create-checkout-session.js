@@ -58,11 +58,28 @@ export default async function handler(req, res) {
       : 'monthly';
 
     const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    const er = await fetch(
-      `${SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=plan,status,stripe_customer_id`,
-      { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
-    );
-    const existing = er.ok ? (await er.json())?.[0] : null;
+    if (!SERVICE_ROLE_KEY) {
+      console.error('create-checkout-session: SUPABASE_SERVICE_ROLE_KEY is not set');
+      return res.status(500).json({ error: 'Billing is not configured yet.' });
+    }
+
+    // FAIL CLOSED: if we cannot tell whether this user already has a subscription, we must not create a new
+    // checkout session (a transient lookup error used to be treated as "no subscription" -> duplicate plans).
+    let existing = null;
+    try {
+      const er = await fetch(
+        `${SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=plan,status,stripe_customer_id`,
+        { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` }, signal: AbortSignal.timeout(6000) }
+      );
+      if (!er.ok) throw new Error('subscription lookup returned HTTP ' + er.status);
+      const rows = await er.json();
+      if (!Array.isArray(rows)) throw new Error('subscription lookup returned an unexpected payload');
+      existing = rows[0] || null;
+    } catch (lookupErr) {
+      console.error('create-checkout-session: subscription lookup failed:', lookupErr);
+      res.setHeader?.('Retry-After', '5');
+      return res.status(503).json({ error: 'Billing is temporarily unavailable. Please try again in a moment.', retryable: true });
+    }
 
     if (existing?.plan === 'pro') {
       // alreadyActive/plan/status let the client re-sync its UI to Pro and surface "Manage Billing"
@@ -112,6 +129,7 @@ export default async function handler(req, res) {
     const dark = req.body?.theme === 'dark';
     const darkBranding = { background_color: '#0d1824', button_color: '#4d8fcc' };
     const createSession = (p) => fetch('https://api.stripe.com/v1/checkout/sessions', {
+      signal: AbortSignal.timeout(15000),
       method: 'POST',
       headers: {
         Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
@@ -133,6 +151,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ clientSecret: data.client_secret });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    console.error('create-checkout-session failed:', err);
+    return res.status(500).json({ error: 'Could not start checkout. Please try again.' });
   }
 }
