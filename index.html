@@ -1086,6 +1086,9 @@ body.dark .oauth-btn:hover{background:#1a2f45;border-color:#4d8fcc;}
 .gate-list{list-style:none;margin:0 0 18px;padding:0;font-size:14px;color:var(--text);line-height:1.5;}
 .gate-list li{position:relative;padding:6px 0 6px 26px;}
 .gate-list li::before{content:'';position:absolute;left:2px;top:9px;width:14px;height:8px;border-left:3px solid var(--ok);border-bottom:3px solid var(--ok);transform:rotate(-45deg) scale(.8);}
+.gate-signin{margin:2px 0 0;text-align:center;font-size:13px;color:var(--muted);}
+.gate-signin a{color:var(--brand);font-weight:700;text-decoration:none;}
+.gate-signin a:hover{text-decoration:underline;}
 .gate-keep{background:none;border:none;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;padding:8px;text-decoration:underline;}
 .gate-keep:hover{color:var(--brand);}
 
@@ -1730,9 +1733,7 @@ body.dark .bm-num{color:#34d399;}
       </div>
       <div id="profilePlanStatus" style="font-size:14px;margin-bottom:12px;">Free plan</div>
       <div id="profilePlanFreeBtns" style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="mbtn-ok" style="width:auto;padding:10px 18px;background:#10b981;" onclick="startUpgradeCheckout('trial')">Try free for 7 days</button>
-        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('monthly')">Monthly — $4.99/mo</button>
-        <button class="mbtn-ok" style="width:auto;padding:10px 18px;" onclick="startUpgradeCheckout('yearly')">Yearly — $39.99/yr</button>
+        <button class="mbtn-ok" id="profileViewPlansBtn" style="width:auto;padding:10px 22px;" onclick="openUpgradeModal('plans')">View plans</button>
       </div>
       <button id="profilePlanManageBtn" style="display:none;width:auto;padding:10px 18px;" class="mbtn-cancel" onclick="openBillingPortal()">Manage billing / Cancel plan</button>
     </div>
@@ -1972,9 +1973,9 @@ body.dark .bm-num{color:#34d399;}
   <p class="gate-body" id="gateBody"></p>
   <ul class="gate-list" id="gateList"></ul>
   <div class="modal-btn-row" style="flex-direction:column;gap:8px;">
-    <button class="mbtn-ok" id="gateCreate" onclick="gateGo('signup')"></button>
-    <button class="mbtn-cancel" id="gateLogin" onclick="gateGo('login')"></button>
-    <button class="gate-keep" id="gateKeep" onclick="closeModals()"></button>
+         <button class="mbtn-ok" id="gateCreate" onclick="gateGo('signup')"></button>
+     <p class="gate-signin"><span id="gateHave"></span> <a href="#" id="gateLogin" onclick="gateGo('login');return false;"></a></p>
+     <button class="gate-keep" id="gateKeep" onclick="closeModals()"></button>
   </div>
 </div>
 
@@ -2003,10 +2004,13 @@ body.dark .bm-num{color:#34d399;}
 </div>
 
 <div class="modal-box" id="checkoutSuccessModal" style="max-width:380px;text-align:center;">
-  <div style="font-size:44px;margin-bottom:8px;">🎉</div>
-  <div class="modal-title" style="margin-bottom:8px;">You're Pro!</div>
-  <p style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Unlimited Penny, unlimited scans, unlimited lists, no ads. Enjoy!</p>
-  <button class="mbtn-ok" onclick="closeModals()">Let's go</button>
+  <div id="coEmoji" style="font-size:44px;margin-bottom:8px;">⏳</div>
+  <div class="modal-title" id="coTitle" style="margin-bottom:8px;">Confirming your subscription…</div>
+  <p id="coMsg" style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Hang tight. This usually takes a few seconds.</p>
+  <div class="modal-btn-row" style="flex-direction:column;gap:8px;">
+    <button class="mbtn-ok" id="coPrimary" onclick="closeModals()" style="display:none;">Let's go</button>
+    <button class="mbtn-cancel" id="coSecondary" onclick="closeModals()" style="display:none;">Close</button>
+  </div>
 </div>
 
 <div class="modal-box" id="confirmModal">
@@ -2088,20 +2092,71 @@ function _markProLocally(status){
   updateProfilePlanUI();
 }
 
-// Stripe Embedded Checkout redirects to /?embedded_return=1 when it completes (onComplete never runs
-// after a full-page redirect), so handle the return here: clean the URL, unlock Pro, then confirm with the server.
-async function handleEmbeddedReturn(){
-  const params = new URLSearchParams(window.location.search);
-  if(!params.has('embedded_return')) return;
-  params.delete('embedded_return');
-  const qs = params.toString();
-  try { history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash); } catch(e){}
-  _markProLocally('active');
-  openModal('checkoutSuccessModal');
-  for(let i = 0; i < 8; i++){
-    await new Promise(r => setTimeout(r, i === 0 ? 400 : 1500));
-    if(await loadUserPlan()) break;      // server confirmed
+/* ── Checkout completion: ONE path for both the in-page onComplete callback and the ?embedded_return=1 redirect ──
+   Stripe saying "complete" does not mean our database knows yet (the webhook can lag). So we show "Confirming…"
+   and only claim Pro once the subscriptions table says so. */
+function _coState(state){
+  const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  const show = (id, on) => { const e = document.getElementById(id); if(e) e.style.display = on ? '' : 'none'; };
+  if(state === 'pending'){
+    set('coEmoji','⏳'); set('coTitle','Confirming your subscription…'); set('coMsg','Hang tight. This usually takes a few seconds.');
+    show('coPrimary', false); show('coSecondary', false);
+  } else if(state === 'success'){
+    set('coEmoji','🎉'); set('coTitle',"You're Pro!"); set('coMsg','Unlimited Penny, unlimited scans, unlimited lists, no ads. Enjoy!');
+    set('coPrimary',"Let's go"); document.getElementById('coPrimary').onclick = closeModals; show('coPrimary', true); show('coSecondary', false);
+  } else {   // 'delayed'
+    set('coEmoji','🕐'); set('coTitle','Payment received');
+    set('coMsg',"We're still activating your plan. This can take a minute. We'll unlock Pro as soon as it's confirmed, so there's no need to pay again.");
+    set('coPrimary','Check again'); document.getElementById('coPrimary').onclick = () => confirmCheckoutCompletion();
+    set('coSecondary','Close'); show('coPrimary', true); show('coSecondary', true);
   }
+}
+let _coInFlight = null;
+function confirmCheckoutCompletion(){
+  if(_coInFlight) return _coInFlight;
+  _coInFlight = (async () => {
+    _coState('pending'); openModal('checkoutSuccessModal');
+    let confirmed = false;
+    for(let i = 0; i < 12 && !confirmed; i++){
+      await new Promise(r => setTimeout(r, i === 0 ? 500 : 1500));
+      confirmed = await loadUserPlan();        // true ONLY when the subscriptions row says active/trialing
+    }
+    _coState(confirmed ? 'success' : 'delayed');
+    if(!confirmed) _coBackgroundCheck();       // keep checking quietly, e.g. a slow webhook
+    return confirmed;
+  })().finally(() => { _coInFlight = null; });
+  return _coInFlight;
+}
+async function _coBackgroundCheck(){
+  for(let i = 0; i < 9; i++){
+    await new Promise(r => setTimeout(r, 10000));
+    if(await loadUserPlan()){
+      if(document.getElementById('checkoutSuccessModal')?.classList.contains('open')) _coState('success');
+      else showToast("You're Pro! Your plan is active.", 'ok');
+      return;
+    }
+  }
+}
+function _stripUrlParams(names){
+  const params = new URLSearchParams(window.location.search);
+  let found = false;
+  names.forEach(n => { if(params.has(n)){ params.delete(n); found = true; } });
+  if(found){
+    const qs = params.toString();
+    try { history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash); } catch(e){}
+  }
+  return found;
+}
+async function handleEmbeddedReturn(){
+  if(!_stripUrlParams(['embedded_return'])) return;
+  await confirmCheckoutCompletion();
+}
+// Back from the Stripe billing portal (/?billing_return=1): refresh the plan so a cancel/resume shows right away.
+async function handleBillingReturn(){
+  if(!_stripUrlParams(['billing_return'])) return;
+  await loadUserPlan();
+  setTimeout(() => { loadUserPlan(); }, 4000);   // the webhook may land a few seconds after the redirect
+  showToast('Welcome back. Your billing details are up to date.', 'ok');
 }
 
 let lastSubRow = null;
@@ -2149,6 +2204,8 @@ function openUpgradeModal(reason){
   if(msgEl){
     msgEl.textContent = reason === 'scan'
       ? "You've used all 5 free scans for today. Go Pro for unlimited scanning, unlimited Penny messages, unlimited lists, and no ads."
+      : reason === 'plans'
+      ? "Pick a plan to unlock unlimited Penny messages, unlimited scans, unlimited lists, and no ads. Start with a 7-day free trial."
       : reason === 'lists'
       ? `Free accounts get up to ${FREE_LIST_LIMIT} grocery lists. Go Pro for unlimited lists, unlimited Penny, and no ads.`
       : "You've used your free Penny messages for now. Go Pro for unlimited Penny, unlimited scans, unlimited lists, and no ads.";
@@ -2202,15 +2259,9 @@ async function mountEmbeddedCheckout(clientSecret){
 
   _embeddedCheckout = await _stripeJs.initEmbeddedCheckout({
     clientSecret,
-onComplete: async () => {
+onComplete: () => {
       closeEmbeddedCheckout();
-
-      for (let i = 0; i < 8; i++) {
-        await loadUserPlan();
-        if (userPlan === 'pro') break;
-        await new Promise((r) => setTimeout(r, 1500));
-      }
-      openModal('checkoutSuccessModal');
+      confirmCheckoutCompletion();
     }
   });
   _embeddedCheckout.mount('#checkoutEmbedContainer');
@@ -2237,15 +2288,31 @@ async function openBillingPortal(){
   }
 }
 
+function _sbSessionEmail(){ try { return JSON.parse(localStorage.getItem('bp_session')||'{}').email || ''; } catch(e){ return ''; } }
+// Keys changed locally but not yet confirmed written to Supabase, per account. Lives OUTSIDE the synced
+// "bp_<email>_" namespace so it is never uploaded itself.
+const _sbDirtyStoreKey = email => 'bpdirty_' + email;
+function _sbReadDirty(email){ try { return JSON.parse(localStorage.getItem(_sbDirtyStoreKey(email)) || '{}') || {}; } catch(e){ return {}; } }
+function _sbWriteDirty(email, map){
+  try {
+    if(Object.keys(map).length) localStorage.setItem(_sbDirtyStoreKey(email), JSON.stringify(map));
+    else localStorage.removeItem(_sbDirtyStoreKey(email));
+  } catch(e){}
+}
+function _sbMarkDirty(k){
+  const email = _sbSessionEmail(); if(!email) return;
+  const map = _sbReadDirty(email); map[k] = Date.now(); _sbWriteDirty(email, map);
+}
+
 function saveU(k, v){
-  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  const prefix = session.email ? 'bp_'+session.email+'_' : 'bp_';
+  const email = _sbSessionEmail();
+  const prefix = email ? 'bp_'+email+'_' : 'bp_';
   try { localStorage.setItem(prefix+k, JSON.stringify(v)); } catch(e){ console.error('saveU',e); }
+  _sbMarkDirty(k);
   _sbScheduleSync();
 }
 function loadU(k, def){
-  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  const prefix = session.email ? 'bp_'+session.email+'_' : 'bp_';
+  const prefix = _sbSessionEmail() ? 'bp_'+_sbSessionEmail()+'_' : 'bp_';
   try {
     const raw = localStorage.getItem(prefix+k);
     if(raw !== null) return JSON.parse(raw);
@@ -2253,18 +2320,41 @@ function loadU(k, def){
   return def;
 }
 
-let _sbSyncTimer = null;
+/* ── user_data sync: ONE write in flight at a time ──
+   A slow upsert used to be able to finish AFTER a newer one and overwrite fresh data with an old snapshot.
+   Now every write re-reads local storage when it STARTS, writes run strictly one after another, and any change
+   that lands while a write is in flight just sets _sbSyncDirty so a newer snapshot follows. */
+let _sbSyncTimer = null, _sbSyncInFlight = null, _sbSyncDirty = false, _sbRetryTimer = null, _sbRetryCount = 0;
 function _sbScheduleSync(){
   clearTimeout(_sbSyncTimer);
-  _sbSyncTimer = setTimeout(_sbDoSync, 1500);
+  _sbSyncTimer = setTimeout(_sbRunSync, 1500);
 }
+function _sbRunSync(){
+  if(_sbSyncInFlight){ _sbSyncDirty = true; return _sbSyncInFlight; }
+  _sbSyncInFlight = (async () => {
+    let ok = true;
+    try {
+      do { _sbSyncDirty = false; ok = await _sbDoSync(); } while(_sbSyncDirty && ok);
+    } catch(e){ ok = false; console.error('user_data sync crashed:', e); }
+    finally { _sbSyncInFlight = null; }
+    if(ok){ _sbRetryCount = 0; }
+    else {                                    // keep the dirty markers; try again with backoff (5s, 15s, 45s, then 2 min)
+      clearTimeout(_sbRetryTimer);
+      const delay = [5000, 15000, 45000, 120000][Math.min(_sbRetryCount++, 3)];
+      _sbRetryTimer = setTimeout(_sbRunSync, delay);
+    }
+    return ok;
+  })();
+  return _sbSyncInFlight;
+}
+// Returns true when there is nothing (more) to do, false when the write failed.
 async function _sbDoSync(){
   const { data: { user } } = await _sb.auth.getUser();
-  if(!user) return;
-  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  const email = session.email || '';
-  if(!email) return;
+  if(!user) return true;
+  const email = _sbSessionEmail();
+  if(!email) return true;
   const prefix = 'bp_' + email + '_';
+  const dirtyAtStart = _sbReadDirty(email);
   const allData = {};
   for(let i = 0; i < localStorage.length; i++){
     const key = localStorage.key(i);
@@ -2275,29 +2365,47 @@ async function _sbDoSync(){
   }
   const row = { user_id: user.id, data: allData, updated_at: new Date().toISOString() };
   let { error } = await _sb.from('user_data').upsert(row);
-  if(error){ await new Promise(r => setTimeout(r, 800)); ({ error } = await _sb.from('user_data').upsert(row)); }   // one retry
-  if(error) console.error('user_data sync failed:', error.message || error);
+  if(error){ await new Promise(r => setTimeout(r, 800)); ({ error } = await _sb.from('user_data').upsert(row)); }   // quick retry for blips
+  if(error){
+    console.error('user_data sync failed:', error.code || '', error.message || error, '| keys pending:', Object.keys(dirtyAtStart).join(','));
+    return false;
+  }
+  // Success: forget only the keys that were NOT edited again while this write was running.
+  const nowDirty = _sbReadDirty(email);
+  for(const k of Object.keys(dirtyAtStart)){ if(nowDirty[k] === dirtyAtStart[k]) delete nowDirty[k]; }
+  _sbWriteDirty(email, nowDirty);
+  return true;
 }
-// Push any pending changes NOW (the normal sync is debounced by 1.5s, so signing out right after a message
-// used to throw the unsynced chat away).
+// Push everything NOW and wait for it (used before sign-out and when the tab is hidden/closed).
 async function _sbFlushSync(){
   clearTimeout(_sbSyncTimer);
-  try { await _sbDoSync(); } catch(e){ console.error('flush sync failed', e); }
+  try {
+    _sbSyncDirty = true;                       // force a fresh snapshot even if a write is already running
+    await _sbRunSync();
+  } catch(e){ console.error('flush sync failed', e); }
 }
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') _sbFlushSync(); });
 window.addEventListener('pagehide', () => { _sbFlushSync(); });
+window.addEventListener('online', () => { _sbRunSync(); });
+
 async function loadUserDataFromSupabase(){
   const { data: { user } } = await _sb.auth.getUser();
   if(!user) return;
-  const { data: row } = await _sb.from('user_data').select('data').eq('user_id', user.id).single();
+  if(_sbSyncInFlight) await _sbSyncInFlight;     // never hydrate while one of OUR writes is mid-flight
+  const { data: row, error } = await _sb.from('user_data').select('data').eq('user_id', user.id).single();
+  if(error && error.code !== 'PGRST116'){ console.error('user_data load failed:', error.code || '', error.message || error); return; }   // PGRST116 = no row yet (new user)
   if(!row || !row.data) return;
-  const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  const email = session.email || '';
+  const email = _sbSessionEmail();
   if(!email) return;
   const prefix = 'bp_' + email + '_';
+  // Keys edited locally but never confirmed written (tab closed / offline / failed sync) are NEWER than the server copy:
+  // keep them, hydrate the rest, then push the kept edits up.
+  const dirty = _sbReadDirty(email);
   for(const [k, v] of Object.entries(row.data)){
+    if(dirty[k]) continue;
     try { localStorage.setItem(prefix + k, JSON.stringify(v)); } catch(e){}
   }
+  if(Object.keys(dirty).length) _sbScheduleSync();
 }
 
 function esc(str){ const d=document.createElement('div'); d.appendChild(document.createTextNode(String(str||''))); return d.innerHTML; }
@@ -2439,7 +2547,7 @@ const TRANSLATIONS = {
     cardRemoved:'Card removed.', cardsRemaining:'cards remaining.', cardRemainingS:'card remaining.',
     dupLimitMsg:"You've reached the 8-item limit. Remove a card to duplicate.",
     minCardsMsg:'Minimum 2 cards required.',
-    savePresetSwitch:'Switch to Presets tab — name it and save!',
+    savePresetSwitch:'Name your preset, then tap Save.',
     deleteAccount:'Delete Account',
     deleteAccountConfirm:'This will permanently erase your account and all saved data. You can sign up again with the same email. Are you sure?',
     deleteAccountDone:'Account deleted.',
@@ -2591,7 +2699,7 @@ const TRANSLATIONS = {
     cardRemoved:'Tarjeta eliminada.', cardsRemaining:'tarjetas restantes.', cardRemainingS:'tarjeta restante.',
     dupLimitMsg:'Has alcanzado el límite de 8 artículos. Elimina una tarjeta para duplicar.',
     minCardsMsg:'Se requieren mínimo 2 tarjetas.',
-    savePresetSwitch:'Ve a la pestaña Preajustes, ponle nombre y guárdalo.',
+    savePresetSwitch:'Ponle nombre a tu preajuste y toca Guardar.',
     deleteAccount:'Eliminar cuenta',
     deleteAccountConfirm:'Esto borrará permanentemente tu cuenta y todos los datos guardados. Puedes registrarte nuevamente con el mismo correo. ¿Estás seguro?',
     deleteAccountDone:'Cuenta eliminada.',
@@ -2743,7 +2851,7 @@ const TRANSLATIONS = {
     cardRemoved:'Cartão removido.', cardsRemaining:'cartões restantes.', cardRemainingS:'cartão restante.',
     dupLimitMsg:'Você atingiu o limite de 8 itens. Remova um cartão para duplicar.',
     minCardsMsg:'Mínimo de 2 cartões necessários.',
-    savePresetSwitch:'Vá para a aba Predefinições, dê um nome e salve.',
+    savePresetSwitch:'Dê um nome à sua predefinição e toque em Salvar.',
     deleteAccount:'Excluir conta',
     deleteAccountConfirm:'Isso apagará permanentemente sua conta e todos os dados salvos. Você pode se cadastrar novamente com o mesmo e-mail. Tem certeza?',
     deleteAccountDone:'Conta excluída.',
@@ -4244,7 +4352,7 @@ function saveAnalysisAsPreset(){
   // always OPEN the form (never toggle it closed if it was already open)
   _spf.classList.add('open');
   setTimeout(()=>document.getElementById('presetNameInput')?.focus(), 60);
-  showToast(T().savePresetSwitch||'Switch to Presets tab — name it and save!','ok');
+  showToast(T().savePresetSwitch||'Name your preset, then tap Save.','ok');
 }
 
 function updateGrid(){
@@ -5561,7 +5669,7 @@ async function anthropicFetch(fetchOptions){
     if (data?.limitReached) { err.limitReached = true; err.limitKind = data.kind; err.friendlyMessage = data.error; }
     throw err;
   }
-  if (data.visionFailed) console.warn('[Penny] vision models failed:', JSON.stringify(data.visionErrors));
+  if (data.visionFailed) console.warn('[Penny] the image could not be analyzed; answered from text only');
   const text = data.text || '';
   return { ok: true, json: async () => ({ content: [{ type: 'text', text }] }) };
 }
@@ -5999,8 +6107,6 @@ async function pennyCallAPI(){
         msg = "I had trouble with that request. Please try again.";
       else
         msg = "Can't reach Penny right now. Check your connection and try again.";
-      const dbg = (em.match(/\[debug:[^\]]*\]/) || [])[0];   // TEMPORARY: server-provided reason
-      if(dbg) msg += ' ' + dbg;
       showToast(msg);
       pennyAddMessage('penny', msg, null, null, true /* isError */);
     }
@@ -7106,7 +7212,7 @@ const I18N_X = {
     gateBody_profile:'Set your household, stores and budget so advice fits you, and manage your plan.',
     gateB1:'Sync across your phone and computer', gateB2:'Lists, presets and full comparison history',
     gateB3:'Penny, your AI shopping advisor', gateB4:'7-day Pro trial, no credit card to start',
-    gateCreate:'Create free account', gateLogin:'I already have an account', gateKeep:'Keep comparing',
+    gateCreate:'Create free account', gateHave:'Already have an account?', gateLogin:'Sign in', gateKeep:'Keep comparing',
     addDetails:'Add Details', hideDetails:'Hide Details', editDetails:'Details',
     sumOffPct:'{v}% off', sumOffFlat:'{v} off', sumPack:'x{q} pack',
     unitWarnTitle:'Mixed unit types',
@@ -7139,7 +7245,7 @@ const I18N_X = {
     gateBody_profile:'Configura tu hogar, tiendas y presupuesto para que los consejos se ajusten a ti, y administra tu plan.',
     gateB1:'Sincroniza tu teléfono y tu computadora', gateB2:'Listas, preajustes e historial completo',
     gateB3:'Penny, tu asesora de compras con IA', gateB4:'Prueba Pro de 7 días, sin tarjeta para empezar',
-    gateCreate:'Crear cuenta gratis', gateLogin:'Ya tengo una cuenta', gateKeep:'Seguir comparando',
+    gateCreate:'Crear cuenta gratis', gateHave:'¿Ya tienes una cuenta?', gateLogin:'Inicia sesión', gateKeep:'Seguir comparando',
     addDetails:'Agregar detalles', hideDetails:'Ocultar detalles', editDetails:'Detalles',
     sumOffPct:'{v}% dto.', sumOffFlat:'{v} dto.', sumPack:'paquete x{q}',
     unitWarnTitle:'Tipos de unidad mezclados',
@@ -7172,7 +7278,7 @@ const I18N_X = {
     gateBody_profile:'Defina sua casa, mercados e orçamento para que os conselhos se ajustem a você, e gerencie seu plano.',
     gateB1:'Sincronize celular e computador', gateB2:'Listas, predefinições e histórico completo',
     gateB3:'Penny, sua assessora de compras com IA', gateB4:'Teste Pro de 7 dias, sem cartão para começar',
-    gateCreate:'Criar conta grátis', gateLogin:'Já tenho uma conta', gateKeep:'Continuar comparando',
+    gateCreate:'Criar conta grátis', gateHave:'Já tem uma conta?', gateLogin:'Entrar', gateKeep:'Continuar comparando',
     addDetails:'Adicionar detalhes', hideDetails:'Ocultar detalhes', editDetails:'Detalhes',
     sumOffPct:'{v}% off', sumOffFlat:'{v} off', sumPack:'pacote x{q}',
     unitWarnTitle:'Tipos de unidade misturados',
@@ -7254,6 +7360,7 @@ function openGateModal(tab){
   const ul = document.getElementById('gateList'); ul.replaceChildren();
   ['gateB1','gateB2','gateB3','gateB4'].forEach(k => { const li = document.createElement('li'); li.textContent = tx(k); ul.appendChild(li); });
   document.getElementById('gateCreate').textContent = tx('gateCreate');
+  document.getElementById('gateHave').textContent   = tx('gateHave');
   document.getElementById('gateLogin').textContent  = tx('gateLogin');
   document.getElementById('gateKeep').textContent   = tx('gateKeep');
   openModal('gateModal');
@@ -7484,9 +7591,7 @@ let _appStarted = false;
     if(_appStarted || window.__recovery) return;
 
     if(!session){
-      if(new URLSearchParams(window.location.search).has('embedded_return')){
-        try { history.replaceState(null, '', window.location.pathname); } catch(e){}
-      }
+      _stripUrlParams(['embedded_return','billing_return']);
       showGuestApp();               // guest-first: Compare is usable immediately
       return;
     }
@@ -7510,6 +7615,7 @@ let _appStarted = false;
     await loadUserPlan();
     showApp(isNewUser);
     await handleEmbeddedReturn();
+    await handleBillingReturn();
   }
 
   _sb.auth.onAuthStateChange(async (event, session) => {
