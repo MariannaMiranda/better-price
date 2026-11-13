@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 
     const subR = await fetch(
       `${SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=stripe_customer_id`,
-      { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
+      { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` }, signal: AbortSignal.timeout(6000) }
     );
     const subRows = subR.ok ? await subR.json() : [];
     const customerId = subRows?.[0]?.stripe_customer_id;
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: toFormBody({ customer: customerId, return_url: `${origin}/` }),
+      body: toFormBody({ customer: customerId, return_url: `${origin}/?billing_return=1` }),
     });
 
     const data = await r.json();
@@ -70,6 +70,7 @@ export default async function handler(req, res) {
     }
     return res.status(200).json({ url: data.url });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    console.error('create-portal-session failed:', err);
+    return res.status(500).json({ error: 'Could not open billing portal.' });
   }
 }
