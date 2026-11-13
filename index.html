@@ -2050,17 +2050,23 @@ let isGuest = false;          // true until a Supabase session exists
 let _appShown = false;        // showApp() is single-shot (handleAuth + onAuthStateChange both call it)
 const GUEST_GATED = { grocery:true, presets:true, penny:true, profile:true };
 
-async function loadUserPlan(){
+// Re-reads the subscriptions row. Returns { ok, pro }:
+//   ok  = the lookup itself worked (no auth/network/DB error). When false, userPlan/lastSubRow are left UNTOUCHED
+//         so a transient failure can never silently downgrade a paying user's UI to Free.
+//   pro = the row says active/trialing (server truth; a local webhook-lag hint only affects the UI, never this flag).
+async function refreshUserPlan(){
   try {
-    const { data: { user } } = await _sb.auth.getUser();
-    if(!user){ userPlan = 'free'; updateAdVisibility(); updateProfilePlanUI(); return; }
-    const { data } = await _sb.from('subscriptions').select('plan,status,current_period_end,trial_end').eq('user_id', user.id).maybeSingle();
+    const { data: { user }, error: authErr } = await _sb.auth.getUser();
+    if(authErr) throw authErr;
+    if(!user){ userPlan = 'free'; lastSubRow = null; updateAdVisibility(); updateProfilePlanUI(); return { ok: true, pro: false }; }
+    const { data, error } = await _sb.from('subscriptions').select('plan,status,current_period_end,trial_end').eq('user_id', user.id).maybeSingle();
+    if(error) throw error;                       // supabase-js RETURNS errors instead of throwing them
     const serverPro = !!(data && data.plan === 'pro' && (data.status === 'active' || data.status === 'trialing'));
     userPlan = serverPro ? 'pro' : 'free';
     lastSubRow = data || null;
-    // Webhook-lag grace: right after checkout the subscriptions row can lag behind Stripe by a few
-    // seconds. A fresh local "pro" hint (written by _markProLocally) keeps the UI unlocked meanwhile.
-    // The server (Penny limits, billing) never trusts this hint; it only drives the UI.
+    // Webhook-lag grace: right after checkout the subscriptions row can lag behind Stripe by a few seconds.
+    // A fresh local "pro" hint (written by _markProLocally) keeps the UI unlocked meanwhile. The server
+    // (Penny limits, billing) never trusts this hint; it only drives the UI.
     const hint = loadU('plan_hint', null);
     if(serverPro){
       if(hint) saveU('plan_hint', null);
@@ -2072,14 +2078,14 @@ async function loadUserPlan(){
     }
     updateAdVisibility();
     updateProfilePlanUI();
-    return serverPro;
+    return { ok: true, pro: serverPro };
   } catch(e){
-    userPlan = 'free';
+    console.error('refreshUserPlan failed:', e?.code || '', e?.message || e);
+    return { ok: false, pro: false };
   }
-  updateAdVisibility();
-  updateProfilePlanUI();
-  return false;
 }
+// Back-compat wrapper: true ONLY when the subscriptions row says active/trialing.
+async function loadUserPlan(){ return (await refreshUserPlan()).pro; }
 
 // Immediately unlock the Pro UI (banner, Profile billing card, list limit) without waiting for the webhook.
 function _markProLocally(status){
@@ -2131,7 +2137,9 @@ async function _coBackgroundCheck(){
   for(let i = 0; i < 9; i++){
     await new Promise(r => setTimeout(r, 10000));
     if(await loadUserPlan()){
-      if(document.getElementById('checkoutSuccessModal')?.classList.contains('open')) _coState('success');
+      const modalEl = document.getElementById('checkoutSuccessModal');
+      // openModal() shows dialogs via style.display (there is no .open class), so test the computed display.
+      if(modalEl && window.getComputedStyle(modalEl).display !== 'none') _coState('success');
       else showToast("You're Pro! Your plan is active.", 'ok');
       return;
     }
@@ -2154,9 +2162,13 @@ async function handleEmbeddedReturn(){
 // Back from the Stripe billing portal (/?billing_return=1): refresh the plan so a cancel/resume shows right away.
 async function handleBillingReturn(){
   if(!_stripUrlParams(['billing_return'])) return;
-  await loadUserPlan();
-  setTimeout(() => { loadUserPlan(); }, 4000);   // the webhook may land a few seconds after the redirect
-  showToast('Welcome back. Your billing details are up to date.', 'ok');
+  const first = await refreshUserPlan();
+  setTimeout(() => { refreshUserPlan(); }, 4000);   // the webhook may land a few seconds after the redirect
+  if(first.ok){
+    showToast('Welcome back. Your billing details are up to date.', 'ok');
+  } else {
+    showToast("Welcome back. We couldn't refresh your plan just now. It will update shortly, or reload the page.", '');
+  }
 }
 
 let lastSubRow = null;
@@ -2308,6 +2320,7 @@ function saveU(k, v){
   const email = _sbSessionEmail();
   const prefix = email ? 'bp_'+email+'_' : 'bp_';
   try { localStorage.setItem(prefix+k, JSON.stringify(v)); } catch(e){ console.error('saveU',e); }
+  _sbEditSeq++;                       // lets hydration detect an edit that raced its fetch
   _sbMarkDirty(k);
   _sbScheduleSync();
 }
@@ -2324,7 +2337,7 @@ function loadU(k, def){
    A slow upsert used to be able to finish AFTER a newer one and overwrite fresh data with an old snapshot.
    Now every write re-reads local storage when it STARTS, writes run strictly one after another, and any change
    that lands while a write is in flight just sets _sbSyncDirty so a newer snapshot follows. */
-let _sbSyncTimer = null, _sbSyncInFlight = null, _sbSyncDirty = false, _sbRetryTimer = null, _sbRetryCount = 0;
+let _sbSyncTimer = null, _sbSyncInFlight = null, _sbSyncDirty = false, _sbRetryTimer = null, _sbRetryCount = 0, _sbEditSeq = 0, _sbWriteCount = 0;
 function _sbScheduleSync(){
   clearTimeout(_sbSyncTimer);
   _sbSyncTimer = setTimeout(_sbRunSync, 1500);
@@ -2354,6 +2367,7 @@ async function _sbDoSync(){
   const email = _sbSessionEmail();
   if(!email) return true;
   const prefix = 'bp_' + email + '_';
+  _sbWriteCount++;                              // lets hydration detect a write that raced its fetch
   const dirtyAtStart = _sbReadDirty(email);
   const allData = {};
   for(let i = 0; i < localStorage.length; i++){
@@ -2368,8 +2382,10 @@ async function _sbDoSync(){
   if(error){ await new Promise(r => setTimeout(r, 800)); ({ error } = await _sb.from('user_data').upsert(row)); }   // quick retry for blips
   if(error){
     console.error('user_data sync failed:', error.code || '', error.message || error, '| keys pending:', Object.keys(dirtyAtStart).join(','));
+    _sbWriteCount++;
     return false;
   }
+  _sbWriteCount++;
   // Success: forget only the keys that were NOT edited again while this write was running.
   const nowDirty = _sbReadDirty(email);
   for(const k of Object.keys(dirtyAtStart)){ if(nowDirty[k] === dirtyAtStart[k]) delete nowDirty[k]; }
@@ -2391,9 +2407,21 @@ window.addEventListener('online', () => { _sbRunSync(); });
 async function loadUserDataFromSupabase(){
   const { data: { user } } = await _sb.auth.getUser();
   if(!user) return;
-  if(_sbSyncInFlight) await _sbSyncInFlight;     // never hydrate while one of OUR writes is mid-flight
-  const { data: row, error } = await _sb.from('user_data').select('data').eq('user_id', user.id).single();
-  if(error && error.code !== 'PGRST116'){ console.error('user_data load failed:', error.code || '', error.message || error); return; }   // PGRST116 = no row yet (new user)
+  let row = null;
+  // The fetch can overlap a local edit or one of our own writes. A row fetched before such a write would be STALE,
+  // so only apply a row when nothing was edited and no write started or finished while the request was out.
+  for(let attempt = 0; attempt < 3; attempt++){
+    if(_sbSyncInFlight) await _sbSyncInFlight;   // never hydrate while one of OUR writes is mid-flight
+    const seqBefore = _sbEditSeq, writesBefore = _sbWriteCount;
+    const res = await _sb.from('user_data').select('data').eq('user_id', user.id).single();
+    if(res.error && res.error.code !== 'PGRST116'){ console.error('user_data load failed:', res.error.code || '', res.error.message || res.error); return; }   // PGRST116 = no row yet (new user)
+    if(_sbSyncInFlight || seqBefore !== _sbEditSeq || writesBefore !== _sbWriteCount){
+      if(attempt === 2){ console.warn('user_data hydration skipped: local changes kept an in-flight fetch stale'); _sbScheduleSync(); return; }
+      continue;
+    }
+    row = res.data;
+    break;
+  }
   if(!row || !row.data) return;
   const email = _sbSessionEmail();
   if(!email) return;
@@ -2403,7 +2431,7 @@ async function loadUserDataFromSupabase(){
   const dirty = _sbReadDirty(email);
   for(const [k, v] of Object.entries(row.data)){
     if(dirty[k]) continue;
-    try { localStorage.setItem(prefix + k, JSON.stringify(v)); } catch(e){}
+    try { localStorage.setItem(prefix + k, JSON.stringify(v)); } catch(e){ console.error('hydrate failed for', k, e); }
   }
   if(Object.keys(dirty).length) _sbScheduleSync();
 }
