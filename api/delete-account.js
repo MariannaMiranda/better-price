@@ -39,6 +39,18 @@ export default async function handler(req, res) {
     }
   }
 
+  // Shared lists survive: hand every household-shared list this user owns to another member BEFORE the auth user (and,
+  // via ON DELETE CASCADE, everything it owns) is removed. 404 = migration not applied yet, nothing to hand off.
+  const hand = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bp_prepare_account_deletion`, {
+    method: 'POST',
+    headers: { ...sbH, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_user: user.id }),
+  });
+  if (!hand.ok && hand.status !== 404) {
+    console.error('bp_prepare_account_deletion failed:', hand.status, (await hand.text()).slice(0, 300));
+    return res.status(502).json({ error: 'Could not prepare your shared lists. Account deletion aborted.' });
+  }
+
   // Delete Supabase Auth user (cascades user_data/subscriptions if foreign keys are configured)
   const d = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, { method: 'DELETE', headers: sbH });
   if (!d.ok) return res.status(502).json({ error: 'Could not delete user account.' });
