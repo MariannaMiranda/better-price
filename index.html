@@ -7,6 +7,12 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#003366">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Better Price">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Compare grocery prices, manage shopping lists, and get AI-powered shopping advice from Penny."/>
 <meta property="og:title" content="Better Price!"/>
 <meta property="og:description" content="Compare grocery prices, manage shopping lists, and get AI shopping advice from Penny."/>
@@ -2022,6 +2028,8 @@ body.dark .bm-num{color:#34d399;}
   </div>
 </div>
 
+<script src="/bp-store.js"></script>
+<script src="/bp-ui.js"></script>
 <script>
 
 
@@ -2076,11 +2084,16 @@ async function refreshUserPlan(){
     } else if(hint){
       saveU('plan_hint', null);
     }
+    try { localStorage.setItem('bp_plan_' + (user.email || ''), userPlan); } catch(e){}
     updateAdVisibility();
     updateProfilePlanUI();
     return { ok: true, pro: serverPro };
   } catch(e){
     console.error('refreshUserPlan failed:', e?.code || '', e?.message || e);
+    if(navigator.onLine === false){       // offline cold start: trust the last known plan for UI gating only
+      const c = localStorage.getItem('bp_plan_' + _sbSessionEmail());
+      if(c === 'pro' || c === 'free'){ userPlan = c; updateAdVisibility(); updateProfilePlanUI(); }
+    }
     return { ok: false, pro: false };
   }
 }
@@ -2317,6 +2330,8 @@ function _sbMarkDirty(k){
 }
 
 function saveU(k, v){
+  // lists/items live in relational tables once migrated: bp diffs the array into record-level ops (no JSON-blob write)
+  if(window.bp && bp.interceptSave(k, v)) return;
   const email = _sbSessionEmail();
   const prefix = email ? 'bp_'+email+'_' : 'bp_';
   try { localStorage.setItem(prefix+k, JSON.stringify(v)); } catch(e){ console.error('saveU',e); }
@@ -2458,6 +2473,7 @@ async function loadUserDataFromSupabase(){
   const dirty = _sbReadDirty(email);
   for(const [k, v] of Object.entries(row.data)){
     if(dirty[k]) continue;
+    if(window.bp && bp.isRelationalKey(k)) continue;      // server rows are canonical for lists/items now
     try { localStorage.setItem(prefix + k, JSON.stringify(v)); } catch(e){ console.error('hydrate failed for', k, e); }
   }
   if(Object.keys(dirty).length) _sbScheduleSync();
@@ -3581,6 +3597,7 @@ function loadUserData(){
 function logout(){
   showConfirm('Sign Out', 'Are you sure you want to sign out?', async () => {
     await _sbFlushSync();      // save chats/images to Supabase BEFORE the session ends
+    if(window.bp && bp.enabled){ try { await bp.flush(); } catch(e){} }   // drain pending list edits too
     await _sb.auth.signOut();
     localStorage.removeItem('bp_session');
     location.reload();
@@ -4312,7 +4329,7 @@ function translateStarterData(){
 function createStarterGroceryList(){
   const existing = loadU('glists', []);
   if(existing.length > 0) return;
-  const lid = 'list_starter_' + Date.now();
+  const lid = bpId();
   const l = lang||'en';
   const SN = STARTER_NAMES;
   const list = { id: lid, name: SN.listName[l]||SN.listName.en, starterList: true };
@@ -4342,6 +4359,7 @@ function createStarterGroceryList(){
     {id:'s23',listId:lid,name:SN.s23[l]||SN.s23.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s23'},
     {id:'s24',listId:lid,name:SN.s24[l]||SN.s24.en,qty:1,price:'',store:'',notes:'',done:false,starterKey:'s24'},
   ];
+  starterItems.forEach(it => { it.id = bpId(); });   // fixed ids ('s1'...) would resurrect tombstones after a list delete
   saveU('glists', [list]);
   saveU('gitems', starterItems);
 }
@@ -4815,7 +4833,7 @@ function compare(opts){
       const baseUnit=(['oz','lb','g','kg'].includes(u))?'oz':(['ml','l','gal'].includes(u))?'fl oz':(['ft','in','yd','m'].includes(u))?'ft':u;
       document.getElementById(`res-${i}`).innerText=`${cur}${up.toFixed(4)} / ${baseUnit}`;
       itemLines+=`${n}: ${cur}${up.toFixed(4)} ${t.analysisPer} ${baseUnit}.\n`;
-      results.push({i,n,up,fam:UNIT_FAMILY[u]||u});
+      results.push({i,n,up,fam:UNIT_FAMILY[u]||u,price:p,size:s,qty:q,unit:u,baseUnit,dv,dt});
       if(up<best)best=up;
     } else {
       document.getElementById(`res-${i}`).innerText='';
@@ -4845,6 +4863,8 @@ function compare(opts){
   const _mix=unitMismatchInfo(results);
   const log=`${winnerLine}\n\n${itemLines}`.trimEnd()+(_mix?`\n\n\u26a0 ${_mix.text}`:'');
   lastAnalysis=log;
+  window.bpLastCompare = results.map(r => ({...r}));
+  if(window.bp && bp.ui) bp.ui.showSaveButton(results.length > 0);
   showUnitWarn(_mix);
   const ab=document.getElementById('analysisBox');
   ab.value=log;
@@ -4945,7 +4965,7 @@ function promptNewList(){
   document.getElementById('listNameModalTitle').innerText=t.newListBtn;
   document.getElementById('listNameInput').value='';
   listNameCallback = (name) => {
-    const list={id:Date.now(),name};
+    const list={id:bpId(),name};
     groceryLists.push(list); saveU('glists',groceryLists);
     activeListId=list.id; renderListNav(); renderGroceryContent();
     showToast(`"${name}" ${t.toastAdded}`,'ok');
@@ -5040,7 +5060,7 @@ function addGroceryItem(){
   const t=T();
   const name=document.getElementById('g-name').value.trim();
   if(!name){ showToast(t.toastItemName); return; }
-  const item={id:Date.now(),listId:activeListId,name,qty:document.getElementById('g-qty').value||'1',price:document.getElementById('g-price').value,store:document.getElementById('g-store').value.trim(),notes:document.getElementById('g-notes').value.trim(),done:false};
+  const item={id:bpId(),listId:activeListId,name,qty:document.getElementById('g-qty').value||'1',price:document.getElementById('g-price').value,store:document.getElementById('g-store').value.trim(),notes:document.getElementById('g-notes').value.trim(),done:false};
   groceryItems.push(item); saveU('gitems',groceryItems);
   ['g-name','g-qty','g-price','g-store','g-notes'].forEach(id=>{ const e=document.getElementById(id); if(e)e.value=''; });
   renderListNav(); renderGroceryContent();
@@ -5096,7 +5116,7 @@ function saveEditItem(){
 }
 function doDupItem(toListId){
   const orig=groceryItems.find(i=>String(i.id)===String(dupItemId)); if(!orig)return;
-  const copy={...orig,id:Date.now(),listId:toListId,done:false};
+  const copy={...orig,id:bpId(),listId:toListId,done:false};
   groceryItems.push(copy); saveU('gitems',groceryItems);
   closeModals(); renderListNav();
   if(String(toListId)===String(activeListId)) renderGroceryContent();
@@ -7019,7 +7039,87 @@ PRICE HONESTY: Your price knowledge may be outdated — always say "typically ar
 Keep replies warm, brief (under 100 words), and conversational. Encourage them to sign up and try it. If asked how to sign up, tell them to tap Sign in at the top right of the app (or tap any locked tab). Reassure them they can keep comparing as a guest.`;
 }
 
-function pennyUID(){ return 'gi_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
+// Record ids must be UUIDs (Supabase lists / list_items). Date.now() ids collide across household members.
+function bpId(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2,8); }
+function pennyUID(){ return bpId(); }
+
+// ===== relational data layer glue (bp-store.js / bp-ui.js) =====
+let _bpPendingRender = false;
+function bpEditing(){
+  const a = document.activeElement, ov = document.getElementById('modalOverlay');
+  return !!((a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest('#tab-grocery,.modal-box')) || (ov && ov.style.display === 'block'));
+}
+function bpApplyProjection(){
+  groceryLists = loadU('glists', []); groceryItems = loadU('gitems', []);
+  if(activeListId == null || !groceryLists.some(l => String(l.id) === String(activeListId))) activeListId = groceryLists[0]?.id || null;
+  renderListNav(); renderGroceryContent();
+}
+setInterval(() => { if(_bpPendingRender && !bpEditing()){ _bpPendingRender = false; bpApplyProjection(); } }, 1000);
+
+function bpFillCard(c){
+  for(let i = 0; i < items; i++){
+    const n = document.getElementById('n-'+i), p = document.getElementById('p-'+i);
+    if(n && p && !n.value.trim() && !p.value.trim()){
+      goTab('compare');
+      const set = (id, v) => { const el = document.getElementById(id+'-'+i); if(el){ el.value = v; el.dispatchEvent(new Event('input', {bubbles:true})); el.dispatchEvent(new Event('change', {bubbles:true})); } };
+      set('n', c.n); set('p', c.p); set('s', c.s); set('q', c.q); set('u', c.u); set('dv', c.dv || ''); set('dt', c.dt);
+      return true;
+    }
+  }
+  return false;
+}
+
+async function bpBoot(session){
+  if(!window.bp || !bp.ui) return;
+  bp.host.toast = (m, t) => showToast(m, t === undefined ? '' : t);
+  bp.host.onRemap = (o, n) => {
+    groceryItems.forEach(i => { if(String(i.listId) === String(o)) i.listId = n; });
+    if(String(activeListId) === String(o)) activeListId = n;
+  };
+  bp.host.onChange = () => { if(!_appShown) return; if(bpEditing()) _bpPendingRender = true; else bpApplyProjection(); };
+  bp.ui.host = Object.assign(bp.ui.host, {
+    activeListId: () => activeListId,
+    lists: () => groceryLists,
+    listItems: id => groceryItems.filter(i => String(i.listId) === String(id)),
+    addItems(arr){
+      let n = 0;
+      arr.forEach(f => { groceryItems.push({id:bpId(), listId:activeListId, name:f.name, qty:f.qty || '1', price:'', store:f.store || '', notes:'', done:false}); n++; });
+      if(n){ saveU('gitems', groceryItems); renderListNav(); renderGroceryContent(); }
+      return n;
+    },
+    fillCard: bpFillCard,
+    currency: () => (document.getElementById('setCurr') || {}).value || currSymbol,
+    unitRates: () => UNIT_RATES,
+    preferredStores: () => { const p = loadU('preferred_stores', []); return Array.isArray(p) ? p.map(x => typeof x === 'string' ? x : x && x.name).filter(Boolean) : []; },
+    accessToken: async () => (await _sb.auth.getSession()).data.session?.access_token || null,
+    getCompare: () => window.bpLastCompare,
+  });
+  bp.ui.mount();
+  try { await bp.start(_sb, session); } catch(e){ console.error('bp.start failed', e); }
+  bp.ui.refresh();
+}
+
+// Offline cold start: supabase-js may fail to refresh an expired token without network. Fall back to the stored session
+// so a signed-in user still reaches their (locally saved) lists instead of the login screen.
+function _bpOfflineSession(){
+  try {
+    const raw = localStorage.getItem('sb-viemououczppxevejtvs-auth-token'); if(!raw) return null;
+    const s = JSON.parse(raw); return (s && s.user && s.user.id) ? { user: s.user, access_token: s.access_token } : null;
+  } catch(e){ return null; }
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const w = reg.installing;
+        if(w) w.addEventListener('statechange', () => { if(w.state === 'installed' && navigator.serviceWorker.controller) showToast('A new version is ready. Reload to update.', 'ok'); });
+      });
+    }).catch(e => console.warn('service worker registration failed', e));
+  });
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); if(window.bp && bp.ui) bp.ui._install = e; });
+
 
 function pennyResolveList(nameHint){
   if(!nameHint) return groceryLists.find(l => l.id === activeListId) || groceryLists[0];
@@ -7033,7 +7133,7 @@ function pennyResolveList(nameHint){
 function pennyEnsureList(name){
   let list = pennyResolveList(name);
   if(!list || (name && list.name.toLowerCase() !== name.toLowerCase() && !list.name.toLowerCase().includes(name.toLowerCase()))){
-    list = { id: 'list_penny_' + Date.now(), name: name || 'Penny List' };
+    list = { id: bpId(), name: name || 'Penny List' };
     groceryLists.push(list);
     saveU('glists', groceryLists);
     activeListId = list.id;
@@ -7163,7 +7263,7 @@ const DESTRUCTIVE = new Set(['DELETELIST', 'CLEARCHECKED', 'REMOVEITEMS']);
         if(dupes){ toasts.push(lang==='es'?`${dupes} duplicado${dupes!==1?'s':''} omitido${dupes!==1?'s':''}`:lang==='pt'?`${dupes} duplicata${dupes!==1?'s':''} ignorada${dupes!==1?'s':''}`:`${dupes} duplicate${dupes!==1?'s':''} skipped`); }
       }
       else if(cmd.type === 'CREATELIST'){
-        const lid = 'list_penny_' + Date.now();
+        const lid = bpId();
         const list = { id: lid, name: d.name || 'New List' };
         groceryLists.push(list); saveLists=true; activeListId=lid;
         let n = 0;
@@ -7668,17 +7768,21 @@ let _appStarted = false;
     const isNewUser = !hasCompletedOnboarding;
 
     await loadUserPlan();
+    await bpBoot(session);          // migrate (once) + hydrate lists/items BEFORE the UI reads them
     showApp(isNewUser);
     await handleEmbeddedReturn();
     await handleBillingReturn();
   }
 
   _sb.auth.onAuthStateChange(async (event, session) => {
+    if(event === 'SIGNED_OUT' && window.bp){ bp.stop(); if(bp.ui) bp.ui.refresh(); }
     if(event === 'PASSWORD_RECOVERY'){ window.__recovery = true; showResetPassword(); return; }
     if(!_appStarted && session) await handleSession(session);
   });
 
-  const { data: { session } } = await _sb.auth.getSession();
+  let session = null;
+  try { ({ data: { session } } = await _sb.auth.getSession()); } catch(e){ console.warn('getSession failed', e); }
+  if(!session && navigator.onLine === false) session = _bpOfflineSession();
   await handleSession(session);
   if(oauthError && isGuest) openAuthScreen('login');
   if(linkExpired && isGuest){ openAuthScreen('login'); openForgotPassword(); }   // expired reset link -> offer a fresh one
