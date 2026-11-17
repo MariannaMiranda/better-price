@@ -513,19 +513,27 @@
   function normKey(t) { return String(t || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
   bp.normKey = normKey;
 
-  // "Good price" verdict from history rows (newest first) for ONE product_key + base_unit.
+  // Verdict from the user's OWN recorded prices (rows newest first) for ONE product_key + base_unit.
+  // Nothing here is a market claim: "lowest" means lowest among prices you/your household saved.
+  //   code: none | target | new | lowest | near | good | high | fair
+  //   n / last: how many recorded prices and the newest observed_at, so the UI can show the sample behind the verdict.
+  // label is an English fallback only; bp-ui.js renders translated copy from `code`.
   bp.price.verdict = function (rows, target) {
-    if (!rows.length) return { code: 'none', label: 'No data' };
-    const latest = rows[0], cutoff = Date.now() - 120 * 864e5;
-    const recent = rows.filter(r => new Date(r.observed_at).getTime() >= cutoff);
-    const prices = recent.map(r => +r.unit_price).sort((a, b) => a - b);
-    if (target && +latest.unit_price <= +target.target_unit_price) return { code: 'target', label: 'At or below your target' };
-    if (prices.length < 3) return { code: 'new', label: 'Not enough history yet' };
-    const min = prices[0], med = prices[Math.floor(prices.length / 2)], p = +latest.unit_price;
-    if (p <= min * 1.03) return { code: 'lowest', label: 'Lowest in 4 months' };
-    if (p <= med * 0.85) return { code: 'good', label: 'Good price (15%+ under typical)' };
-    if (p >= med * 1.15) return { code: 'high', label: 'Higher than usual' };
-    return { code: 'fair', label: 'Typical price' };
+    const n = rows.length;
+    if (!n) return { code: 'none', label: 'No data', n: 0, last: null };
+    const latest = rows[0], p = +latest.unit_price, meta = { n, last: latest.observed_at };
+    if (target && p <= +target.target_unit_price) return { ...meta, code: 'target', label: 'At or below your target' };
+    if (n < 3) return { ...meta, code: 'new', label: 'Not enough history yet' };
+    const min = Math.min(...rows.map(r => +r.unit_price));            // across everything recorded, so "lowest" is literally true
+    if (p <= min) return { ...meta, code: 'lowest', label: "Lowest you've recorded" };
+    if (p <= min * 1.03) return { ...meta, code: 'near', label: 'Close to your lowest' };
+    const cutoff = Date.now() - 120 * 864e5;                           // "usual" = median of the last 120 days (all history if that is too thin)
+    let pool = rows.filter(r => new Date(r.observed_at).getTime() >= cutoff);
+    if (pool.length < 3) pool = rows;
+    const prices = pool.map(r => +r.unit_price).sort((a, b) => a - b), med = prices[Math.floor(prices.length / 2)];
+    if (p <= med * 0.85) return { ...meta, code: 'good', label: 'Good price (15%+ below your usual)' };
+    if (p >= med * 1.15) return { ...meta, code: 'high', label: 'Higher than your usual' };
+    return { ...meta, code: 'fair', label: 'In line with your usual' };
   };
 
   /* ------------------------------ deals ------------------------------ */
