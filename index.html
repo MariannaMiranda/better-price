@@ -3287,6 +3287,7 @@ function applyLang(){
 
   if(typeof renderPennyMessages === 'function') renderPennyMessages();
   if(typeof renderPennySessions === 'function') renderPennySessions();
+  if(window.bp && bp.ui && bp.ui.relang) bp.ui.relang();   // Savings hub, sync pill, deal cards follow the language
 }
 
 function changeLang(src){
@@ -5047,13 +5048,14 @@ function renderGroceryContent(){
             <button class="card-icon-btn" title="Copy to list" onclick="promptDupItem('${item.id}')"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
             <button class="card-icon-btn" title="Delete" onclick="delGroceryItem('${item.id}')" style="color:var(--danger)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
-        </div>`).join('')
+        </div><div class="bpx-dealslot" data-item="${esc(item.id)}"></div>`).join('')
     }
     </div>
     <div class="grocery-bottom">
       <span class="g-count">${done}/${listItems.length} ${doneWord}</span>
       <button class="tool-btn" onclick="uncheckAll()"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>${t.uncheckAll}</button>
     </div>`;
+  if(window.bp && bp.ui && bp.ui.decorateList) bp.ui.decorateList();   // matched weekly-ad / coupon cards under items
 }
 
 function addGroceryItem(){
@@ -7093,6 +7095,7 @@ async function bpBoot(session){
     preferredStores: () => { const p = loadU('preferred_stores', []); return Array.isArray(p) ? p.map(x => typeof x === 'string' ? x : x && x.name).filter(Boolean) : []; },
     accessToken: async () => (await _sb.auth.getSession()).data.session?.access_token || null,
     getCompare: () => window.bpLastCompare,
+    lang: () => lang,
   });
   bp.ui.mount();
   try { await bp.start(_sb, session); } catch(e){ console.error('bp.start failed', e); }
