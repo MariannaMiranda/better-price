@@ -1,4 +1,6 @@
 /* bp-ui.js — UI for the relational features. Depends on bp-store.js. All strings are escaped via h().
+ * v3: contextual "Share list" flow (openShareList), browse-first "Offers & coupons" tab, "Price history" wording (was "Price Book"),
+ *     and the matching en/es/pt strings. Host may optionally provide goCompare() to jump to the Compare tab.
  * v2: calmer sync pill, "Lowest you've recorded" price-book copy, streamlined deal cards (also inline in the shopping list),
  *     and en/es/pt strings for every label in the Savings hub (see STR below).
  * Host contract (index.html): bp.ui.host.lang() returns 'en' | 'es' | 'pt'. Call bp.ui.relang() after a language change
@@ -32,19 +34,19 @@
       pill_error_tip_other: "{n} changes haven't synced yet. They're safe on this device. Tap to retry.",
       toast_synced: 'Everything is synced.', toast_offline: "You're offline. Changes are saved on this device.", toast_retrying: 'Retrying sync…',
 
-      hub_tip: 'Savings: price book, deals, household', hub_aria: 'Savings hub',
-      bar_replenish: 'Replenish', bar_share: 'Share list', bar_deals: 'Deals for this list',
-      save_prices_btn: 'Save these prices to my Price Book',
+      hub_tip: 'Savings: price history, offers, household', hub_aria: 'Savings hub',
+      bar_replenish: 'Replenish', bar_share: 'Share list', bar_deals: 'Offers for this list',
+      save_prices_btn: 'Save these prices to my price history',
       toast_alert: 'Good price: {name} hit {price}/{unit}', toast_alert_at: 'Good price: {name} at {store} hit {price}/{unit}',
 
-      sheet_title: 'Savings', close: 'Close', tab_book: 'Price Book', tab_deals: 'Deals', tab_house: 'Household',
+      sheet_title: 'Savings', close: 'Close', tab_book: 'Price history', tab_deals: 'Offers & coupons', tab_house: 'Household',
       install_app: 'Install app', ios_install: 'Install on iPhone/iPad: tap Share, then Add to Home Screen.',
       loading: 'Loading…', err_generic: 'Something went wrong. Try again in a moment.', err_offline: 'You are offline. This section needs a connection.',
 
-      pb_cached: 'Offline: showing your last saved Price Book.',
+      pb_cached: 'Offline: showing your last saved price history.',
       alerts_one: '{n} good-price alert', alerts_other: '{n} good-price alerts', mark_read: 'Mark read',
       alert_row: '{name}: {price}/{unit} (target {target})', alert_row_at: '{name} at {store}: {price}/{unit} (target {target})',
-      pb_empty_1: 'Nothing saved yet.', pb_empty_2: 'Run a comparison, then tap "Save these prices to my Price Book".',
+      pb_empty_1: 'No price history yet.', pb_empty_2: 'Prices you save from a comparison will show up here.',
       pb_best: 'Best {price}/{unit}', pb_best_at: 'Best {price}/{unit} at {store}',
       meta_one: '{n} price recorded · last {date}', meta_other: '{n} prices recorded · last {date}',
       v_none: 'No data', v_target: 'At or below your target', v_new: 'Not enough history yet',
@@ -60,12 +62,12 @@
       chart_need_two: 'Save at least two prices to see a trend.', chart_aria: 'Unit price history, {n} points, from {from} to {to}', chart_target: '- - your target',
       t_removed: 'Target removed', p_removed: 'Price removed', t_invalid: 'Enter a target price greater than 0.', t_set: 'Alert set',
 
-      sp_title: 'Save to Price Book', sp_name_first: 'Give each product a name first so it can be tracked.',
+      sp_title: 'Save to price history', sp_name_first: 'Give each product a name first so it can be tracked.',
       sp_note: 'Only save prices you have confirmed on the shelf or receipt. Each one becomes a data point in your history.',
       store_ph: 'Store (optional)', store_aria: 'Store for {name}', share_with: 'Share with', just_me: 'Just me', hh_suffix: '{name} (household)',
-      save_btn: 'Save prices', saved_one: 'Saved {n} price to your Price Book', saved_other: 'Saved {n} prices to your Price Book', nothing_sel: 'Nothing selected',
+      save_btn: 'Save prices', saved_one: 'Saved {n} price to your price history', saved_other: 'Saved {n} prices to your price history', nothing_sel: 'Nothing selected',
 
-      lbl_matches: 'Matches for your current list', lbl_add: 'Add a weekly-ad deal or coupon', lbl_active: 'Active deals', no_deals: 'No active deals yet.',
+      lbl_matches: 'Matched to this list', lbl_add: 'Add a weekly-ad deal or coupon', lbl_active: 'Active deals', no_deals: 'No active deals yet.',
       ph_product: 'Product', ph_store: 'Store', ph_price: 'Shelf price', ph_size: 'Size per pack', ph_qty: 'Packs (default 1)',
       kind_ad: 'Weekly ad', kind_coupon: 'Coupon (needs clip)',
       disc_none: 'Sale price as listed', disc_p: '% off', disc_d: 'Amount off', disc_bogo: 'Buy X get Y free',
@@ -99,6 +101,52 @@
       rep_bought: 'bought {n}× · last {date}', pin: 'Pin', unpin: 'Unpin', pin_aria: 'Pin {name}', unpin_aria: 'Unpin {name}', hide_aria: 'Hide {name}',
       rep_add: 'Add selected to list', rep_empty_1: 'Nothing to replenish yet.', rep_empty_2: 'Items you add to lists show up here for one-tap re-adding.',
       added_one: 'Added {n} item', added_other: 'Added {n} items',
+
+      sh_title: 'Share this list',
+      sh_chip_private: 'Private',
+      sh_chip_shared: 'Shared',
+      sh_status_private: 'Only you can see this list.',
+      sh_status_shared: 'Shared with {name}.',
+      sh_step1: 'Household',
+      sh_step2: 'Share this list',
+      sh_step3: 'Add people',
+      sh_done: 'done',
+      sh_hh_none: 'Lists are shared through a household: a group of people who see the same lists. Create one or join one to continue.',
+      sh_create_btn: 'Create & share',
+      sh_join_lbl: 'Join with a code',
+      sh_share_btn: 'Share with {name}',
+      sh_share_sel: 'Share this list',
+      sh_need_hh: 'Create or join a household first.',
+      sh_step2_done: 'Shared with {name}.',
+      sh_invite_help: 'Create a code and send it. They enter it under "Join with a code".',
+      sh_invite_btn: 'Invite someone',
+      sh_copy: 'Copy code',
+      sh_send: 'Share…',
+      sh_copied: 'Code copied',
+      sh_copy_failed: 'Could not copy automatically. Select the code and copy it.',
+      sh_invite_msg: 'Join my household on Better Price. Invite code: {code}',
+      sh_invite_owner_only: 'Only the household owner can create invite codes.',
+      sh_with_lbl: 'Shared with',
+      sh_only_you: 'Only you so far. Invite someone to start sharing.',
+      sh_stop: 'Stop sharing',
+      sh_stop_confirm: 'Stop sharing this list? It will be private again.',
+      sh_owner_only: 'Only the list owner can change sharing.',
+      sh_manage: 'Manage household & members',
+      sh_created_shared: 'Household created. List shared.',
+      offers_empty: 'No saved offers match this list yet. Offers are added by you or your household; live store ads aren\'t connected.',
+      offers_scope_note: 'Offers are added by you or your household; live store ads aren\'t connected.',
+      lbl_other: 'Other saved offers',
+      lbl_all: 'All saved offers',
+      act_add: 'Add an offer',
+      act_import: 'Import CSV',
+      more_opts: 'Discount, coupon & expiry (optional)',
+      unit_aria: 'Size unit',
+      ph_dv_p: 'Percent off (0–100)',
+      ph_dv_d: 'Amount off',
+      ph_dv_bogo: 'Buy how many?',
+      pb_scope_note: 'Price history shows only prices you and your household recorded. It is not live store data.',
+      pb_empty_cta: 'Save prices from a comparison',
+      pb_go_compare: 'Compare some products, then tap "Save these prices to my price history".',
     },
 
     es: {
@@ -114,19 +162,19 @@
       pill_error_tip_other: 'Aún no se sincronizaron {n} cambios. Están a salvo en este dispositivo. Toca para reintentar.',
       toast_synced: 'Todo está sincronizado.', toast_offline: 'Sin conexión. Los cambios se guardan en este dispositivo.', toast_retrying: 'Reintentando sincronizar…',
 
-      hub_tip: 'Ahorros: libro de precios, ofertas, hogar', hub_aria: 'Centro de ahorros',
+      hub_tip: 'Ahorros: historial de precios, ofertas, hogar', hub_aria: 'Centro de ahorros',
       bar_replenish: 'Reponer', bar_share: 'Compartir lista', bar_deals: 'Ofertas para esta lista',
-      save_prices_btn: 'Guardar estos precios en mi Libro de precios',
+      save_prices_btn: 'Guardar estos precios en mi historial de precios',
       toast_alert: 'Buen precio: {name} llegó a {price}/{unit}', toast_alert_at: 'Buen precio: {name} en {store} llegó a {price}/{unit}',
 
-      sheet_title: 'Ahorros', close: 'Cerrar', tab_book: 'Libro de precios', tab_deals: 'Ofertas', tab_house: 'Hogar',
+      sheet_title: 'Ahorros', close: 'Cerrar', tab_book: 'Historial de precios', tab_deals: 'Ofertas y cupones', tab_house: 'Hogar',
       install_app: 'Instalar app', ios_install: 'Instalar en iPhone/iPad: toca Compartir y luego Agregar a pantalla de inicio.',
       loading: 'Cargando…', err_generic: 'Algo salió mal. Inténtalo de nuevo en un momento.', err_offline: 'Estás sin conexión. Esta sección necesita conexión.',
 
-      pb_cached: 'Sin conexión: mostrando tu último Libro de precios guardado.',
+      pb_cached: 'Sin conexión: mostrando tu último historial de precios guardado.',
       alerts_one: '{n} alerta de buen precio', alerts_other: '{n} alertas de buen precio', mark_read: 'Marcar como leídas',
       alert_row: '{name}: {price}/{unit} (meta {target})', alert_row_at: '{name} en {store}: {price}/{unit} (meta {target})',
-      pb_empty_1: 'Aún no has guardado nada.', pb_empty_2: 'Haz una comparación y toca "Guardar estos precios en mi Libro de precios".',
+      pb_empty_1: 'Aún no hay historial de precios.', pb_empty_2: 'Los precios que guardes desde una comparación aparecerán aquí.',
       pb_best: 'Mejor {price}/{unit}', pb_best_at: 'Mejor {price}/{unit} en {store}',
       meta_one: '{n} precio registrado · último {date}', meta_other: '{n} precios registrados · último {date}',
       v_none: 'Sin datos', v_target: 'En tu meta o por debajo', v_new: 'Aún no hay suficiente historial',
@@ -142,12 +190,12 @@
       chart_need_two: 'Guarda al menos dos precios para ver una tendencia.', chart_aria: 'Historial de precio unitario, {n} puntos, de {from} a {to}', chart_target: '- - tu meta',
       t_removed: 'Meta eliminada', p_removed: 'Precio eliminado', t_invalid: 'Ingresa un precio meta mayor que 0.', t_set: 'Alerta creada',
 
-      sp_title: 'Guardar en el Libro de precios', sp_name_first: 'Ponle nombre a cada producto para poder darle seguimiento.',
+      sp_title: 'Guardar en el historial de precios', sp_name_first: 'Ponle nombre a cada producto para poder darle seguimiento.',
       sp_note: 'Guarda solo precios que hayas confirmado en el estante o en el recibo. Cada uno se convierte en un dato de tu historial.',
       store_ph: 'Tienda (opcional)', store_aria: 'Tienda para {name}', share_with: 'Compartir con', just_me: 'Solo yo', hh_suffix: '{name} (hogar)',
-      save_btn: 'Guardar precios', saved_one: 'Se guardó {n} precio en tu Libro de precios', saved_other: 'Se guardaron {n} precios en tu Libro de precios', nothing_sel: 'No seleccionaste nada',
+      save_btn: 'Guardar precios', saved_one: 'Se guardó {n} precio en tu historial de precios', saved_other: 'Se guardaron {n} precios en tu historial de precios', nothing_sel: 'No seleccionaste nada',
 
-      lbl_matches: 'Coincidencias con tu lista actual', lbl_add: 'Agrega una oferta del folleto o un cupón', lbl_active: 'Ofertas activas', no_deals: 'Aún no hay ofertas activas.',
+      lbl_matches: 'Coinciden con esta lista', lbl_add: 'Agrega una oferta del folleto o un cupón', lbl_active: 'Ofertas activas', no_deals: 'Aún no hay ofertas activas.',
       ph_product: 'Producto', ph_store: 'Tienda', ph_price: 'Precio en estante', ph_size: 'Tamaño por paquete', ph_qty: 'Paquetes (predeterminado 1)',
       kind_ad: 'Folleto semanal', kind_coupon: 'Cupón (hay que activarlo)',
       disc_none: 'Precio de oferta tal como aparece', disc_p: '% de descuento', disc_d: 'Monto de descuento', disc_bogo: 'Compra X y lleva Y gratis',
@@ -181,6 +229,52 @@
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fijar', unpin: 'Quitar fijado', pin_aria: 'Fijar {name}', unpin_aria: 'Quitar fijado de {name}', hide_aria: 'Ocultar {name}',
       rep_add: 'Agregar seleccionados a la lista', rep_empty_1: 'Aún no hay nada que reponer.', rep_empty_2: 'Los artículos que agregues a tus listas aparecerán aquí para volver a agregarlos con un toque.',
       added_one: 'Se agregó {n} artículo', added_other: 'Se agregaron {n} artículos',
+
+      sh_title: 'Compartir esta lista',
+      sh_chip_private: 'Privada',
+      sh_chip_shared: 'Compartida',
+      sh_status_private: 'Solo tú puedes ver esta lista.',
+      sh_status_shared: 'Compartida con {name}.',
+      sh_step1: 'Hogar',
+      sh_step2: 'Compartir esta lista',
+      sh_step3: 'Agregar personas',
+      sh_done: 'hecho',
+      sh_hh_none: 'Las listas se comparten mediante un hogar: un grupo de personas que ven las mismas listas. Crea uno o únete a uno para continuar.',
+      sh_create_btn: 'Crear y compartir',
+      sh_join_lbl: 'Unirse con un código',
+      sh_share_btn: 'Compartir con {name}',
+      sh_share_sel: 'Compartir esta lista',
+      sh_need_hh: 'Primero crea un hogar o únete a uno.',
+      sh_step2_done: 'Compartida con {name}.',
+      sh_invite_help: 'Crea un código y envíaselo. Lo ingresan en "Unirse con un código".',
+      sh_invite_btn: 'Invitar a alguien',
+      sh_copy: 'Copiar código',
+      sh_send: 'Compartir…',
+      sh_copied: 'Código copiado',
+      sh_copy_failed: 'No se pudo copiar automáticamente. Selecciona el código y cópialo.',
+      sh_invite_msg: 'Únete a mi hogar en Better Price. Código de invitación: {code}',
+      sh_invite_owner_only: 'Solo el propietario del hogar puede crear códigos de invitación.',
+      sh_with_lbl: 'Compartida con',
+      sh_only_you: 'Por ahora solo tú. Invita a alguien para empezar a compartir.',
+      sh_stop: 'Dejar de compartir',
+      sh_stop_confirm: '¿Dejar de compartir esta lista? Volverá a ser privada.',
+      sh_owner_only: 'Solo el propietario de la lista puede cambiar cómo se comparte.',
+      sh_manage: 'Administrar hogar y miembros',
+      sh_created_shared: 'Hogar creado. Lista compartida.',
+      offers_empty: 'Todavía no hay ofertas guardadas que coincidan con esta lista. Las ofertas las agregas tú o tu hogar; los folletos de las tiendas en vivo no están conectados.',
+      offers_scope_note: 'Las ofertas las agregas tú o tu hogar; los folletos de las tiendas en vivo no están conectados.',
+      lbl_other: 'Otras ofertas guardadas',
+      lbl_all: 'Todas las ofertas guardadas',
+      act_add: 'Agregar una oferta',
+      act_import: 'Importar CSV',
+      more_opts: 'Descuento, cupón y vencimiento (opcional)',
+      unit_aria: 'Unidad del tamaño',
+      ph_dv_p: 'Porcentaje de descuento (0–100)',
+      ph_dv_d: 'Monto de descuento',
+      ph_dv_bogo: '¿Cuántos comprar?',
+      pb_scope_note: 'El historial de precios solo muestra los precios que tú y tu hogar registraron. No son datos en vivo de las tiendas.',
+      pb_empty_cta: 'Guardar precios desde una comparación',
+      pb_go_compare: 'Compara algunos productos y luego toca "Guardar estos precios en mi historial de precios".',
     },
 
     pt: {
@@ -196,19 +290,19 @@
       pill_error_tip_other: '{n} alterações ainda não foram sincronizadas. Elas estão seguras neste aparelho. Toque para tentar de novo.',
       toast_synced: 'Tudo está sincronizado.', toast_offline: 'Você está offline. As alterações ficam salvas neste aparelho.', toast_retrying: 'Tentando sincronizar de novo…',
 
-      hub_tip: 'Economia: caderno de preços, ofertas, família', hub_aria: 'Central de economia',
+      hub_tip: 'Economia: histórico de preços, ofertas, família', hub_aria: 'Central de economia',
       bar_replenish: 'Repor', bar_share: 'Compartilhar lista', bar_deals: 'Ofertas para esta lista',
-      save_prices_btn: 'Salvar estes preços no meu Caderno de preços',
+      save_prices_btn: 'Salvar estes preços no meu histórico de preços',
       toast_alert: 'Bom preço: {name} chegou a {price}/{unit}', toast_alert_at: 'Bom preço: {name} em {store} chegou a {price}/{unit}',
 
-      sheet_title: 'Economia', close: 'Fechar', tab_book: 'Caderno de preços', tab_deals: 'Ofertas', tab_house: 'Família',
+      sheet_title: 'Economia', close: 'Fechar', tab_book: 'Histórico de preços', tab_deals: 'Ofertas e cupons', tab_house: 'Família',
       install_app: 'Instalar app', ios_install: 'Instalar no iPhone/iPad: toque em Compartilhar e depois em Adicionar à Tela de Início.',
       loading: 'Carregando…', err_generic: 'Algo deu errado. Tente de novo em instantes.', err_offline: 'Você está offline. Esta seção precisa de conexão.',
 
-      pb_cached: 'Offline: mostrando seu último Caderno de preços salvo.',
+      pb_cached: 'Offline: mostrando seu último histórico de preços salvo.',
       alerts_one: '{n} alerta de bom preço', alerts_other: '{n} alertas de bom preço', mark_read: 'Marcar como lidos',
       alert_row: '{name}: {price}/{unit} (meta {target})', alert_row_at: '{name} em {store}: {price}/{unit} (meta {target})',
-      pb_empty_1: 'Nada salvo ainda.', pb_empty_2: 'Faça uma comparação e toque em "Salvar estes preços no meu Caderno de preços".',
+      pb_empty_1: 'Ainda não há histórico de preços.', pb_empty_2: 'Os preços que você salvar a partir de uma comparação aparecerão aqui.',
       pb_best: 'Melhor {price}/{unit}', pb_best_at: 'Melhor {price}/{unit} em {store}',
       meta_one: '{n} preço registrado · último {date}', meta_other: '{n} preços registrados · último {date}',
       v_none: 'Sem dados', v_target: 'Na sua meta ou abaixo', v_new: 'Ainda não há histórico suficiente',
@@ -224,12 +318,12 @@
       chart_need_two: 'Salve pelo menos dois preços para ver uma tendência.', chart_aria: 'Histórico de preço unitário, {n} pontos, de {from} a {to}', chart_target: '- - sua meta',
       t_removed: 'Meta removida', p_removed: 'Preço removido', t_invalid: 'Informe um preço desejado maior que 0.', t_set: 'Alerta criado',
 
-      sp_title: 'Salvar no Caderno de preços', sp_name_first: 'Dê um nome a cada produto para poder acompanhá-lo.',
+      sp_title: 'Salvar no histórico de preços', sp_name_first: 'Dê um nome a cada produto para poder acompanhá-lo.',
       sp_note: 'Salve apenas preços que você confirmou na prateleira ou no recibo. Cada um vira um ponto no seu histórico.',
       store_ph: 'Loja (opcional)', store_aria: 'Loja para {name}', share_with: 'Compartilhar com', just_me: 'Só eu', hh_suffix: '{name} (família)',
-      save_btn: 'Salvar preços', saved_one: '{n} preço salvo no seu Caderno de preços', saved_other: '{n} preços salvos no seu Caderno de preços', nothing_sel: 'Nada selecionado',
+      save_btn: 'Salvar preços', saved_one: 'Salvou {n} preço no seu histórico de preços', saved_other: 'Salvou {n} preços no seu histórico de preços', nothing_sel: 'Nada selecionado',
 
-      lbl_matches: 'Correspondências com a sua lista atual', lbl_add: 'Adicione uma oferta do encarte ou um cupom', lbl_active: 'Ofertas ativas', no_deals: 'Ainda não há ofertas ativas.',
+      lbl_matches: 'Correspondem a esta lista', lbl_add: 'Adicione uma oferta do encarte ou um cupom', lbl_active: 'Ofertas ativas', no_deals: 'Ainda não há ofertas ativas.',
       ph_product: 'Produto', ph_store: 'Loja', ph_price: 'Preço na prateleira', ph_size: 'Tamanho por pacote', ph_qty: 'Pacotes (padrão 1)',
       kind_ad: 'Encarte semanal', kind_coupon: 'Cupom (precisa ativar)',
       disc_none: 'Preço promocional como anunciado', disc_p: '% de desconto', disc_d: 'Valor de desconto', disc_bogo: 'Leve X e ganhe Y grátis',
@@ -263,6 +357,52 @@
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fixar', unpin: 'Desafixar', pin_aria: 'Fixar {name}', unpin_aria: 'Desafixar {name}', hide_aria: 'Ocultar {name}',
       rep_add: 'Adicionar selecionados à lista', rep_empty_1: 'Nada para repor ainda.', rep_empty_2: 'Os itens que você adiciona às listas aparecem aqui para readicionar com um toque.',
       added_one: '{n} item adicionado', added_other: '{n} itens adicionados',
+
+      sh_title: 'Compartilhar esta lista',
+      sh_chip_private: 'Privada',
+      sh_chip_shared: 'Compartilhada',
+      sh_status_private: 'Só você pode ver esta lista.',
+      sh_status_shared: 'Compartilhada com {name}.',
+      sh_step1: 'Família',
+      sh_step2: 'Compartilhar esta lista',
+      sh_step3: 'Adicionar pessoas',
+      sh_done: 'concluído',
+      sh_hh_none: 'As listas são compartilhadas por meio de uma família: um grupo de pessoas que veem as mesmas listas. Crie uma ou entre em uma para continuar.',
+      sh_create_btn: 'Criar e compartilhar',
+      sh_join_lbl: 'Entrar com um código',
+      sh_share_btn: 'Compartilhar com {name}',
+      sh_share_sel: 'Compartilhar esta lista',
+      sh_need_hh: 'Primeiro crie uma família ou entre em uma.',
+      sh_step2_done: 'Compartilhada com {name}.',
+      sh_invite_help: 'Crie um código e envie. A pessoa o digita em "Entrar com um código".',
+      sh_invite_btn: 'Convidar alguém',
+      sh_copy: 'Copiar código',
+      sh_send: 'Compartilhar…',
+      sh_copied: 'Código copiado',
+      sh_copy_failed: 'Não foi possível copiar automaticamente. Selecione o código e copie.',
+      sh_invite_msg: 'Entre na minha família no Better Price. Código de convite: {code}',
+      sh_invite_owner_only: 'Só o dono da família pode criar códigos de convite.',
+      sh_with_lbl: 'Compartilhada com',
+      sh_only_you: 'Por enquanto só você. Convide alguém para começar a compartilhar.',
+      sh_stop: 'Parar de compartilhar',
+      sh_stop_confirm: 'Parar de compartilhar esta lista? Ela voltará a ser privada.',
+      sh_owner_only: 'Só o dono da lista pode alterar o compartilhamento.',
+      sh_manage: 'Gerenciar família e membros',
+      sh_created_shared: 'Família criada. Lista compartilhada.',
+      offers_empty: 'Ainda não há ofertas salvas que correspondam a esta lista. As ofertas são adicionadas por você ou pela sua família; os encartes das lojas ao vivo não estão conectados.',
+      offers_scope_note: 'As ofertas são adicionadas por você ou pela sua família; os encartes das lojas ao vivo não estão conectados.',
+      lbl_other: 'Outras ofertas salvas',
+      lbl_all: 'Todas as ofertas salvas',
+      act_add: 'Adicionar uma oferta',
+      act_import: 'Importar CSV',
+      more_opts: 'Desconto, cupom e validade (opcional)',
+      unit_aria: 'Unidade do tamanho',
+      ph_dv_p: 'Porcentagem de desconto (0–100)',
+      ph_dv_d: 'Valor do desconto',
+      ph_dv_bogo: 'Quantos comprar?',
+      pb_scope_note: 'O histórico de preços mostra apenas os preços que você e sua família registraram. Não são dados ao vivo das lojas.',
+      pb_empty_cta: 'Salvar preços de uma comparação',
+      pb_go_compare: 'Compare alguns produtos e toque em "Salvar estes preços no meu histórico de preços".',
     },
   };
   const curLang = () => { const l = (ui.host.lang && ui.host.lang()) || 'en'; return STR[l] ? l : 'en'; };
@@ -342,6 +482,13 @@
   .bpx-dc.needclip .bpx-dc-up{opacity:.75}
   .bpx-dc-act{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
   .bpx-more{margin:0 0 6px}.bpx-more>summary{cursor:pointer;font:600 12px var(--font,system-ui);color:var(--muted);padding:2px 0 6px;list-style:revert}
+  /* ---- share-list flow + tabs ---- */
+  .bpx-tabs .bpx-tab{padding:9px 4px;line-height:1.2}
+  .bpx-step{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.bpx-step:last-of-type{border-bottom:none}
+  .bpx-stepn{flex:none;width:24px;height:24px;border-radius:50%;background:var(--input-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font:700 12px var(--font,system-ui)}
+  .bpx-step.done .bpx-stepn{background:#10b981;border-color:#10b981;color:#fff}
+  .bpx-step .bpx-sub,.bpx-step .bpx-note{margin:3px 0}
+  .bpx-people .bpx-row{padding:2px 0}
   `;
 
   /* ------------------------------ mount ------------------------------ */
@@ -367,7 +514,7 @@
     const gl = $('#tab-grocery .grocery-layout');
     if (gl) {
       bar = document.createElement('div'); bar.className = 'bpx-bar';
-      bar.onclick = e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'replenish') openReplenish(); else if (a === 'sharelist') openHub('house'); else if (a === 'listdeals') openHub('deals'); };
+      bar.onclick = e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'replenish') openReplenish(); else if (a === 'sharelist') openShareList(); else if (a === 'listdeals') openHub('deals'); };
       gl.parentNode.insertBefore(bar, gl);
     }
     const aw = $('.analysis-wrap');
@@ -503,6 +650,28 @@
       if (a === 'settarget') return saveTarget(el.dataset.k);
       if (a === 'deltarget') { await bp.price.deleteTarget(el.dataset.id); toast(tr('t_removed'), 'ok'); return renderProduct(el.dataset.k); }
       if (a === 'delentry') { await bp.price.remove(el.dataset.id); toast(tr('p_removed'), 'ok'); return renderProduct(el.dataset.k); }
+      if (a === 'toggle') {                                   // Offers tab: reveal one secondary panel at a time
+        const open = document.getElementById(el.dataset.t).hidden;
+        ['dlAddPanel', 'dlImpPanel'].forEach(id => {
+          const p = document.getElementById(id), b = sheetEl.querySelector('[data-t="' + id + '"]'), on = open && id === el.dataset.t;
+          if (p) p.hidden = !on; if (b) b.setAttribute('aria-expanded', String(on));
+        });
+        if (open) { const f = document.getElementById(el.dataset.t).querySelector('input,textarea'); if (f) f.focus(); }
+        return;
+      }
+      if (a === 'savefromcmp') {                              // Price history empty state: the one primary action
+        const res = (ui.host.getCompare && ui.host.getCompare()) || [];
+        if (res.some(r => r.n && !/^Item \d+$/.test(r.n))) return openSavePrices();
+        closeSheet(); if (ui.host.goCompare) ui.host.goCompare(); toast(tr('pb_go_compare')); return;
+      }
+      if (a === 'shmk') return shMake();
+      if (a === 'shjoin') return shJoin();
+      if (a === 'shshare') return shShare(el);
+      if (a === 'shinvite') { shInvite = { hid: el.dataset.id, code: await bp.households.invite(el.dataset.id) }; const box = $('#shInv'); if (box) box.innerHTML = inviteHtml(shInvite.code); return; }
+      if (a === 'shcopy') return shCopy();
+      if (a === 'shsend') return shSend();
+      if (a === 'shstop') return shStop();
+      if (a === 'shmanage') return openHub('house');
       if (a === 'adddeal') return submitDeal();
       if (a === 'clip') { await bp.deals.clip(el.dataset.id, el.dataset.v === '1'); patchCachedDeal(el.dataset.id, { clipped: el.dataset.v === '1' }); return showTab('deals'); }
       if (a === 'deldeal') { await bp.deals.remove(el.dataset.id); mcache.forEach(c => { c.at = 0; }); return showTab('deals'); }
@@ -543,8 +712,9 @@
     const groups = new Map();
     rows.forEach(r => { const k = groupKey(r); (groups.get(k) || groups.set(k, []).get(k)).push(r); });
     let html = cached ? `<div class="bpx-note">${h(tr('pb_cached'))}</div>` : '';
+    if (groups.size) html += `<div class="bpx-note">${h(tr('pb_scope_note'))}</div>`;   // always visible: this is YOUR record, not market data
     if (alerts.length) html += `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(trn('alerts', alerts.length))}</div><button class="bpx-btn" data-a="readalerts">${h(tr('mark_read'))}</button></div>${alerts.slice(0, 6).map(a => `<div class="bpx-sub">${h(tr(a.store ? 'alert_row_at' : 'alert_row', { name: a.product_name, store: a.store, price: money(a.unit_price), unit: a.base_unit, target: money(a.target_unit_price) }))}</div>`).join('')}</div>`;
-    if (!groups.size) html += `<div class="bpx-empty">${h(tr('pb_empty_1'))}<br>${h(tr('pb_empty_2'))}</div>`;
+    if (!groups.size) html += `<div class="bpx-empty"><b>${h(tr('pb_empty_1'))}</b><br>${h(tr('pb_empty_2'))}<div style="margin-top:14px"><button class="bpx-btn p" data-a="savefromcmp">${h(tr('pb_empty_cta'))}</button></div></div><div class="bpx-note" style="text-align:center">${h(tr('pb_scope_note'))}</div>`;
     for (const [k, list] of [...groups].sort((a, b) => b[1][0].observed_at.localeCompare(a[1][0].observed_at))) {
       const t = pbTargets.find(x => x.product_key === list[0].product_key && x.base_unit === list[0].base_unit && x.active);
       const v = vInfo(list, t), best = list.reduce((m, r) => (+r.unit_price < +m.unit_price ? r : m), list[0]);
@@ -729,25 +899,44 @@
     const lid = ui.host.activeListId();
     let matches = []; if (lid) { try { matches = await bp.deals.matchesForList(lid); } catch (e) { /* ignore */ } }
     const today = localISO(); ui._deals = deals;
-    let html = '';
-    const seen = new Set(), uniq = matches.filter(m => { const k = m.item_id + '|' + m.deal.id; if (seen.has(k)) return false; seen.add(k); return !m.deal.valid_to || m.deal.valid_to >= today; });
-    if (uniq.length) html += `<span class="bpx-lbl">${h(tr('lbl_matches'))}</span>` + uniq.map(m => dealCard(evalDeal(m.deal, best), { item: m.item_name })).join('');
-    html += `<span class="bpx-lbl">${h(tr('lbl_add'))}</span>
-      <div class="bpx-card"><div class="bpx-grid"><input class="bpx-in" id="dlName" placeholder="${h(tr('ph_product'))}" maxlength="200"><input class="bpx-in" id="dlStore" placeholder="${h(tr('ph_store'))}" maxlength="120">
-      <input class="bpx-in" id="dlPrice" inputmode="decimal" placeholder="${h(tr('ph_price'))}"><input class="bpx-in" id="dlSize" inputmode="decimal" placeholder="${h(tr('ph_size'))}">
-      <input class="bpx-in" id="dlQty" inputmode="decimal" placeholder="${h(tr('ph_qty'))}"><select class="bpx-in" id="dlUnit">${UNITS.map(u => `<option>${u}</option>`).join('')}</select>
-      <select class="bpx-in" id="dlKind"><option value="weekly_ad">${h(tr('kind_ad'))}</option><option value="coupon">${h(tr('kind_coupon'))}</option></select>
-      <select class="bpx-in" id="dlDisc"><option value="">${h(tr('disc_none'))}</option><option value="p">${h(tr('disc_p'))}</option><option value="d">${h(tr('disc_d'))}</option><option value="bogo">${h(tr('disc_bogo'))}</option></select>
-      <input class="bpx-in" id="dlDv" inputmode="decimal" placeholder="${h(tr('ph_dv'))}"><input class="bpx-in" id="dlGet" inputmode="numeric" placeholder="${h(tr('ph_get'))}">
-      <input class="bpx-in" id="dlTo" type="date" aria-label="${h(tr('valid_until_aria'))}"></div>
-      <div class="bpx-note">${h(tr('add_note'))}</div>
-      <button class="bpx-btn p" data-a="adddeal">${h(tr('add_deal'))}</button></div>
-      <details class="bpx-card"><summary class="bpx-name" style="cursor:pointer">${h(tr('import_sum'))}</summary><div class="bpx-note">${h(tr('import_cols'))}</div>
-      <textarea class="bpx-in" id="dlCsv" rows="4" placeholder="Publix,Whole milk,weekly_ad,4.29,1,1,gal,,,,,2026-11-19"></textarea><button class="bpx-btn" data-a="importdeals" style="margin-top:6px">${h(tr('import_btn'))}</button></details>
-      <span class="bpx-lbl">${h(tr('lbl_active'))}</span>`;
-    const act = deals.filter(d => !d.valid_to || d.valid_to >= today);
-    html += act.length ? act.map(d => dealCard(evalDeal(d, best), { del: true })).join('') : `<div class="bpx-empty">${h(tr('no_deals'))}</div>`;
+    const seen = new Set(), matchedIds = new Set();
+    const uniq = matches.filter(m => {
+      const k = m.item_id + '|' + m.deal.id; if (seen.has(k)) return false; seen.add(k);
+      const live = !m.deal.valid_to || m.deal.valid_to >= today; if (live) matchedIds.add(m.deal.id); return live;
+    });
+    // 1) Browse first: offers matched to the current list (or a plain-language empty state).
+    let html = `<span class="bpx-lbl" style="margin-top:0">${h(tr('lbl_matches'))}</span>`;
+    html += uniq.length
+      ? uniq.map(m => dealCard(evalDeal(m.deal, best), { item: m.item_name, del: true })).join('') + `<div class="bpx-note">${h(tr('offers_scope_note'))}</div>`
+      : `<div class="bpx-card bpx-empty">${h(tr('offers_empty'))}</div>`;
+    // 2) Secondary actions: manual entry and CSV import stay collapsed until asked for.
+    html += `<div class="bpx-row" style="margin:10px 0 8px">
+      <button class="bpx-btn" data-a="toggle" data-t="dlAddPanel" aria-expanded="false" aria-controls="dlAddPanel">+ ${h(tr('act_add'))}</button>
+      <button class="bpx-btn" data-a="toggle" data-t="dlImpPanel" aria-expanded="false" aria-controls="dlImpPanel">${h(tr('act_import'))}</button></div>
+      <div class="bpx-card" id="dlAddPanel" hidden>
+        <div class="bpx-grid"><input class="bpx-in" id="dlName" placeholder="${h(tr('ph_product'))}" aria-label="${h(tr('ph_product'))}" maxlength="200"><input class="bpx-in" id="dlStore" placeholder="${h(tr('ph_store'))}" aria-label="${h(tr('ph_store'))}" maxlength="120">
+          <input class="bpx-in" id="dlPrice" inputmode="decimal" placeholder="${h(tr('ph_price'))}" aria-label="${h(tr('ph_price'))}">
+          <div class="bpx-row" style="flex-wrap:nowrap"><input class="bpx-in" id="dlSize" inputmode="decimal" placeholder="${h(tr('ph_size'))}" aria-label="${h(tr('ph_size'))}"><select class="bpx-in" id="dlUnit" style="width:auto" aria-label="${h(tr('unit_aria'))}">${UNITS.map(u => `<option>${u}</option>`).join('')}</select></div></div>
+        <details class="bpx-more" style="margin-top:10px"><summary>${h(tr('more_opts'))}</summary>
+          <div class="bpx-grid"><select class="bpx-in" id="dlKind" aria-label="${h(tr('kind_ad'))} / ${h(tr('dc_coupon'))}"><option value="weekly_ad">${h(tr('kind_ad'))}</option><option value="coupon">${h(tr('kind_coupon'))}</option></select>
+            <input class="bpx-in" id="dlQty" inputmode="decimal" placeholder="${h(tr('ph_qty'))}" aria-label="${h(tr('ph_qty'))}">
+            <select class="bpx-in" id="dlDisc" aria-label="${h(tr('disc_none'))}"><option value="">${h(tr('disc_none'))}</option><option value="p">${h(tr('disc_p'))}</option><option value="d">${h(tr('disc_d'))}</option><option value="bogo">${h(tr('disc_bogo'))}</option></select>
+            <input class="bpx-in" id="dlDv" inputmode="decimal" hidden><input class="bpx-in" id="dlGet" inputmode="numeric" placeholder="${h(tr('ph_get'))}" aria-label="${h(tr('ph_get'))}" hidden>
+            <label class="bpx-sub" style="grid-column:1/-1">${h(tr('valid_until_aria'))}<input class="bpx-in" id="dlTo" type="date" style="margin-top:3px"></label></div>
+          <div class="bpx-note">${h(tr('add_note'))}</div></details>
+        <button class="bpx-btn p" data-a="adddeal" style="margin-top:8px">${h(tr('add_deal'))}</button></div>
+      <div class="bpx-card" id="dlImpPanel" hidden><div class="bpx-name">${h(tr('import_sum'))}</div><div class="bpx-note">${h(tr('import_cols'))}</div>
+        <textarea class="bpx-in" id="dlCsv" rows="4" placeholder="Publix,Whole milk,weekly_ad,4.29,1,1,gal,,,,,2026-11-19" aria-label="${h(tr('import_sum'))}"></textarea><button class="bpx-btn" data-a="importdeals" style="margin-top:6px">${h(tr('import_btn'))}</button></div>`;
+    // 3) Everything else that is saved and still valid.
+    const rest = deals.filter(d => (!d.valid_to || d.valid_to >= today) && !matchedIds.has(d.id));
+    if (rest.length) html += `<span class="bpx-lbl">${h(tr(uniq.length ? 'lbl_other' : 'lbl_all'))}</span>` + rest.map(d => dealCard(evalDeal(d, best), { del: true })).join('');
     body().innerHTML = html;
+    const disc = $('#dlDisc');
+    if (disc) disc.onchange = () => {                         // discount fields appear only when a discount type is chosen
+      const v = disc.value, dv = $('#dlDv'), get = $('#dlGet');
+      dv.hidden = !v; get.hidden = v !== 'bogo';
+      dv.placeholder = v ? tr('ph_dv_' + v) : ''; dv.setAttribute('aria-label', dv.placeholder); dv.inputMode = v === 'bogo' ? 'numeric' : 'decimal';
+    };
   }
   const num = id => { const v = parseFloat($(id).value); return isNaN(v) ? null : v; };
   async function submitDeal() {
@@ -798,6 +987,101 @@
   async function mkHouse() { const n = $('#hhName').value.trim(); if (!n) return toast(tr('need_hh_name')); await bp.households.create(n); toast(tr('hh_created'), 'ok'); showTab('house'); }
   async function joinHouse() { const c = $('#hhCode').value.trim(); if (!c) return toast(tr('need_code')); await bp.households.join(c); toast(tr('hh_joined'), 'ok'); showTab('house'); }
 
+  /* ------------------------------ share THIS list (contextual flow) ------------------------------
+   * Opened from the "Share list" button under the list header. Everything is about the active list: its state (private /
+   * shared), then the three steps (household -> share -> invite), then who it is shared with and "Stop sharing".
+   * The general Household tab (members, leave, per-list selectors) is untouched and reachable via "Manage household". */
+  let shInvite = null, shOv = null;                          // shOv: optimistic householdId for ~5 s, until the projection catches up
+  const curList = () => {
+    const lid = ui.host.activeListId(); if (lid == null) return null;
+    const l = ((ui.host.lists && ui.host.lists()) || []).find(x => String(x.id) === String(lid)); if (!l) return null;
+    return shOv && String(shOv.id) === String(l.id) && Date.now() - shOv.at < 5000 ? Object.assign({}, l, { householdId: shOv.hid }) : l;
+  };
+  const isOwnerOf = x => x.members.some(m => m.is_me && m.role === 'owner');
+  function inviteHtml(code) {
+    return `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code" id="shCodeOut">${h(code)}</div>
+      <div class="bpx-row" style="margin-top:6px"><button class="bpx-btn" data-a="shcopy">${h(tr('sh_copy'))}</button>${navigator.share ? `<button class="bpx-btn p" data-a="shsend">${h(tr('sh_send'))}</button>` : ''}</div>`;
+  }
+  async function openShareList() {
+    if (!curList()) return toast(tr('rep_open_list'));
+    shInvite = null; shOv = null;
+    openSheet(tr('sh_title'), '', null);
+    sheetEl.addEventListener('click', hubClick);
+    sheetEl.addEventListener('submit', e => e.preventDefault());
+    sheetEl.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' || !e.target.matches || !e.target.matches('#shName,#shCode')) return;
+      e.preventDefault(); const b = $(e.target.id === 'shName' ? '[data-a="shmk"]' : '[data-a="shjoin"]', sheetEl); if (b) b.click();
+    });
+    busy();
+    try { await renderShare(); } catch (e) { fail(e); }
+  }
+  async function renderShare() {
+    if (!sheetEl) return;
+    const l = curList(); if (!l) return closeSheet();
+    const hs = await bp.households.list(), me = bp.me();
+    if (!sheetEl) return;
+    const mine = l.ownerId === me, shared = !!l.householdId;
+    const hh = shared ? hs.find(x => String(x.id) === String(l.householdId)) : null, hhName = hh ? hh.name : (hs[0] ? hs[0].name : '');
+    const people = x => x.members.map(m => `<div class="bpx-row bpx-sub"><span>${h(m.display_name)}${m.is_me ? ' ' + h(tr('you')) : ''}${m.role === 'owner' ? ' · ' + h(tr('owner')) : ''}</span></div>`).join('');
+    const step = (n, title, done, inner) => `<div class="bpx-step${done ? ' done' : ''}"><div class="bpx-stepn" aria-hidden="true">${done ? '&#10003;' : n}</div><div class="bpx-grow"><div class="bpx-name">${h(title)}${done ? `<span class="bpx-sr"> (${h(tr('sh_done'))})</span>` : ''}</div>${inner}</div></div>`;
+    // a) Is it private or shared?
+    let html = `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow"><div class="bpx-name">${h(l.name)}</div>
+      <div class="bpx-sub">${h(shared ? tr('sh_status_shared', { name: hhName || tr('sh_chip_shared') }) : tr('sh_status_private'))}</div></div>
+      <span class="bpx-chip ${shared ? 'g' : 'n'}">${h(tr(shared ? 'sh_chip_shared' : 'sh_chip_private'))}</span></div></div>`;
+    if (!mine) {                                              // a list someone else shared with me: read-only
+      html += `<div class="bpx-note">${h(tr('sh_owner_only'))}</div>` + (hh ? `<span class="bpx-lbl">${h(tr('sh_with_lbl'))}</span><div class="bpx-people">${people(hh)}</div>` : '')
+        + `<div class="bpx-row" style="margin-top:10px"><button class="bpx-btn" data-a="shmanage">${h(tr('sh_manage'))}</button></div>`;
+      body().innerHTML = html; return;
+    }
+    // b) Household: create or join when there is none.
+    html += step(1, tr('sh_step1'), hs.length > 0, hs.length
+      ? `<div class="bpx-sub">${h(hs.map(x => x.name).join(', '))}</div>`
+      : `<div class="bpx-note">${h(tr('sh_hh_none'))}</div>
+         <span class="bpx-lbl">${h(tr('hh_create_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="shName" maxlength="80" placeholder="${h(tr('hh_ph'))}" aria-label="${h(tr('hh_create_lbl'))}"><button class="bpx-btn p" data-a="shmk">${h(tr('sh_create_btn'))}</button></div>
+         <span class="bpx-lbl">${h(tr('sh_join_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="shCode" maxlength="16" autocapitalize="characters" placeholder="${h(tr('code_ph'))}" aria-label="${h(tr('sh_join_lbl'))}"><button class="bpx-btn" data-a="shjoin">${h(tr('join'))}</button></div>`);
+    // Share this list with a household.
+    html += step(2, tr('sh_step2'), shared, shared ? `<div class="bpx-sub">${h(tr('sh_step2_done', { name: hhName }))}</div>`
+      : hs.length === 0 ? `<div class="bpx-sub">${h(tr('sh_need_hh'))}</div>`
+      : hs.length === 1 ? `<div class="bpx-row" style="margin-top:4px"><button class="bpx-btn p" data-a="shshare" data-id="${h(hs[0].id)}">${h(tr('sh_share_btn', { name: hs[0].name }))}</button></div>`
+      : `<div class="bpx-row" style="margin-top:4px"><select class="bpx-in bpx-grow" id="shHh" aria-label="${h(tr('sh_step1'))}">${hs.map(x => `<option value="${h(x.id)}">${h(x.name)}</option>`).join('')}</select><button class="bpx-btn p" data-a="shshare">${h(tr('sh_share_sel'))}</button></div>`);
+    // c) Invite someone.
+    const target = hh || hs.find(isOwnerOf) || hs[0];
+    html += step(3, tr('sh_step3'), false, !target ? `<div class="bpx-sub">${h(tr('sh_need_hh'))}</div>`
+      : !isOwnerOf(target) ? `<div class="bpx-sub">${h(tr('sh_invite_owner_only'))}</div>`
+      : `<div class="bpx-note">${h(tr('sh_invite_help'))}</div><button class="bpx-btn" data-a="shinvite" data-id="${h(target.id)}">${h(tr('sh_invite_btn'))}</button><div id="shInv">${shInvite && String(shInvite.hid) === String(target.id) ? inviteHtml(shInvite.code) : ''}</div>`);
+    // d) Who can see it now + stop sharing.
+    if (shared && hh) {
+      html += `<span class="bpx-lbl">${h(tr('sh_with_lbl'))}</span><div class="bpx-people">${people(hh)}</div>` + (hh.members.length < 2 ? `<div class="bpx-note">${h(tr('sh_only_you'))}</div>` : '');
+      html += `<div class="bpx-row" style="margin-top:10px"><button class="bpx-btn d" data-a="shstop">${h(tr('sh_stop'))}</button></div>`;
+    } else if (shared) {
+      html += `<div class="bpx-row" style="margin-top:10px"><button class="bpx-btn d" data-a="shstop">${h(tr('sh_stop'))}</button></div>`;
+    }
+    if (hs.length) html += `<div class="bpx-row" style="margin-top:8px"><button class="bpx-btn" data-a="shmanage">${h(tr('sh_manage'))}</button></div>`;
+    body().innerHTML = html;
+  }
+  function shareNow(householdId) {                           // throws if I'm not the owner (server enforces it too)
+    const l = curList(); bp.shareList(l.id, householdId || null); shOv = { id: l.id, hid: householdId || null, at: Date.now() };
+  }
+  async function shMake() {
+    const n = $('#shName').value.trim(); if (!n) return toast(tr('need_hh_name'));
+    const id = await bp.households.create(n); let ok = false;
+    if (id) { try { shareNow(id); ok = true; } catch (e) { console.error(e); } }
+    toast(tr(ok ? 'sh_created_shared' : 'hh_created'), 'ok'); await renderShare();
+  }
+  async function shJoin() { const c = $('#shCode').value.trim(); if (!c) return toast(tr('need_code')); await bp.households.join(c); toast(tr('hh_joined'), 'ok'); await renderShare(); }
+  async function shShare(el) { const hid = el.dataset.id || ($('#shHh') || {}).value; if (!hid) return; shareNow(hid); toast(tr('shared'), 'ok'); await renderShare(); }
+  async function shStop() { if (!confirm(tr('sh_stop_confirm'))) return; shareNow(null); shInvite = null; toast(tr('private'), 'ok'); await renderShare(); }
+  async function shCopy() {
+    const c = shInvite && shInvite.code; if (!c) return;
+    try { await navigator.clipboard.writeText(c); toast(tr('sh_copied'), 'ok'); }
+    catch (e) { const el = $('#shCodeOut'); if (el) { const r = document.createRange(); r.selectNodeContents(el); const s = global.getSelection(); s.removeAllRanges(); s.addRange(r); } toast(tr('sh_copy_failed')); }
+  }
+  async function shSend() {
+    const c = shInvite && shInvite.code; if (!c) return;
+    try { await navigator.share({ title: 'Better Price', text: tr('sh_invite_msg', { code: c }), url: location.origin }); }
+    catch (e) { if (e && e.name !== 'AbortError') return shCopy(); }
+  }
+
   /* ------------------------------ replenish ------------------------------ */
   async function openReplenish() {
     const lid = ui.host.activeListId(); if (!lid) return toast(tr('rep_open_list'));
@@ -823,5 +1107,5 @@
       };
     } catch (e) { fail(e); }
   }
-  ui.openReplenish = openReplenish; ui.openHub = openHub;
+  ui.openReplenish = openReplenish; ui.openHub = openHub; ui.openShareList = openShareList;
 })(window);
