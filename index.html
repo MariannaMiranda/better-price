@@ -7095,6 +7095,7 @@ async function bpBoot(session){
     preferredStores: () => { const p = loadU('preferred_stores', []); return Array.isArray(p) ? p.map(x => typeof x === 'string' ? x : x && x.name).filter(Boolean) : []; },
     accessToken: async () => (await _sb.auth.getSession()).data.session?.access_token || null,
     getCompare: () => window.bpLastCompare,
+    goCompare: () => goTab('compare'),
     lang: () => lang,
   });
   bp.ui.mount();
