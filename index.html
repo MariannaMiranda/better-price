@@ -423,13 +423,12 @@ body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 .nav-tabs-wrap{position:sticky;top:58px;z-index:90;}
 .nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:relative;}
 .nav-tabs::-webkit-scrollbar{display:none;}
-.nav-scroll-cue{display:none;position:absolute;top:0;bottom:1px;width:28px;pointer-events:none;z-index:2;opacity:0;transition:opacity .2s ease;}
+.nav-scroll-cue{position:absolute;top:0;bottom:1px;width:28px;pointer-events:none;z-index:2;opacity:0;visibility:hidden;transition:opacity .2s ease;}
 .nav-scroll-cue-left{left:0;background:linear-gradient(to right,var(--white),transparent);}
 .nav-scroll-cue-right{right:0;background:linear-gradient(to left,var(--white),transparent);}
 @media(max-width:480px){
-  .nav-scroll-cue{display:block;}
   .nav-tabs-wrap.can-scroll-left .nav-scroll-cue-left,
-  .nav-tabs-wrap.can-scroll-right .nav-scroll-cue-right{opacity:1;}
+  .nav-tabs-wrap.can-scroll-right .nav-scroll-cue-right{opacity:1;visibility:visible;}
 }
 .nav-tab{flex:1;min-width:72px;padding:14px 8px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
 .nav-tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -532,7 +531,7 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 /* ── ONBOARDING STEPPER ── */
 #onboarding-screen{display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;padding:16px;}
 #onboarding-screen::before{content:'';position:fixed;inset:0;background:rgba(0,20,50,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:-1;}
-.onboard-card{background:var(--white);border-radius:22px;padding:36px 32px;max-width:520px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.35);max-height:92vh;max-height:92dvh;overflow-y:auto;position:relative;z-index:1;}
+.onboard-card{background:var(--white);border-radius:22px;padding:36px 32px;max-width:520px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.35);max-height:92vh;overflow-y:auto;position:relative;z-index:1;}
 .onboard-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:6px;opacity:.8;}
 .onboard-tailor-badge{display:inline-flex;align-items:center;gap:7px;background:var(--brand-light);border:1px solid var(--brand);border-radius:40px;padding:7px 16px;margin-bottom:14px;}
 .onboard-tailor-badge span{font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.6px;}
@@ -548,6 +547,13 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 .onboard-chip{padding:10px 18px;border-radius:40px;border:2px solid var(--border);background:var(--input-bg);color:var(--text);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;transition:.2s;}
 .onboard-chip.selected{border-color:var(--brand);background:var(--brand-light);color:var(--brand);}
 .onboard-stepper{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;}
+.people-breakdown{margin:-10px 0 20px;text-align:left;}
+.people-breakdown summary{color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;text-align:center;padding:8px;}
+.people-breakdown-rows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;}
+.people-breakdown-rows label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);}
+.people-breakdown-rows input{width:100%;min-width:0;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font:inherit;}
+.people-breakdown-note{font-size:11px;color:var(--muted);line-height:1.4;margin-top:6px;}
+@media(max-width:420px){.people-breakdown-rows{grid-template-columns:1fr;}}
 .stepper-btn{width:40px;height:40px;border-radius:50%;border:2px solid var(--brand);background:none;color:var(--brand);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
 .stepper-btn:hover{background:var(--brand);color:#fff;}
 .stepper-val{font-family:var(--font-d);font-size:32px;font-weight:800;color:var(--brand);min-width:44px;text-align:center;}
@@ -740,8 +746,7 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(95%, 800px); 
-  height: min(75vh, 500px);
-  height: min(75dvh, 500px);
+  height: min(75vh, 500px); 
   border: 4px solid rgba(255, 255, 255, 0.9); 
   border-radius: 32px; 
   z-index: 2002;
@@ -799,7 +804,12 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 
 /* ── MODALS ── */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;z-index:1000;backdrop-filter:blur(2px);}
-.modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);width:min(440px,94vw);padding:28px;border-radius:22px;z-index:1001;display:none;box-shadow:0 20px 60px rgba(0,0,0,.22);color:var(--text);max-height:90vh;max-height:90dvh;overflow-y:auto;}
+.modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);width:min(440px,94vw);padding:28px;border-radius:22px;z-index:1001;display:none;box-shadow:0 20px 60px rgba(0,0,0,.22);color:var(--text);max-height:90vh;overflow-y:auto;}
+.checkout-status-icon{width:48px;height:48px;margin:0 auto 8px;display:grid;place-items:center;color:var(--text);}
+.checkout-status-icon svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
+.checkout-status-icon.is-loading svg{animation:checkout-icon-spin 1.2s linear infinite;}
+@keyframes checkout-icon-spin{to{transform:rotate(360deg);}}
+@media(prefers-reduced-motion:reduce){.checkout-status-icon.is-loading svg{animation:none;}}
 .modal-x{position:absolute;top:16px;right:16px;background:var(--input-bg);color:var(--muted);border:none;width:34px;height:34px;border-radius:9px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .modal-title{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--brand);margin-bottom:20px;}
 .modal-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:15px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;margin-bottom:14px;}
@@ -856,8 +866,11 @@ input:checked+.slider:before{transform:translateX(20px);}
 .penny-session-item{padding:9px 10px;border-radius:8px;font-size:13px;color:var(--text);cursor:pointer;transition:.15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;justify-content:space-between;gap:6px;}
 .penny-session-item:hover{background:var(--input-bg);}
 .penny-session-item.active{background:var(--brand-light);color:var(--brand);font-weight:600;}
-.penny-session-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:14px;flex-shrink:0;opacity:0;transition:.15s;}
-.penny-session-item:hover .penny-session-del{opacity:1;}
+.penny-session-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:14px;flex-shrink:0;transition:.15s;}
+@media (hover:hover) and (pointer:fine){
+  .penny-session-del{opacity:0;}
+  .penny-session-item:hover .penny-session-del{opacity:1;}
+}
 .penny-session-del:hover{color:var(--danger);}
 .penny-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
 .penny-chat-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;}
@@ -909,8 +922,11 @@ body.dark .pmsg-bubble .pmsg-pre{background:#0d1824;}
 .pmsg-bubble .pmsg-code{background:var(--input-bg);border-radius:4px;padding:1px 5px;font-size:12px;font-family:monospace;}
 body.dark .pmsg-bubble .pmsg-code{background:#0d1824;}
 .pmsg-wrap{display:flex;flex-direction:column;gap:2px;}
-.pmsg-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;padding:0 2px;}
-.pmsg-wrap:hover .pmsg-actions{opacity:1;}
+.pmsg-actions{display:flex;gap:4px;transition:opacity .15s;padding:0 2px;}
+@media (hover:hover) and (pointer:fine){
+  .pmsg-actions{opacity:0;}
+  .pmsg-wrap:hover .pmsg-actions{opacity:1;}
+}
 .pmsg-wrap.user .pmsg-actions{justify-content:flex-end;}
 .pmsg-wrap.penny .pmsg-actions{justify-content:flex-start;padding-left:38px;}
 .pmsg-act-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:3px;font-family:var(--font);transition:.15s;line-height:1.4;}
@@ -972,15 +988,12 @@ body.dark .pmsg-edit-cancel{border-color:#2a4060;color:#eef2ff;}
   .penny-textarea{font-size:16px;} /* prevent iOS zoom */
 }
 @media (hover:none), (pointer:coarse){
+  #tab-penny button,
+  #tab-penny textarea{min-width:44px;min-height:44px;}
   .penny-sidebar-close,
   .penny-sidebar-toggle,
   .penny-attach-btn,
   .penny-send-btn,
-  .penny-new-btn,
-  .penny-context-btn,
-  .penny-textarea,
-  .pmsg-edit-cancel,
-  .pmsg-edit-save,
   .nav-tab,
   .penny-sug{min-width:44px;min-height:44px;}
   .penny-session-item{min-height:44px;padding-top:0;padding-bottom:0;}
@@ -1337,13 +1350,22 @@ body.dark .bm-num{color:#34d399;}
     <div class="onboard-step active" id="ob-step-1">
       <div class="onboard-eyebrow">Step 1 of 5</div>
       <div class="onboard-title">How many people do you shop for?</div>
-      <div class="onboard-sub">This helps Penny estimate how long products last and calculate cost-per-day for your household.</div>
+      <div class="onboard-sub">This helps Penny estimate how long products last and calculate cost per person for the people you shop for.</div>
       <div class="onboard-stepper">
         <button class="stepper-btn" onclick="adjustHousehold(-1)">&#8722;</button>
         <div class="stepper-val" id="household-val">1</div>
         <button class="stepper-btn" onclick="adjustHousehold(1)">+</button>
         <span style="font-size:14px;color:var(--muted)" id="hh-label">person</span>
       </div>
+      <details class="people-breakdown">
+        <summary id="ob-breakdown-title">Add age breakdown (optional)</summary>
+        <div class="people-breakdown-rows">
+          <label><span id="ob-babies-label">Babies (under 2)</span><input id="ob-babies" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('ob')"></label>
+          <label><span id="ob-children-label">Children (2–17)</span><input id="ob-children" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('ob')"></label>
+          <label><span id="ob-adults-label">Adults (18+)</span><input id="ob-adults" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('ob')"></label>
+        </div>
+        <div class="people-breakdown-note" id="ob-breakdown-note" aria-live="polite">Enter any age counts; the total updates automatically. Leave all blank to use only the total.</div>
+      </details>
       <button class="onboard-next" onclick="obGoStep(2)">Continue &#8594;</button>
       <span class="onboard-skip" onclick="obSkipStep(1)">Skip for now</span>
     </div>
@@ -1654,7 +1676,7 @@ body.dark .bm-num{color:#34d399;}
             <div class="penny-welcome-text" id="pennyWelcomeText">Hey! I'm Penny, your AI shopping advisor.</div>
             <div class="penny-welcome-sub">Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.</div>
             <div class="penny-suggestions">
-              <button class="penny-sug" onclick="pennyQuickSend('Which store has the best prices for a family of 4?')">Best stores for families</button>
+              <button class="penny-sug" onclick="pennyQuickSend('Which stores have good grocery prices for the people I shop for?')">Best stores near me</button>
               <button class="penny-sug" onclick="pennyQuickSend('How do I save the most on meat?')">Save on meat</button>
               <button class="penny-sug" onclick="pennyQuickSend('What groceries should I buy in bulk?')">What to buy in bulk</button>
             </div>
@@ -1720,9 +1742,9 @@ body.dark .bm-num{color:#34d399;}
 
     <div class="help-section">
       <div class="help-h">Penny (AI Advisor)</div>
-      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Ask anything</div><div class="help-step-desc">Penny knows about your household, budget, and preferred stores. Ask things like <em>"What should I buy in bulk?"</em> or <em>"Which store is cheapest for produce?"</em></div></div></div>
+      <div class="help-step"><div class="help-num">1</div><div><div class="help-step-title">Ask anything</div><div class="help-step-desc">Penny knows who you shop for, your budget, and preferred stores. Ask things like <em>"What should I buy in bulk?"</em> or <em>"Which store is cheapest for produce?"</em></div></div></div>
       <div class="help-step"><div class="help-num">2</div><div><div class="help-step-title">Share your comparison</div><div class="help-step-desc">Tap <strong>Add Compare</strong> in the Penny tab to send your current product comparison to Penny and get a recommendation.</div></div></div>
-      <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Manage your grocery list</div><div class="help-step-desc">Just tell Penny what to add — she can create lists, add or remove items, and even suggest quantities based on your household size.</div></div></div>
+      <div class="help-step"><div class="help-num">3</div><div><div class="help-step-title">Manage your grocery list</div><div class="help-step-desc">Just tell Penny what to add — she can create lists, add or remove items, and suggest quantities based on the people you shop for.</div></div></div>
     </div>
 
     <div class="help-section">
@@ -1732,7 +1754,7 @@ body.dark .bm-num{color:#34d399;}
 
     <div class="help-section">
       <div class="help-h">Profile Tab</div>
-      <div class="help-tip">Update your name, email, and password here. You can also update your <strong>household size</strong>, <strong>shopping frequency</strong>, <strong>weekly budget</strong>, <strong>zip code</strong>, and <strong>preferred stores</strong> — Penny uses all of this to give you better advice.</div>
+      <div class="help-tip">Update your name, email, and password here. You can also update the number of people you shop for, optional age details, shopping frequency, budget, ZIP code, and preferred stores — Penny uses these to tailor advice.</div>
     </div>
     </div>
   </div>
@@ -1742,7 +1764,7 @@ body.dark .bm-num{color:#34d399;}
       <video id="cameraVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
       
       <div style="position:absolute;inset:0;pointer-events:none;">
-        <div style="position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);width:min(95%,800px);height:min(75vh,500px);height:min(75dvh,500px);border:4px solid rgba(255,255,255,.9);border-radius:32px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6);"></div>
+        <div style="position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);width:min(95%,800px);height:min(75vh,500px);border:4px solid rgba(255,255,255,.9);border-radius:32px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6);"></div>
       </div>
       
       <div style="position:absolute;top:0;left:0;right:0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
@@ -1838,7 +1860,7 @@ body.dark .bm-num{color:#34d399;}
     <div class="profile-section">
       <div class="profile-section-title">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span class="prof-lbl-household">Household Size</span>
+        <span class="prof-lbl-household">People You Shop For</span>
       </div>
       <div class="onboard-stepper" style="margin-bottom:0;">
         <button class="stepper-btn" onclick="profileAdjHousehold(-1)">&#8722;</button>
@@ -1846,6 +1868,15 @@ body.dark .bm-num{color:#34d399;}
         <button class="stepper-btn" onclick="profileAdjHousehold(1)">+</button>
         <span style="font-size:14px;color:var(--muted)">people</span>
       </div>
+      <details class="people-breakdown" style="margin:10px 0 0;">
+        <summary id="profile-breakdown-title">Add age breakdown (optional)</summary>
+        <div class="people-breakdown-rows">
+          <label><span id="profile-babies-label">Babies (under 2)</span><input id="profile-babies" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('profile')"></label>
+          <label><span id="profile-children-label">Children (2–17)</span><input id="profile-children" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('profile')"></label>
+          <label><span id="profile-adults-label">Adults (18+)</span><input id="profile-adults" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('profile')"></label>
+        </div>
+        <div class="people-breakdown-note" id="profile-breakdown-note" aria-live="polite">Enter any age counts; the total updates automatically. Leave all blank to use only the total.</div>
+      </details>
     </div>
 
     <div class="profile-section">
@@ -2022,7 +2053,7 @@ body.dark .bm-num{color:#34d399;}
 
 <div class="modal-box" id="upgradeModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
-  <div class="modal-title">Go Pro ⭐</div>
+  <div class="modal-title">Go Pro</div>
   <p id="upgradeModalMsg" style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;"></p>
   <ul style="font-size:13px;color:var(--text);margin:0 0 18px;padding-left:18px;line-height:1.8;">
     <li>Unlimited Penny AI messages</li>
@@ -2045,7 +2076,7 @@ body.dark .bm-num{color:#34d399;}
 </div>
 
 <div class="modal-box" id="checkoutSuccessModal" style="max-width:380px;text-align:center;">
-  <div id="coEmoji" style="font-size:44px;margin-bottom:8px;">⏳</div>
+  <div id="coStatusIcon" class="checkout-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-opacity=".28"/><path d="M12 3a9 9 0 0 1 9 9"/></svg></div>
   <div class="modal-title" id="coTitle" style="margin-bottom:8px;">Confirming your subscription…</div>
   <p id="coMsg" style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Hang tight. This usually takes a few seconds.</p>
   <div class="modal-btn-row" style="flex-direction:column;gap:8px;">
@@ -2149,18 +2180,28 @@ function _markProLocally(status){
 /* ── Checkout completion: ONE path for both the in-page onComplete callback and the ?embedded_return=1 redirect ──
    Stripe saying "complete" does not mean our database knows yet (the webhook can lag). So we show "Confirming…"
    and only claim Pro once the subscriptions table says so. */
+const _CHECKOUT_STATUS_ICONS = {
+  pending:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-opacity=".28"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>',
+  success:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg>',
+  delayed:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/><path d="m8 14 1.5 1.5L12 13"/></svg>'
+};
 function _coState(state){
   const set = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
   const show = (id, on) => { const e = document.getElementById(id); if(e) e.style.display = on ? '' : 'none'; };
+  const icon = document.getElementById('coStatusIcon');
+  if(icon){
+    icon.innerHTML = _CHECKOUT_STATUS_ICONS[state] || _CHECKOUT_STATUS_ICONS.delayed;
+    icon.classList.toggle('is-loading',state==='pending');
+  }
   if(state === 'pending'){
-    set('coEmoji','⏳'); set('coTitle','Confirming your subscription…'); set('coMsg','Hang tight. This usually takes a few seconds.');
+    set('coTitle','Confirming your subscription…'); set('coMsg','Hang tight. This usually takes a few seconds.');
     show('coPrimary', false); show('coSecondary', false);
   } else if(state === 'success'){
-    set('coEmoji','🎉'); set('coTitle',"You're Pro!"); set('coMsg','Unlimited Penny, unlimited scans, unlimited lists, no ads. Enjoy!');
+    set('coTitle',"You're Pro!"); set('coMsg','Unlimited Penny, unlimited scans, unlimited lists, no ads. Enjoy!');
     set('coPrimary',"Let's go"); document.getElementById('coPrimary').onclick = closeModals; show('coPrimary', true); show('coSecondary', false);
   } else {   // 'delayed'
-    set('coEmoji','🕐'); set('coTitle','Payment received');
-    set('coMsg',"We're still activating your plan. This can take a minute. We'll unlock Pro as soon as it's confirmed, so there's no need to pay again.");
+    set('coTitle','Checkout complete');
+    set('coMsg',"Your plan is still syncing with Stripe. This can take a minute; we'll keep checking, and you don't need to submit payment again.");
     set('coPrimary','Check again'); document.getElementById('coPrimary').onclick = () => confirmCheckoutCompletion();
     set('coSecondary','Close'); show('coPrimary', true); show('coSecondary', true);
   }
@@ -2231,12 +2272,12 @@ function updateProfilePlanUI(){
   if(!statusEl) return;
   if(userPlan === 'pro'){
     if(lastSubRow?.status === 'trialing' && lastSubRow?.trial_end){
-      statusEl.textContent = 'Free trial ⭐ — ends ' + new Date(lastSubRow.trial_end).toLocaleDateString();
+      statusEl.textContent = 'Free trial — ends ' + new Date(lastSubRow.trial_end).toLocaleDateString();
     } else {
       const renews = lastSubRow?.current_period_end
         ? ' — renews ' + new Date(lastSubRow.current_period_end).toLocaleDateString()
         : '';
-      statusEl.textContent = 'Pro plan ⭐' + renews;
+      statusEl.textContent = 'Pro plan' + renews;
     }
     freeBtns.style.display = 'none';
     manageBtn.style.display = 'inline-block';
@@ -2606,12 +2647,12 @@ const TRANSLATIONS = {
     hg3title:'Shop and check off', hg3desc:'While shopping, tap the checkbox next to each item. When done, use Clear Checked to reset the list for next time.',
     hp1title:'Save a comparison', hp1desc:'After setting up products on the Compare tab, go to Presets and tap Save Current. Give it a name so you can find it later.',
     hp2title:'Reload anytime', hp2desc:'Tap Load on any preset to instantly restore all the product cards. Great for items you compare every week.',
-    hpen1title:'Ask anything', hpen1desc:'Penny knows your household, budget, and preferred stores. Ask things like "What should I buy in bulk?" or "Which store is cheapest for produce?"',
+    hpen1title:'Ask anything', hpen1desc:'Penny knows who you shop for, your budget, and preferred stores. Ask things like "What should I buy in bulk?" or "Which store is cheapest for produce?"',
     hpen2title:'Share your comparison', hpen2desc:'Tap Add Compare in the Penny tab to send your current product comparison to Penny and get a recommendation.',
-    hpen3title:'Manage your grocery list', hpen3desc:'Just tell Penny what to add — she can create lists, add or remove items, and suggest quantities based on your household size.',
+    hpen3title:'Manage your grocery list', hpen3desc:'Just tell Penny what to add — she can create lists, add or remove items, and suggest quantities based on the people you shop for.',
     helpCompareTip:'Go to Settings (toolbar) to change how many product cards show at once — up to 8.',
     helpHistoryTip:'Every comparison you run is automatically saved here with the date, time, and winner. Tap the trash icon to remove an entry, or tap Clear All to wipe your history.',
-    helpProfileTip:'Update your name, email, and password here. You can also update your household size, shopping frequency, weekly budget, zip code, and preferred stores — Penny uses all of this to give you better advice.',
+    helpProfileTip:'Update your name, email, and password here. You can also update the people you shop for, optional age details, shopping frequency, budget, ZIP code, and preferred stores.',
     saveToPreset:'Save to Preset',
     scanCancel:'Cancel',
     errName:'Please enter your first name.', errLastName:'Please enter your last name.',
@@ -2639,7 +2680,9 @@ const TRANSLATIONS = {
     profileChangePass:'Change Password', profileCurPass:'Current Password', profileNewPass:'New Password',
     profileConfPass:'Confirm New Password', profilePassNote:'Leave new & confirm blank to keep your current password.',
     profileCurPassPh:'Enter your current password', profileNewPassPh:'New password (8+ chars)', profileConfPassPh:'Repeat new password',
-    profileHousehold:'Household Size', profileZip:'Zip Code', profileStores:'My Stores',
+    profileHousehold:'People You Shop For', profileZip:'Zip Code', profileStores:'My Stores',
+    peopleBreakdown:'Add age breakdown (optional)', peopleBreakdownNote:'Enter any age counts; the total updates automatically. Leave all blank to use only the total.', peopleBreakdownError:'Counts must add up to 1–15 people.',
+    peopleBabies:'Babies (under 2)', peopleChildren:'Children (2–17)', peopleAdults:'Adults (18+)',
     profileSave:'Save Changes', profileSaved:'Profile saved!',
     profileZipErr:'Zip code must be exactly 5 digits.',
     profilePassErr:'Password needs: ', profilePassNoMatch:'New passwords do not match.',
@@ -2667,7 +2710,7 @@ const TRANSLATIONS = {
     onboardTitle3:'What is your weekly grocery budget?',
     onboardTitle4:'Which stores do you shop at?',
     onboardTitle5:'What is your zip code?',
-    onboardSub1:'This helps Penny estimate how long products last and calculate cost-per-day for your household.',
+    onboardSub1:'This helps Penny estimate how long products last and calculate cost per person for the people you shop for.',
     onboardSub2:'We use this to calculate your weekly and monthly savings potential.',
     onboardSub3:'Set a spending target. Penny will help you stay on track and spot the best deals.',
     onboardSub4:'Select your preferred stores. Penny will estimate and compare prices at each one.',
@@ -2763,7 +2806,7 @@ const TRANSLATIONS = {
     hpen3title:'Gestiona tu lista de compras', hpen3desc:'Solo dile a Penny qué agregar: puede crear listas, agregar o quitar artículos y sugerir cantidades.',
     helpCompareTip:'Ve a Ajustes (barra de herramientas) para cambiar cuántas tarjetas se muestran — hasta 8.',
     helpHistoryTip:'Cada comparación que haces se guarda automáticamente aquí con la fecha, la hora y el ganador. Toca el ícono de papelera para eliminar una entrada o toca "Borrar todo" para limpiar tu historial.',
-    helpProfileTip:'Actualiza tu nombre, correo y contraseña. También puedes actualizar el tamaño del hogar, frecuencia de compra, presupuesto, código postal y tiendas preferidas.',
+    helpProfileTip:'Actualiza tu nombre, correo y contraseña. También puedes indicar para cuántas personas compras, edades opcionales, frecuencia, presupuesto, código postal y tiendas preferidas.',
     saveToPreset:'Guardar como preajuste',
     scanCancel:'Cancelar',
     errName:'Por favor ingresa tu nombre.', errLastName:'Por favor ingresa tu apellido.',
@@ -2791,7 +2834,9 @@ const TRANSLATIONS = {
     profileChangePass:'Cambiar contraseña', profileCurPass:'Contraseña actual', profileNewPass:'Nueva contraseña',
     profileConfPass:'Confirmar nueva contraseña', profilePassNote:'Deja los dos últimos en blanco para mantener tu contraseña.',
     profileCurPassPh:'Ingresa tu contraseña actual', profileNewPassPh:'Nueva contraseña (8+ caracteres)', profileConfPassPh:'Repite la nueva contraseña',
-    profileHousehold:'Tamaño del hogar', profileZip:'Código postal', profileStores:'Mis tiendas',
+    profileHousehold:'Personas para quienes compras', profileZip:'Código postal', profileStores:'Mis tiendas',
+    peopleBreakdown:'Agregar edades (opcional)', peopleBreakdownNote:'Ingresa las edades que quieras; el total se actualiza automáticamente. Déjalas en blanco para usar solo el total.', peopleBreakdownError:'El total debe ser de 1 a 15 personas.',
+    peopleBabies:'Bebés (menores de 2)', peopleChildren:'Niños (2–17)', peopleAdults:'Adultos (18+)',
     profileSave:'Guardar cambios', profileSaved:'¡Perfil guardado!',
     profileZipErr:'El código postal debe tener exactamente 5 dígitos.',
     profilePassErr:'La contraseña necesita: ', profilePassNoMatch:'Las contraseñas no coinciden.',
@@ -2819,7 +2864,7 @@ const TRANSLATIONS = {
     onboardTitle3:'¿Cuál es tu presupuesto semanal de compras?',
     onboardTitle4:'¿En qué tiendas compras?',
     onboardTitle5:'¿Cuál es tu código postal?',
-    onboardSub1:'Esto ayuda a Penny a estimar cuánto duran los productos y calcular el costo diario para tu hogar.',
+    onboardSub1:'Esto ayuda a Penny a estimar cuánto duran los productos y calcular el costo por persona para quienes haces las compras.',
     onboardSub2:'Lo usamos para calcular tu potencial de ahorro semanal y mensual.',
     onboardSub3:'Establece un objetivo de gasto. Penny te ayudará a mantenerte en el presupuesto.',
     onboardSub4:'Selecciona tus tiendas preferidas. Penny estimará y comparará precios en cada una.',
@@ -2915,7 +2960,7 @@ const TRANSLATIONS = {
     hpen3title:'Gerencie sua lista de compras', hpen3desc:'Basta dizer à Penny o que adicionar — ela pode criar listas, adicionar ou remover itens e sugerir quantidades.',
     helpCompareTip:'Vá em Configurações (barra de ferramentas) para alterar quantos cartões são exibidos — até 8.',
     helpHistoryTip:'Cada comparação que você faz é salva automaticamente aqui com a data, a hora e o vencedor. Toque no ícone de lixeira para remover uma entrada ou toque em "Limpar tudo" para apagar seu histórico.',
-    helpProfileTip:'Atualize seu nome, e-mail e senha. Você também pode atualizar o tamanho do domicílio, frequência de compras, orçamento, CEP e lojas preferidas.',
+    helpProfileTip:'Atualize seu nome, e-mail e senha. Você também pode informar para quantas pessoas compra, faixas etárias opcionais, frequência, orçamento, CEP e lojas preferidas.',
     saveToPreset:'Salvar como predefinição',
     scanCancel:'Cancelar',
     errName:'Por favor insira seu nome.', errLastName:'Por favor insira seu sobrenome.',
@@ -2943,7 +2988,9 @@ const TRANSLATIONS = {
     profileChangePass:'Alterar senha', profileCurPass:'Senha atual', profileNewPass:'Nova senha',
     profileConfPass:'Confirmar nova senha', profilePassNote:'Deixe os dois últimos em branco para manter sua senha.',
     profileCurPassPh:'Digite sua senha atual', profileNewPassPh:'Nova senha (8+ caracteres)', profileConfPassPh:'Repita a nova senha',
-    profileHousehold:'Tamanho da família', profileZip:'CEP', profileStores:'Minhas lojas',
+    profileHousehold:'Pessoas para quem você compra', profileZip:'CEP', profileStores:'Minhas lojas',
+    peopleBreakdown:'Adicionar faixas etárias (opcional)', peopleBreakdownNote:'Informe as idades desejadas; o total será atualizado. Deixe tudo em branco para usar apenas o total.', peopleBreakdownError:'O total deve ser de 1 a 15 pessoas.',
+    peopleBabies:'Bebês (menores de 2)', peopleChildren:'Crianças (2–17)', peopleAdults:'Adultos (18+)',
     profileSave:'Salvar alterações', profileSaved:'Perfil salvo!',
     profileZipErr:'O CEP deve ter exatamente 5 dígitos.',
     profilePassErr:'A senha precisa de: ', profilePassNoMatch:'As senhas não coincidem.',
@@ -2971,7 +3018,7 @@ const TRANSLATIONS = {
     onboardTitle3:'Qual é o seu orçamento semanal de compras?',
     onboardTitle4:'Em quais lojas você compra?',
     onboardTitle5:'Qual é o seu CEP?',
-    onboardSub1:'Isso ajuda Penny a estimar quanto tempo os produtos duram e calcular o custo diário para sua família.',
+    onboardSub1:'Isso ajuda Penny a estimar quanto tempo os produtos duram e calcular o custo por pessoa para quem você faz compras.',
     onboardSub2:'Usamos isso para calcular seu potencial de economia semanal e mensal.',
     onboardSub3:'Defina uma meta de gastos. Penny vai te ajudar a manter o orçamento.',
     onboardSub4:'Selecione suas lojas preferidas. Penny vai estimar e comparar preços em cada uma.',
@@ -3223,12 +3270,12 @@ function applyLang(){
   if(pennyWelcome){
     const sugs = pennyWelcome.querySelectorAll('.penny-sug');
     const sugTexts = lang==='es'
-      ? ['Mejores tiendas para familias','Ahorrar en carnes','Qué comprar al por mayor']
+      ? ['Tiendas con buenos precios cerca de mí','Ahorrar en carnes','Qué comprar al por mayor']
       : lang==='pt'
-      ? ['Melhores lojas para famílias','Economizar em carnes','O que comprar em quantidade']
-      : ['Best stores for families','Save on meat','What to buy in bulk'];
+      ? ['Lojas com bons preços perto de mim','Economizar em carnes','O que comprar em quantidade']
+      : ['Best stores near me','Save on meat','What to buy in bulk'];
     const sugCmds = [
-      lang==='es'?'¿Cuál tienda tiene mejores precios para una familia de 4?':lang==='pt'?'Qual loja tem os melhores preços para uma família de 4?':'Which store has the best prices for a family of 4?',
+      lang==='es'?'¿Qué tiendas tienen buenos precios cerca de mí?':lang==='pt'?'Quais lojas têm bons preços perto de mim?':'Which stores have good grocery prices near me?',
       lang==='es'?'¿Cómo ahorro más en carnes?':lang==='pt'?'Como economizo mais em carnes?':'How do I save the most on meat?',
       lang==='es'?'¿Qué comestibles debo comprar al por mayor?':lang==='pt'?'Quais mantimentos devo comprar em quantidade?':'What groceries should I buy in bulk?'
     ];
@@ -3279,6 +3326,14 @@ function applyLang(){
   // Update hh-label to current language
   const hhLbl=document.getElementById('hh-label');
   if(hhLbl){ const hh=parseInt(document.getElementById('household-val')?.innerText)||obHousehold; hhLbl.textContent=hh===1?(t.person||'person'):(t.people||'people'); }
+  ['ob','profile'].forEach(prefix=>{
+    setText(`${prefix}-breakdown-title`,t.peopleBreakdown||'Add age breakdown (optional)');
+    setText(`${prefix}-babies-label`,t.peopleBabies||'Babies (under 2)');
+    setText(`${prefix}-children-label`,t.peopleChildren||'Children (2–17)');
+    setText(`${prefix}-adults-label`,t.peopleAdults||'Adults (18+)');
+    const note=document.getElementById(`${prefix}-breakdown-note`);
+    if(note&&!peopleBreakdown(prefix)?.valid) note.textContent=t.peopleBreakdownNote||'Enter any age counts; the total updates automatically. Leave all blank to use only the total.';
+  });
 
   setQ('#tab-profile .tab-title', t.profileTitle||'My Profile');
   setQ('#tab-profile .prof-lbl-account',    t.profileAccountInfo||'Account Info');
@@ -3880,12 +3935,69 @@ function obRefreshBudgetStep(){
   if(v) v.innerText = '$' + obBudget.toLocaleString('en-US');
 }
 
-function adjustHousehold(d){
-  obHousehold = Math.max(1, Math.min(15, obHousehold + d));
-  document.getElementById('household-val').innerText = obHousehold;
-  const lbl = document.getElementById('hh-label');
-  if(lbl){ const t=T(); lbl.textContent = obHousehold === 1 ? (t.person||'person') : (t.people||'people'); }
+function peopleBreakdown(prefix){
+  const keys=['babies','children','adults'];
+  const raw=keys.map(key=>document.getElementById(`${prefix}-${key}`)?.value.trim()||'');
+  if(raw.every(value=>value==='')) return null;
+  const counts=raw.map(value=>value===''?0:Number(value));
+  const total=counts.reduce((sum,value)=>sum+value,0);
+  return {
+    babies:counts[0], children:counts[1], adults:counts[2], total,
+    valid:counts.every(value=>Number.isInteger(value)&&value>=0&&value<=15)&&total>=1&&total<=15
+  };
 }
+function updateObHouseholdUI(){
+  const value=document.getElementById('household-val');
+  if(value) value.textContent=obHousehold;
+  const lbl=document.getElementById('hh-label'), t=T();
+  if(lbl) lbl.textContent=obHousehold===1?(t.person||'person'):(t.people||'people');
+}
+function setPeopleBreakdown(prefix,mix){
+  ['babies','children','adults'].forEach(key=>{
+    const input=document.getElementById(`${prefix}-${key}`);
+    if(input) input.value=mix?String(mix[key]):'';
+  });
+  updatePeopleBreakdown(prefix);
+}
+function updatePeopleBreakdown(prefix){
+  const mix=peopleBreakdown(prefix);
+  const note=document.getElementById(`${prefix}-breakdown-note`), t=T();
+  if(note) note.textContent=mix&&!mix.valid?(t.peopleBreakdownError||'Counts must add up to 1–15 people.'):(t.peopleBreakdownNote||'Enter any age counts; the total updates automatically. Leave all blank to use only the total.');
+  if(!mix||!mix.valid) return;
+  if(prefix==='ob'){
+    obHousehold=mix.total;
+    updateObHouseholdUI();
+  }else{
+    profileHousehold=mix.total;
+    const value=document.getElementById('profile-household-val');
+    if(value) value.textContent=profileHousehold;
+  }
+}
+function changePeopleTotal(prefix,d){
+  const current=prefix==='ob'?obHousehold:profileHousehold;
+  const mix=peopleBreakdown(prefix);
+  if(mix?.valid){
+    if(d<0&&mix.total<=1) return;
+    if(d>0&&mix.total>=15) return;
+    if(d>0) mix.adults++;
+    else if(mix.adults) mix.adults--;
+    else if(mix.children) mix.children--;
+    else if(mix.babies) mix.babies--;
+    setPeopleBreakdown(prefix,mix);
+    return;
+  }
+  if(mix&&!mix.valid) setPeopleBreakdown(prefix,null);
+  const next=Math.max(1,Math.min(15,current+d));
+  if(prefix==='ob'){
+    obHousehold=next;
+    updateObHouseholdUI();
+  }else{
+    profileHousehold=next;
+    const value=document.getElementById('profile-household-val');
+    if(value) value.textContent=profileHousehold;
+  }
+}
+function adjustHousehold(d){ changePeopleTotal('ob',d); }
 function adjustBudget(d){
   const cfg = BUDGET_CFG[obBudgetMode()];
   obBudgetTouched = true;
@@ -3919,6 +4031,10 @@ function toggleObOtherStore(el){
   if(el.classList.contains('selected')) setTimeout(() => document.getElementById('ob-other-text')?.focus(), 50);
 }
 function obGoStep(step){
+  if(step>1&&document.getElementById('ob-step-1')?.classList.contains('active')&&!obSkipped[1]){
+    const mix=peopleBreakdown('ob');
+    if(mix&&!mix.valid){ updatePeopleBreakdown('ob'); return; }
+  }
   [1,2,3,4,5,6].forEach(n => {
     const el = document.getElementById('ob-step-' + n);
     if(el) el.classList.remove('active');
@@ -3976,7 +4092,11 @@ function tryFinishOnboarding(){
 
 function finishOnboarding(){
   _sb.auth.getUser().then(({data})=>{ if(data?.user) localStorage.setItem('bp_onboarded_'+data.user.id,'1'); });
-  if(!obSkipped[1]) saveU('household', obHousehold);
+  if(!obSkipped[1]){
+    saveU('household', obHousehold);
+    const mix=peopleBreakdown('ob');
+    saveU('people_composition',mix?.valid?{babies:mix.babies,children:mix.children,adults:mix.adults}:null);
+  }
   if(!obSkipped[2]){
     const otherFreqChip = document.getElementById('freq-other-chip');
     if(otherFreqChip && otherFreqChip.classList.contains('selected')){
@@ -5362,10 +5482,7 @@ let profileStores = [];
 let profileBudget = 200;
 let profileFreq = 'weekly';
 
-function profileAdjHousehold(d){
-  profileHousehold = Math.max(1, Math.min(15, profileHousehold + d));
-  document.getElementById('profile-household-val').innerText = profileHousehold;
-}
+function profileAdjHousehold(d){ changePeopleTotal('profile',d); }
 
 function profileBudgetMode(){ return budgetModeFor(profileFreq); }
 function profileRefreshBudgetUI(){
@@ -5454,6 +5571,8 @@ function renderProfileTab(){
   setPh('profile-confirm-pass',t.profileConfPassPh||'Repeat new password');
 
   profileHousehold = loadU('household', 2);
+  const savedPeopleBreakdown=loadU('people_composition',null);
+  setPeopleBreakdown('profile',savedPeopleBreakdown&&typeof savedPeopleBreakdown==='object'?savedPeopleBreakdown:null);
   profileStores    = loadU('preferred_stores', []);
   profileBudget    = loadU('weekly_budget', 200);
   profileFreq      = loadU('shop_frequency', 'weekly');
@@ -5654,6 +5773,12 @@ function confirmSaveProfile(){
 
 async function saveProfile(){
   const t = T();
+  const peopleMix=peopleBreakdown('profile');
+  if(peopleMix&&!peopleMix.valid){
+    updatePeopleBreakdown('profile');
+    showToast(t.peopleBreakdownError||'Counts must add up to 1–15 people.');
+    return;
+  }
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
   const email   = session.email || '';
 
@@ -5748,6 +5873,7 @@ async function saveProfile(){
   }
 
   saveU('household', profileHousehold);
+  saveU('people_composition',peopleMix?{babies:peopleMix.babies,children:peopleMix.children,adults:peopleMix.adults}:null);
   saveU('preferred_stores', profileStores);
   saveU('zip', zipVal);
   saveU('weekly_budget', profileBudget);
@@ -5973,7 +6099,7 @@ function renderPennyMessages(){
     const welcomeText = lang==='es'?(_fn?`Hola, ${_fn}! Soy Penny, tu asesora de compras con IA.`:'Hola, soy Penny, tu asesora de compras con IA.'):lang==='pt'?(_fn?`Olá, ${_fn}! Sou Penny, sua consultora de compras com IA.`:'Olá! Sou Penny, sua consultora de compras com IA.'):(_fn?`Hey, ${_fn}! I'm Penny, your AI shopping advisor.`:'Hey! I\'m Penny, your AI shopping advisor.');
     const welcomeSub  = lang==='es'?'Pregúntame lo que quieras o toca "Agregar comparación" para compartir tus productos actuales.':lang==='pt'?'Pergunte-me qualquer coisa ou toque em "Adicionar comparação" para compartilhar seus produtos atuais.':'Ask me anything about prices, what to buy, or tap "Add Compare" to share your current product comparison.';
     const sugTexts = lang==='es'?['Mejores tiendas para familias','Ahorrar en carnes','Qué comprar al por mayor']:lang==='pt'?['Melhores lojas para famílias','Economizar em carnes','O que comprar em quantidade']:['Best stores for families','Save on meat','What to buy in bulk'];
-    const sugCmds  = lang==='es'?['¿Cuál tienda tiene mejores precios para una familia de 4?','¿Cómo ahorro más en carnes?','¿Qué comestibles debo comprar al por mayor?']:lang==='pt'?['Qual loja tem os melhores preços para uma família de 4?','Como economizo mais em carnes?','Quais mantimentos devo comprar em quantidade?']:['Which store has the best prices for a family of 4?','How do I save the most on meat?','What groceries should I buy in bulk?'];
+    const sugCmds  = lang==='es'?['¿Qué tiendas tienen buenos precios cerca de mí?','¿Cómo ahorro más en carnes?','¿Qué comestibles debo comprar al por mayor?']:lang==='pt'?['Quais lojas têm bons preços perto de mim?','Como economizo mais em carnes?','Quais mantimentos devo comprar em quantidade?']:['Which stores have good grocery prices near me?','How do I save the most on meat?','What groceries should I buy in bulk?'];
     area.innerHTML = `<div class="penny-welcome">
       <div class="penny-welcome-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg></div>
       <div class="penny-welcome-text">${welcomeText}</div>
@@ -6745,6 +6871,8 @@ function buildSys(){
   const session=JSON.parse(localStorage.getItem('bp_session')||'{}');
   const firstName=session.firstName||session.name?.split(' ')[0]||'';
   const hh=loadU('household',2);
+  const savedPeople=loadU('people_composition',null);
+  const peopleMix=savedPeople&&['babies','children','adults'].every(key=>Number.isInteger(savedPeople[key])&&savedPeople[key]>=0&&savedPeople[key]<=15)&&savedPeople.babies+savedPeople.children+savedPeople.adults===hh?savedPeople:null;
   const stores=loadU('preferred_stores',[]);
   const zip=loadU('zip','');
   const budget=loadU('weekly_budget',0);
@@ -6781,7 +6909,8 @@ function buildSys(){
   const contextLines=[
     firstName?'User\'s first name: '+firstName:'',
     'Plan: '+(userPlan==='pro'?'Pro':'Free'),
-    'Household: '+hh+' person'+(hh>1?'s':''),
+    'People you shop for: '+hh,
+    peopleMix?'User-provided age breakdown: '+peopleMix.babies+' babies under 2, '+peopleMix.children+' children ages 2–17, '+peopleMix.adults+' adults 18+':'',
     'Preferred stores: '+(stores.length?stores.join(', '):'not set'),
     'Zip: '+(zip||'not set'),
     budget?('Budget ('+bWord+'): $'+budget+((bMode==='weekly'||bMode==='generic')?'':' (about $'+Math.round(budgetToWeekly(Number(budget),bMode))+'/week)')):'',
@@ -6812,7 +6941,7 @@ PRESETS TAB: Shows all saved Compare setups. Tap any preset to instantly reload 
 
 HISTORY TAB: Every comparison the user runs is automatically saved here with the date, product names, and results. Tap any history entry to view details or reload it. Users can delete individual entries.
 
-PROFILE TAB: Users set: household size (affects cost-per-day estimates), preferred grocery stores, zip code (for regional pricing), and budget (per shopping period, matching their shopping frequency). These personalize your recommendations.
+PROFILE TAB: Users set how many people they shop for, an optional age breakdown, preferred grocery stores, ZIP code (for regional pricing), and budget (per shopping period, matching their shopping frequency). These personalize your recommendations. The age breakdown is user-provided context, not a medical or precise nutrition profile.
 
 PENNY TAB (you): Users chat with you here. You can: answer questions, give price advice, recommend stores, help with meal planning, AND directly manage their grocery lists using command tags. You have full list management powers.
 
@@ -6909,7 +7038,7 @@ When a user asks about a product, store, or price WITHOUT mentioning how often t
 Use their answer to shape advice: daily consumers benefit from bulk; occasional buyers should skip warehouse packs. If frequency is already known from context, use it — never ask again.
 
 RULE 7 — SMART FREQUENCY-BASED SAVINGS MATH:
-Always factor in household size (${hh} person${hh>1?'s':''}) and usage frequency when comparing prices.
+Always factor in the number of people the user shops for (${hh}) and usage frequency when comparing prices. If an age breakdown is supplied, use it for context but do not claim precise age-based nutrition or cost estimates.
 - Daily use → calculate weekly/monthly cost at each store; recommend bulk only if the family will use it before it expires
 - Occasional/one-time → recommend smallest affordable pack at cheapest store
 - Perishables → warn if bulk pack may spoil before they finish it
@@ -6924,8 +7053,8 @@ After giving advice, always end with ONE natural follow-up that deepens it:
 Never just answer and stop — always invite the next step (except when you are redirecting an off-topic request; the redirect already offers the next step).
 
 RULE 9 — HOUSEHOLD CONTEXT IS ALWAYS IN PLAY:
-You already know this household: ${hh} person${hh>1?'s':''}, shops ${freq||'regularly'}${budget?', $'+budget+' '+bWord+' budget':''}.
-Reference it naturally without them repeating it: "For your family of ${hh}..." or "Since you shop ${freq||'weekly'}..."
+You already know the shopping group: ${hh} people, shops ${freq||'regularly'}${budget?', $'+budget+' '+bWord+' budget':''}.
+The group may be a family, roommates, daycare, office, or another arrangement. Do not assume people are related or call them a family unless the user has said so. Reference the group neutrally and use any provided age breakdown without stereotyping.
 If frequency or household eating habits are unknown and it matters for your advice, ask once clearly and use the answer throughout the session.
 
 RULE 10 — PROACTIVELY SURFACE CHEAPER ALTERNATIVES:
@@ -6940,7 +7069,7 @@ Rules:
 - Only suggest stores the user could realistically visit (use their zip + preferred stores; nearby chains count even if not in their list)
 - Only flag it if savings are meaningful: at least ~$0.30/unit or ~10% cheaper — don't nitpick pennies
 - One soft offer, then wait. If they say "stick to my usual" → respect it, don't push that store again for that item
-- If they say yes → give a clear side-by-side with unit prices and total cost scaled to their household size and usage frequency
+- If they say yes → give a clear side-by-side with unit prices and total cost scaled to the number of people they shop for and their usage frequency
 
 RULE 11 — PRICE ACCURACY & AVAILABILITY HONESTY:
 Your own training knowledge may be months or years old and you don't have live access to store inventory. However — some messages will include a "Live web search results" system note above with real, freshly-retrieved information. Check for that first:
@@ -7076,7 +7205,7 @@ HOW BETTER PRICE! WORKS:
 - Grocery Tab: Build and manage custom grocery lists. Add items with quantity and notes, check them off while shopping, and copy items between lists.
 - Presets Tab: Reload any saved Compare setup instantly — no need to re-enter product info each time you shop.
 - History Tab: Every comparison you run is automatically saved with date and results so you can look back anytime.
-- Profile Tab: Set your household size, preferred grocery stores, zip code, and weekly budget to personalize recommendations.
+- Profile Tab: Set how many people you shop for, optional age details, preferred stores, ZIP code, and budget to personalize recommendations.
 - Penny Tab (that's me!): Once logged in, chat with me to manage your grocery lists, get price comparisons, store recommendations, budget tips, and more. I can add or remove items from your lists directly.
 
 LANGUAGE & DARK MODE: English, Spanish (Español) and Portuguese (Português) are supported. Inside the app, tap the Settings button (Settings / Ajustes / Configurações) in the top-left toolbar of the Compare tab to change the language or toggle Dark Mode. On the Sign-In / Sign-Up screen, use the language dropdown and the sun/moon icon in the top-right corner. There is no globe icon and no side menu (☰); never mention either.
@@ -7420,7 +7549,7 @@ const I18N_X = {
     gateTitle_penny:'Chat with Penny',
     gateBody_penny:'Penny builds your lists, compares stores and answers shopping questions. She needs an account so she can remember you.',
     gateTitle_profile:'Your profile',
-    gateBody_profile:'Set your household, stores and budget so advice fits you, and manage your plan.',
+    gateBody_profile:'Set who you shop for, your stores and budget so advice fits you, and manage your plan.',
     gateB1:'Sync across your phone and computer', gateB2:'Lists, presets and full comparison history',
     gateB3:'Penny, your AI shopping advisor', gateB4:'7-day Pro trial, no credit card to start',
     gateCreate:'Create free account', gateHave:'Already have an account?', gateLogin:'Sign in', gateKeep:'Keep comparing',
@@ -7439,7 +7568,8 @@ const I18N_X = {
     bmBelow:'Your budget sits below the USDA low-cost plan (about ${low}/{per} for {n}). Tight budgets are where checking unit prices pays off most.',
     bmWithin:'Your budget falls between the USDA low-cost (about ${low}) and moderate-cost (about ${mod}) plans per {per} for {n}. Comparing unit prices helps you stay in that range.',
     bmAbove:'Your budget is about ${diff}/{per} above the USDA moderate-cost plan (about ${mod} for {n}). That is headroom unit-price shopping can help you reclaim.',
-    bmBudgetOnly:'Add your household size in Profile to see how your budget compares with USDA food plans.',
+    bmBudgetOnly:'Add your shopping group size in Profile to see how your budget compares with USDA food plans.',
+    bmAgeMixNote:'Your optional age breakdown is saved for Penny, but this USDA comparison remains a broad estimate and is not calculated from your exact age mix.',
     bmNoBudget:'Set a weekly budget in Profile and we will show where you land.',
     bmFoot:'Benchmarks: USDA Food Plans, May 2026 (food at home; assumes adults plus school-age children). Your actual costs vary by region and household.',
     bmGo:'Start comparing', person:'person', people:'people'
@@ -7453,7 +7583,7 @@ const I18N_X = {
     gateTitle_penny:'Chatea con Penny',
     gateBody_penny:'Penny arma tus listas, compara tiendas y responde dudas de compras. Necesita una cuenta para recordarte.',
     gateTitle_profile:'Tu perfil',
-    gateBody_profile:'Configura tu hogar, tiendas y presupuesto para que los consejos se ajusten a ti, y administra tu plan.',
+    gateBody_profile:'Indica para quién compras, tus tiendas y presupuesto para adaptar los consejos, y administra tu plan.',
     gateB1:'Sincroniza tu teléfono y tu computadora', gateB2:'Listas, preajustes e historial completo',
     gateB3:'Penny, tu asesora de compras con IA', gateB4:'Prueba Pro de 7 días, sin tarjeta para empezar',
     gateCreate:'Crear cuenta gratis', gateHave:'¿Ya tienes una cuenta?', gateLogin:'Inicia sesión', gateKeep:'Seguir comparando',
@@ -7472,7 +7602,8 @@ const I18N_X = {
     bmBelow:'Tu presupuesto está por debajo del plan económico del USDA (unos ${low}/{per} para {n}). Con presupuestos ajustados, comparar precios por unidad rinde más.',
     bmWithin:'Tu presupuesto está entre el plan económico (unos ${low}) y el moderado (unos ${mod}) del USDA por {per} para {n}. Comparar precios por unidad te ayuda a mantenerte ahí.',
     bmAbove:'Tu presupuesto está unos ${diff}/{per} por encima del plan moderado del USDA (unos ${mod} para {n}). Es margen que comparar precios por unidad puede ayudarte a recuperar.',
-    bmBudgetOnly:'Agrega el tamaño de tu hogar en Perfil para ver cómo se compara tu presupuesto con los planes del USDA.',
+    bmBudgetOnly:'Agrega cuántas personas integran tu grupo de compras en Perfil para comparar tu presupuesto con los planes del USDA.',
+    bmAgeMixNote:'Penny guardará las edades opcionales, pero esta comparación del USDA sigue siendo una estimación general y no se calcula según esas edades.',
     bmNoBudget:'Define un presupuesto semanal en Perfil y te mostraremos dónde estás.',
     bmFoot:'Referencias: Planes de alimentos del USDA, mayo de 2026 (comida en casa; supone adultos y niños en edad escolar). Tus costos reales varían por región y hogar.',
     bmGo:'Empezar a comparar', person:'persona', people:'personas'
@@ -7486,7 +7617,7 @@ const I18N_X = {
     gateTitle_penny:'Converse com a Penny',
     gateBody_penny:'A Penny monta suas listas, compara mercados e tira dúvidas de compras. Ela precisa de uma conta para lembrar de você.',
     gateTitle_profile:'Seu perfil',
-    gateBody_profile:'Defina sua casa, mercados e orçamento para que os conselhos se ajustem a você, e gerencie seu plano.',
+    gateBody_profile:'Informe para quem você compra, suas lojas e orçamento para personalizar os conselhos, e gerencie seu plano.',
     gateB1:'Sincronize celular e computador', gateB2:'Listas, predefinições e histórico completo',
     gateB3:'Penny, sua assessora de compras com IA', gateB4:'Teste Pro de 7 dias, sem cartão para começar',
     gateCreate:'Criar conta grátis', gateHave:'Já tem uma conta?', gateLogin:'Entrar', gateKeep:'Continuar comparando',
@@ -7505,7 +7636,8 @@ const I18N_X = {
     bmBelow:'Seu orçamento está abaixo do plano econômico do USDA (cerca de ${low}/{per} para {n}). Com orçamento apertado, comparar preço por unidade rende mais.',
     bmWithin:'Seu orçamento fica entre o plano econômico (cerca de ${low}) e o moderado (cerca de ${mod}) do USDA por {per} para {n}. Comparar preço por unidade ajuda a se manter nessa faixa.',
     bmAbove:'Seu orçamento está cerca de ${diff}/{per} acima do plano moderado do USDA (cerca de ${mod} para {n}). É folga que comparar preço por unidade pode ajudar a recuperar.',
-    bmBudgetOnly:'Adicione o tamanho da sua casa em Perfil para ver como seu orçamento se compara aos planos do USDA.',
+    bmBudgetOnly:'Informe quantas pessoas fazem parte do seu grupo de compras no Perfil para comparar seu orçamento com os planos do USDA.',
+    bmAgeMixNote:'As faixas etárias opcionais ficam salvas para Penny, mas esta comparação do USDA continua sendo uma estimativa geral, não calculada pelas idades informadas.',
     bmNoBudget:'Defina um orçamento semanal em Perfil e mostraremos onde você está.',
     bmFoot:'Referências: Planos alimentares do USDA, maio de 2026 (comida em casa; considera adultos e crianças em idade escolar). Seus custos reais variam por região e casa.',
     bmGo:'Começar a comparar', person:'pessoa', people:'pessoas'
@@ -7723,7 +7855,8 @@ function renderBenchmark(){
     ? tx('bmConv', { amt: _fmt(entered), per: tx('bmPer_' + bMode), wk: _fmt(wk) }) : '';
 
   const nLabel = hh === null ? '' : (hh + ' ' + (hh === 1 ? tx('person') : tx('people')));
-  const usdaW = hh === null ? null : usdaWeekly(hh);
+  const ageMix = peopleBreakdown('ob');
+  const usdaW = hh === null || ageMix?.valid ? null : usdaWeekly(hh);
   const usda = usdaW ? { low: usdaW.low * mult, mod: usdaW.mod * mult } : null;
   const $ = id => document.getElementById(id);
 
@@ -7767,7 +7900,7 @@ function renderBenchmark(){
     else if(bud <= mod) verdict.textContent = tx('bmWithin', {low: _fmt(low), mod: _fmt(mod), n: nLabel, per});
     else                verdict.textContent = tx('bmAbove',  {diff: _fmt(bud - mod), mod: _fmt(mod), n: nLabel, per});
   } else if(wk !== null){
-    verdict.textContent = tx('bmBudgetOnly') + (convText ? ' ' + convText : '');
+    verdict.textContent = tx(ageMix?.valid ? 'bmAgeMixNote' : 'bmBudgetOnly') + (convText ? ' ' + convText : '');
   } else {
     verdict.textContent = tx('bmNoBudget');
   }
