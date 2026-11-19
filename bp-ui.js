@@ -58,9 +58,9 @@
       target_lbl: 'Alert me when it drops to (per {unit})', target_ph: 'e.g. {v}', target_aria: 'Target unit price',
       set_alert: 'Set alert', update: 'Update', remove: 'Remove',
       target_note: 'Alerts fire when any new price you (or your household) save is at or below this. No store data is fetched automatically.',
-      history: 'History', del_price_aria: 'Delete this price',
+      history: 'Price history', del_price_aria: 'Delete this price',
       chart_need_two: 'Save at least two prices to see a trend.', chart_aria: 'Unit price history, {n} points, from {from} to {to}', chart_target: '- - your target',
-      t_removed: 'Target removed', p_removed: 'Price removed', t_invalid: 'Enter a target price greater than 0.', t_set: 'Alert set',
+      t_removed: 'Target removed', p_removed: 'Price history entry removed', t_invalid: 'Enter a target price greater than 0.', t_set: 'Alert set',
 
       sp_title: 'Save to price history', sp_name_first: 'Give each product a name first so it can be tracked.',
       sp_note: 'Only save prices you have confirmed on the shelf or receipt. Each one becomes a data point in your history.',
@@ -73,7 +73,11 @@
       disc_none: 'Sale price as listed', disc_p: '% off', disc_d: 'Amount off', disc_bogo: 'Buy X get Y free',
       ph_dv: 'Discount value / buy X', ph_get: 'Get Y (BOGO)', valid_until_aria: 'Valid until',
       add_note: 'Enter the shelf price and the discount separately; the effective unit price is calculated for you. No retailer feeds are used.',
-      add_deal: 'Add deal', import_sum: 'Import a weekly ad (CSV)', import_cols: 'Columns: store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to', import_btn: 'Import',
+      add_deal: 'Add deal', import_sum: 'Import a weekly ad (CSV)', import_cols: 'Columns: store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to',
+      import_help: 'One deal per row. Required: product, kind (weekly_ad or coupon), price, size and unit. Store and quantity are optional; quantity defaults to 1. Discount fields (p, d or bogo) and valid_to are optional. A header row is optional; quote any value that contains a comma. Dates use YYYY-MM-DD. Up to 200 rows per import.',
+      import_example: 'store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to\nPublix,Whole milk,weekly_ad,4.29,1,1,gal,,,,,',
+      import_paste_ph: 'Paste CSV rows here (header row optional)',
+      import_btn: 'Import',
       dc_ad: 'Weekly ad', dc_coupon: 'Coupon', dc_regular: 'Regular', dc_effective: 'effective', dc_per_pack: 'per pack',
       dc_unsupported: 'Unit not supported', dc_ends: 'Ends {date}', dc_ends_today: 'Ends today', dc_ends_tomorrow: 'Ends tomorrow',
       dc_best: 'Best deal', dc_clip_needed: 'Clip to use', dc_vs_best: 'Your best {price}/{unit}',
@@ -89,11 +93,13 @@
       clipped: 'Coupon clipped', unclipped: 'Coupon unclipped',
 
       hh_intro: 'A household lets several people share lists, favorites and price history. Edits merge automatically, even from offline phones.',
-      invite: 'Invite', leave: 'Leave', you: '(you)', owner: 'owner', invite_note: 'Invite code (valid 7 days, 10 uses):',
+      invite: 'Invite', invite_again: 'New code', leave: 'Leave', you: '(you)', owner: 'owner', member: 'member',
+      invite_note: 'Invite code: valid for 7 days and up to 10 uses. Create a fresh code whenever your group needs another invite.',
+      member_access: 'Members can edit shared-list items, but only the household owner can invite or remove members. Anyone can leave at any time.',
       hh_create_lbl: 'Create a household', hh_ph: 'e.g. Home', create: 'Create', join_lbl: 'Join with an invite code', code_ph: 'Invite code', join: 'Join',
       share_lbl: 'Who can see each of your lists', share_aria: 'Sharing for {name}', shared: 'List shared', private: 'List is private again',
-      confirm_leave: 'Leave this household? Lists you own will stop being shared.', confirm_kick: 'Remove this member?',
-      e_invite: 'That invite code is invalid or expired.', e_full: 'That household is full.', e_limit: 'You have reached the household limit.',
+      confirm_leave: 'Leave this household? Lists you own will become private and stay yours. You will lose access to lists owned by others.', confirm_kick: 'Remove this member?',
+      e_invite: 'That invite code is invalid, expired or has no uses left. Ask the owner to create a fresh code.', e_full: 'That household is full.', e_limit: 'You have reached the household limit.',
       e_offline: 'You are offline.', e_generic: 'That did not work. Please try again.',
       need_hh_name: 'Give the household a name.', need_code: 'Enter the invite code.', hh_created: 'Household created', hh_joined: 'Joined. Shared lists are loading.',
 
@@ -118,8 +124,8 @@
       sh_share_sel: 'Share this list',
       sh_need_hh: 'Create or join a household first.',
       sh_step2_done: 'Shared with {name}.',
-      sh_invite_help: 'Create a code and send it. They enter it under "Join with a code".',
-      sh_invite_btn: 'Invite someone',
+      sh_invite_help: 'Create a code and send it. It is valid for 7 days and up to 10 uses; create a fresh code whenever your group needs another invite.',
+      sh_invite_btn: 'Invite someone', sh_new_invite_btn: 'Create another code',
       sh_copy: 'Copy code',
       sh_send: 'Share…',
       sh_copied: 'Code copied',
@@ -130,7 +136,7 @@
       sh_only_you: 'Only you so far. Invite someone to start sharing.',
       sh_stop: 'Stop sharing',
       sh_stop_confirm: 'Stop sharing this list? It will be private again.',
-      sh_owner_only: 'Only the list owner can change sharing.',
+      sh_owner_only: 'You can edit items on this shared list, but only its owner can change sharing or delete the list.',
       sh_manage: 'Manage household & members',
       sh_created_shared: 'Household created. List shared.',
       offers_empty: 'No saved offers match this list yet. Offers are added by you or your household; live store ads aren\'t connected.',
@@ -186,9 +192,9 @@
       target_lbl: 'Avísame cuando baje a (por {unit})', target_ph: 'p. ej. {v}', target_aria: 'Precio unitario meta',
       set_alert: 'Crear alerta', update: 'Actualizar', remove: 'Quitar',
       target_note: 'Las alertas se activan cuando cualquier precio nuevo que tú (o tu hogar) guarden sea igual o menor. No se consultan datos de tiendas automáticamente.',
-      history: 'Historial', del_price_aria: 'Eliminar este precio',
+      history: 'Historial de precios', del_price_aria: 'Eliminar este precio',
       chart_need_two: 'Guarda al menos dos precios para ver una tendencia.', chart_aria: 'Historial de precio unitario, {n} puntos, de {from} a {to}', chart_target: '- - tu meta',
-      t_removed: 'Meta eliminada', p_removed: 'Precio eliminado', t_invalid: 'Ingresa un precio meta mayor que 0.', t_set: 'Alerta creada',
+      t_removed: 'Meta eliminada', p_removed: 'Se eliminó el registro del historial de precios', t_invalid: 'Ingresa un precio meta mayor que 0.', t_set: 'Alerta creada',
 
       sp_title: 'Guardar en el historial de precios', sp_name_first: 'Ponle nombre a cada producto para poder darle seguimiento.',
       sp_note: 'Guarda solo precios que hayas confirmado en el estante o en el recibo. Cada uno se convierte en un dato de tu historial.',
@@ -201,7 +207,11 @@
       disc_none: 'Precio de oferta tal como aparece', disc_p: '% de descuento', disc_d: 'Monto de descuento', disc_bogo: 'Compra X y lleva Y gratis',
       ph_dv: 'Valor del descuento / compra X', ph_get: 'Lleva Y (2x1)', valid_until_aria: 'Válido hasta',
       add_note: 'Ingresa por separado el precio en estante y el descuento; el precio unitario efectivo se calcula por ti. No se usan datos de minoristas.',
-      add_deal: 'Agregar oferta', import_sum: 'Importar un folleto semanal (CSV)', import_cols: 'Columnas: store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to', import_btn: 'Importar',
+      add_deal: 'Agregar oferta', import_sum: 'Importar un folleto semanal (CSV)', import_cols: 'Columnas: store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to',
+      import_help: 'Una oferta por fila. Obligatorios: product, kind (weekly_ad o coupon), price, size y unit. store y quantity son opcionales; quantity predeterminada es 1. El descuento (p, d o bogo) y valid_to son opcionales. El encabezado es opcional; usa comillas si un valor contiene comas. Fechas en formato YYYY-MM-DD. Máximo 200 filas por importación.',
+      import_example: 'store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to\nPublix,Whole milk,weekly_ad,4.29,1,1,gal,,,,,',
+      import_paste_ph: 'Pega aquí las filas CSV (encabezado opcional)',
+      import_btn: 'Importar',
       dc_ad: 'Folleto semanal', dc_coupon: 'Cupón', dc_regular: 'Regular', dc_effective: 'efectivo', dc_per_pack: 'por paquete',
       dc_unsupported: 'Unidad no compatible', dc_ends: 'Termina {date}', dc_ends_today: 'Termina hoy', dc_ends_tomorrow: 'Termina mañana',
       dc_best: 'Mejor oferta', dc_clip_needed: 'Actívalo para usarlo', dc_vs_best: 'Tu mejor {price}/{unit}',
@@ -217,11 +227,13 @@
       clipped: 'Cupón activado', unclipped: 'Cupón desactivado',
 
       hh_intro: 'Un hogar permite que varias personas compartan listas, favoritos e historial de precios. Los cambios se combinan solos, incluso desde teléfonos sin conexión.',
-      invite: 'Invitar', leave: 'Salir', you: '(tú)', owner: 'propietario', invite_note: 'Código de invitación (válido 7 días, 10 usos):',
+      invite: 'Invitar', invite_again: 'Nuevo código', leave: 'Salir', you: '(tú)', owner: 'propietario', member: 'miembro',
+      invite_note: 'Código válido por 7 días y hasta 10 usos. Crea un código nuevo cuando tu grupo necesite otra invitación.',
+      member_access: 'Los miembros pueden editar artículos de listas compartidas, pero solo el propietario del hogar puede invitar o quitar miembros. Cualquiera puede salir cuando quiera.',
       hh_create_lbl: 'Crear un hogar', hh_ph: 'p. ej. Casa', create: 'Crear', join_lbl: 'Unirse con un código de invitación', code_ph: 'Código de invitación', join: 'Unirme',
       share_lbl: 'Quién puede ver cada una de tus listas', share_aria: 'Uso compartido de {name}', shared: 'Lista compartida', private: 'La lista vuelve a ser privada',
-      confirm_leave: '¿Salir de este hogar? Las listas que posees dejarán de compartirse.', confirm_kick: '¿Quitar a este miembro?',
-      e_invite: 'Ese código de invitación no es válido o venció.', e_full: 'Ese hogar está lleno.', e_limit: 'Alcanzaste el límite de hogares.',
+      confirm_leave: '¿Salir de este hogar? Tus listas volverán a ser privadas y seguirán siendo tuyas. Perderás acceso a las listas de otras personas.', confirm_kick: '¿Quitar a este miembro?',
+      e_invite: 'El código no es válido, venció o ya no tiene usos. Pide al propietario que cree uno nuevo.', e_full: 'Ese hogar está lleno.', e_limit: 'Alcanzaste el límite de hogares.',
       e_offline: 'Estás sin conexión.', e_generic: 'No funcionó. Inténtalo de nuevo.',
       need_hh_name: 'Ponle un nombre al hogar.', need_code: 'Ingresa el código de invitación.', hh_created: 'Hogar creado', hh_joined: 'Te uniste. Se están cargando las listas compartidas.',
 
@@ -246,8 +258,8 @@
       sh_share_sel: 'Compartir esta lista',
       sh_need_hh: 'Primero crea un hogar o únete a uno.',
       sh_step2_done: 'Compartida con {name}.',
-      sh_invite_help: 'Crea un código y envíaselo. Lo ingresan en "Unirse con un código".',
-      sh_invite_btn: 'Invitar a alguien',
+      sh_invite_help: 'Crea un código y envíaselo. Es válido por 7 días y hasta 10 usos; crea otro cuando tu grupo necesite una nueva invitación.',
+      sh_invite_btn: 'Invitar a alguien', sh_new_invite_btn: 'Crear otro código',
       sh_copy: 'Copiar código',
       sh_send: 'Compartir…',
       sh_copied: 'Código copiado',
@@ -258,7 +270,7 @@
       sh_only_you: 'Por ahora solo tú. Invita a alguien para empezar a compartir.',
       sh_stop: 'Dejar de compartir',
       sh_stop_confirm: '¿Dejar de compartir esta lista? Volverá a ser privada.',
-      sh_owner_only: 'Solo el propietario de la lista puede cambiar cómo se comparte.',
+      sh_owner_only: 'Puedes editar artículos de esta lista compartida, pero solo su propietario puede cambiar el uso compartido o eliminarla.',
       sh_manage: 'Administrar hogar y miembros',
       sh_created_shared: 'Hogar creado. Lista compartida.',
       offers_empty: 'Todavía no hay ofertas guardadas que coincidan con esta lista. Las ofertas las agregas tú o tu hogar; los folletos de las tiendas en vivo no están conectados.',
@@ -314,9 +326,9 @@
       target_lbl: 'Avise-me quando cair para (por {unit})', target_ph: 'ex.: {v}', target_aria: 'Preço unitário desejado',
       set_alert: 'Criar alerta', update: 'Atualizar', remove: 'Remover',
       target_note: 'Os alertas disparam quando qualquer preço novo que você (ou sua família) salvar for igual ou menor. Nenhum dado de loja é buscado automaticamente.',
-      history: 'Histórico', del_price_aria: 'Excluir este preço',
+      history: 'Histórico de preços', del_price_aria: 'Excluir este preço',
       chart_need_two: 'Salve pelo menos dois preços para ver uma tendência.', chart_aria: 'Histórico de preço unitário, {n} pontos, de {from} a {to}', chart_target: '- - sua meta',
-      t_removed: 'Meta removida', p_removed: 'Preço removido', t_invalid: 'Informe um preço desejado maior que 0.', t_set: 'Alerta criado',
+      t_removed: 'Meta removida', p_removed: 'Registro do histórico de preços removido', t_invalid: 'Informe um preço desejado maior que 0.', t_set: 'Alerta criado',
 
       sp_title: 'Salvar no histórico de preços', sp_name_first: 'Dê um nome a cada produto para poder acompanhá-lo.',
       sp_note: 'Salve apenas preços que você confirmou na prateleira ou no recibo. Cada um vira um ponto no seu histórico.',
@@ -329,7 +341,11 @@
       disc_none: 'Preço promocional como anunciado', disc_p: '% de desconto', disc_d: 'Valor de desconto', disc_bogo: 'Leve X e ganhe Y grátis',
       ph_dv: 'Valor do desconto / leve X', ph_get: 'Ganhe Y (leve+ganhe)', valid_until_aria: 'Válido até',
       add_note: 'Informe o preço da prateleira e o desconto separadamente; o preço unitário efetivo é calculado para você. Nenhum feed de varejista é usado.',
-      add_deal: 'Adicionar oferta', import_sum: 'Importar um encarte semanal (CSV)', import_cols: 'Colunas: store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to', import_btn: 'Importar',
+      add_deal: 'Adicionar oferta', import_sum: 'Importar um encarte semanal (CSV)', import_cols: 'Colunas: store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to',
+      import_help: 'Uma oferta por linha. Obrigatórios: product, kind (weekly_ad ou coupon), price, size e unit. store e quantity são opcionais; quantity padrão é 1. Desconto (p, d ou bogo) e valid_to são opcionais. O cabeçalho é opcional; use aspas se um valor tiver vírgula. Datas no formato YYYY-MM-DD. Até 200 linhas por importação.',
+      import_example: 'store,product,kind,price,size,qty,unit,discount_type,discount_value,buy_qty,get_qty,valid_to\nPublix,Whole milk,weekly_ad,4.29,1,1,gal,,,,,',
+      import_paste_ph: 'Cole as linhas CSV aqui (cabeçalho opcional)',
+      import_btn: 'Importar',
       dc_ad: 'Encarte semanal', dc_coupon: 'Cupom', dc_regular: 'Normal', dc_effective: 'efetivo', dc_per_pack: 'por pacote',
       dc_unsupported: 'Unidade não compatível', dc_ends: 'Termina {date}', dc_ends_today: 'Termina hoje', dc_ends_tomorrow: 'Termina amanhã',
       dc_best: 'Melhor oferta', dc_clip_needed: 'Ative para usar', dc_vs_best: 'Seu melhor {price}/{unit}',
@@ -345,11 +361,13 @@
       clipped: 'Cupom ativado', unclipped: 'Cupom desativado',
 
       hh_intro: 'Uma família permite que várias pessoas compartilhem listas, favoritos e histórico de preços. As edições se combinam sozinhas, até de celulares offline.',
-      invite: 'Convidar', leave: 'Sair', you: '(você)', owner: 'dono', invite_note: 'Código de convite (válido por 7 dias, 10 usos):',
+      invite: 'Convidar', invite_again: 'Novo código', leave: 'Sair', you: '(você)', owner: 'dono', member: 'membro',
+      invite_note: 'Código válido por 7 dias e até 10 usos. Crie um novo código quando seu grupo precisar de outro convite.',
+      member_access: 'Membros podem editar itens das listas compartilhadas, mas só o dono da família pode convidar ou remover membros. Qualquer pessoa pode sair quando quiser.',
       hh_create_lbl: 'Criar uma família', hh_ph: 'ex.: Casa', create: 'Criar', join_lbl: 'Entrar com um código de convite', code_ph: 'Código de convite', join: 'Entrar',
       share_lbl: 'Quem pode ver cada uma das suas listas', share_aria: 'Compartilhamento de {name}', shared: 'Lista compartilhada', private: 'A lista voltou a ser privada',
-      confirm_leave: 'Sair desta família? As listas que você criou deixarão de ser compartilhadas.', confirm_kick: 'Remover este membro?',
-      e_invite: 'Esse código de convite é inválido ou expirou.', e_full: 'Essa família está cheia.', e_limit: 'Você atingiu o limite de famílias.',
+      confirm_leave: 'Sair desta família? Suas listas voltarão a ser privadas e continuarão sendo suas. Você perderá acesso às listas de outras pessoas.', confirm_kick: 'Remover este membro?',
+      e_invite: 'O código é inválido, expirou ou não tem mais usos. Peça ao dono para criar um novo.', e_full: 'Essa família está cheia.', e_limit: 'Você atingiu o limite de famílias.',
       e_offline: 'Você está offline.', e_generic: 'Não funcionou. Tente novamente.',
       need_hh_name: 'Dê um nome à família.', need_code: 'Informe o código de convite.', hh_created: 'Família criada', hh_joined: 'Você entrou. As listas compartilhadas estão carregando.',
 
@@ -374,8 +392,8 @@
       sh_share_sel: 'Compartilhar esta lista',
       sh_need_hh: 'Primeiro crie uma família ou entre em uma.',
       sh_step2_done: 'Compartilhada com {name}.',
-      sh_invite_help: 'Crie um código e envie. A pessoa o digita em "Entrar com um código".',
-      sh_invite_btn: 'Convidar alguém',
+      sh_invite_help: 'Crie um código e envie. Ele vale por 7 dias e até 10 usos; crie outro quando seu grupo precisar de um novo convite.',
+      sh_invite_btn: 'Convidar alguém', sh_new_invite_btn: 'Criar outro código',
       sh_copy: 'Copiar código',
       sh_send: 'Compartilhar…',
       sh_copied: 'Código copiado',
@@ -386,7 +404,7 @@
       sh_only_you: 'Por enquanto só você. Convide alguém para começar a compartilhar.',
       sh_stop: 'Parar de compartilhar',
       sh_stop_confirm: 'Parar de compartilhar esta lista? Ela voltará a ser privada.',
-      sh_owner_only: 'Só o dono da lista pode alterar o compartilhamento.',
+      sh_owner_only: 'Você pode editar os itens desta lista compartilhada, mas só o dono pode alterar o compartilhamento ou excluí-la.',
       sh_manage: 'Gerenciar família e membros',
       sh_created_shared: 'Família criada. Lista compartilhada.',
       offers_empty: 'Ainda não há ofertas salvas que correspondam a esta lista. As ofertas são adicionadas por você ou pela sua família; os encartes das lojas ao vivo não estão conectados.',
@@ -440,11 +458,12 @@
   .bpx-badge{position:absolute;top:-2px;right:0;background:#ef4444;color:#fff;font:700 10px var(--font,system-ui);min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 4px}
   .bpx-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center}
   .bpx-sheet{background:var(--card-bg,var(--white,#fff));color:var(--text);width:100%;max-width:640px;max-height:92vh;max-height:92dvh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.3)}
-  @media (min-width:700px){.bpx-ov{align-items:center}.bpx-sheet{border-radius:18px;max-height:86vh}}
+  @media (min-width:700px){.bpx-ov{align-items:center}.bpx-sheet{border-radius:18px;max-height:86vh;max-height:86dvh}}
   .bpx-hd{display:flex;align-items:center;gap:8px;padding:14px 16px 8px}.bpx-hd h2{flex:1;font-size:17px;margin:0}
   .bpx-x{background:var(--input-bg);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px}
   .bpx-tabs{display:flex;gap:4px;padding:0 12px 8px;border-bottom:1px solid var(--border)}
   .bpx-tab{flex:1;background:none;border:none;color:var(--muted);font:600 13px var(--font,system-ui);padding:9px 6px;border-radius:9px;cursor:pointer}.bpx-tab[aria-selected=true]{background:var(--input-bg);color:var(--text)}
+  @media (hover:none),(pointer:coarse){.bpx-x{width:44px;height:44px}.bpx-tab,.bpx-btn{min-width:44px;min-height:44px}}
   .bpx-body{padding:12px 16px 20px;overflow:auto;flex:1}
   .bpx-card{border:1px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:9px;background:var(--bg)}
   .bpx-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.bpx-grow{flex:1;min-width:0}
@@ -464,6 +483,7 @@
   .bpx-chart{width:100%;height:auto;background:var(--input-bg);border-radius:10px}
   .bpx-empty{text-align:center;color:var(--muted);padding:26px 8px;font-size:14px}
   .bpx-code{font:700 20px ui-monospace,monospace;letter-spacing:2px;user-select:all}
+  .bpx-csv-example{margin:6px 0;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font:11px/1.5 ui-monospace,monospace;white-space:pre;overflow-x:auto}
   /* ---- deal cards (hub + inline under shopping-list items) ---- */
   .bpx-dealslot:empty{display:none}.bpx-dealslot{margin:-2px 0 10px 36px}
   .grocery-item.done + .bpx-dealslot{display:none}
@@ -667,7 +687,7 @@
       if (a === 'shmk') return shMake();
       if (a === 'shjoin') return shJoin();
       if (a === 'shshare') return shShare(el);
-      if (a === 'shinvite') { shInvite = { hid: el.dataset.id, code: await bp.households.invite(el.dataset.id) }; const box = $('#shInv'); if (box) box.innerHTML = inviteHtml(shInvite.code); return; }
+      if (a === 'shinvite') { shInvite = { hid: el.dataset.id, code: await bp.households.invite(el.dataset.id) }; const box = $('#shInv'); if (box) box.innerHTML = inviteHtml(shInvite.code); el.textContent = tr('sh_new_invite_btn'); return; }
       if (a === 'shcopy') return shCopy();
       if (a === 'shsend') return shSend();
       if (a === 'shstop') return shStop();
@@ -679,14 +699,14 @@
       if (a === 'importdeals') return importDeals();
       if (a === 'mkhouse') return mkHouse();
       if (a === 'joinhouse') return joinHouse();
-      if (a === 'invite') { const c = await bp.households.invite(el.dataset.id); $('#bpxInv' + el.dataset.id).innerHTML = `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code">${h(c)}</div>`; return; }
+      if (a === 'invite') { const c = await bp.households.invite(el.dataset.id); $('#bpxInv' + el.dataset.id).innerHTML = `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code">${h(c)}</div>`; el.textContent = tr('invite_again'); return; }
       if (a === 'leave') { if (confirm(tr('confirm_leave'))) { await bp.households.leave(el.dataset.id); return showTab('house'); } }
       if (a === 'kick') { if (confirm(tr('confirm_kick'))) { await bp.households.removeMember(el.dataset.hid, el.dataset.uid); return showTab('house'); } }
     } catch (err) { console.error(err); toast(errMsg(err), ''); }
   }
   function errMsg(e) {
     const m = (e && e.message) || '';
-    if (/invalid_or_expired_invite/.test(m)) return tr('e_invite');
+    if (/invalid_or_expired_invite|invite.*(?:invalid|expired|used|limit)/i.test(m)) return tr('e_invite');
     if (/household is full/.test(m)) return tr('e_full');
     if (/limit reached/.test(m)) return tr('e_limit');
     if (!online()) return tr('e_offline');
@@ -925,8 +945,9 @@
             <label class="bpx-sub" style="grid-column:1/-1">${h(tr('valid_until_aria'))}<input class="bpx-in" id="dlTo" type="date" style="margin-top:3px"></label></div>
           <div class="bpx-note">${h(tr('add_note'))}</div></details>
         <button class="bpx-btn p" data-a="adddeal" style="margin-top:8px">${h(tr('add_deal'))}</button></div>
-      <div class="bpx-card" id="dlImpPanel" hidden><div class="bpx-name">${h(tr('import_sum'))}</div><div class="bpx-note">${h(tr('import_cols'))}</div>
-        <textarea class="bpx-in" id="dlCsv" rows="4" placeholder="Publix,Whole milk,weekly_ad,4.29,1,1,gal,,,,,2026-11-19" aria-label="${h(tr('import_sum'))}"></textarea><button class="bpx-btn" data-a="importdeals" style="margin-top:6px">${h(tr('import_btn'))}</button></div>`;
+      <div class="bpx-card" id="dlImpPanel" hidden><div class="bpx-name">${h(tr('import_sum'))}</div><div class="bpx-note" id="dlCsvHelp">${h(tr('import_help'))}</div>
+        <pre class="bpx-csv-example" id="dlCsvExample">${h(tr('import_example'))}</pre>
+        <textarea class="bpx-in" id="dlCsv" rows="4" placeholder="${h(tr('import_paste_ph'))}" aria-label="${h(tr('import_sum'))}" aria-describedby="dlCsvHelp dlCsvExample"></textarea><button class="bpx-btn" data-a="importdeals" style="margin-top:6px">${h(tr('import_btn'))}</button></div>`;
     // 3) Everything else that is saved and still valid.
     const rest = deals.filter(d => (!d.valid_to || d.valid_to >= today) && !matchedIds.has(d.id));
     if (rest.length) html += `<span class="bpx-lbl">${h(tr(uniq.length ? 'lbl_other' : 'lbl_all'))}</span>` + rest.map(d => dealCard(evalDeal(d, best), { del: true })).join('');
@@ -972,7 +993,8 @@
       const owner = x.members.some(m => m.is_me && m.role === 'owner');
       return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div>${owner ? `<button class="bpx-btn" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button>` : ''}<button class="bpx-btn d" data-a="leave" data-id="${h(x.id)}">${h(tr('leave'))}</button></div>
         <div id="bpxInv${h(x.id)}"></div>
-        ${x.members.map(m => `<div class="bpx-row bpx-sub" style="justify-content:space-between"><span>${h(m.display_name)}${m.is_me ? ' ' + h(tr('you')) : ''}${m.role === 'owner' ? ' · ' + h(tr('owner')) : ''}</span>${owner && !m.is_me ? `<button class="bpx-btn d" style="padding:2px 8px" data-a="kick" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('remove'))}</button>` : ''}</div>`).join('')}</div>`;
+        <div class="bpx-note">${h(tr('member_access'))}</div>
+        ${x.members.map(m => `<div class="bpx-row bpx-sub" style="justify-content:space-between"><span>${h(m.display_name)}${m.is_me ? ' ' + h(tr('you')) : ''} · ${h(tr(m.role === 'owner' ? 'owner' : 'member'))}</span>${owner && !m.is_me ? `<button class="bpx-btn d" style="padding:2px 8px" data-a="kick" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('remove'))}</button>` : ''}</div>`).join('')}</div>`;
     }).join('') : `<div class="bpx-note">${h(tr('hh_intro'))}</div>`;
     html += `<div class="bpx-card"><span class="bpx-lbl" style="margin-top:0">${h(tr('hh_create_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhName" maxlength="80" placeholder="${h(tr('hh_ph'))}"><button class="bpx-btn p" data-a="mkhouse">${h(tr('create'))}</button></div>
       <span class="bpx-lbl">${h(tr('join_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhCode" maxlength="16" autocapitalize="characters" placeholder="${h(tr('code_ph'))}"><button class="bpx-btn" data-a="joinhouse">${h(tr('join'))}</button></div></div>`;
@@ -1048,7 +1070,7 @@
     const target = hh || hs.find(isOwnerOf) || hs[0];
     html += step(3, tr('sh_step3'), false, !target ? `<div class="bpx-sub">${h(tr('sh_need_hh'))}</div>`
       : !isOwnerOf(target) ? `<div class="bpx-sub">${h(tr('sh_invite_owner_only'))}</div>`
-      : `<div class="bpx-note">${h(tr('sh_invite_help'))}</div><button class="bpx-btn" data-a="shinvite" data-id="${h(target.id)}">${h(tr('sh_invite_btn'))}</button><div id="shInv">${shInvite && String(shInvite.hid) === String(target.id) ? inviteHtml(shInvite.code) : ''}</div>`);
+      : `<div class="bpx-note">${h(tr('sh_invite_help'))}</div><button class="bpx-btn" data-a="shinvite" data-id="${h(target.id)}">${h(tr(shInvite && String(shInvite.hid) === String(target.id) ? 'sh_new_invite_btn' : 'sh_invite_btn'))}</button><div id="shInv">${shInvite && String(shInvite.hid) === String(target.id) ? inviteHtml(shInvite.code) : ''}</div>`);
     // d) Who can see it now + stop sharing.
     if (shared && hh) {
       html += `<span class="bpx-lbl">${h(tr('sh_with_lbl'))}</span><div class="bpx-people">${people(hh)}</div>` + (hh.members.length < 2 ? `<div class="bpx-note">${h(tr('sh_only_you'))}</div>` : '');
