@@ -32,7 +32,6 @@
   --r:14px;--rsm:10px;
   --font:'DM Sans',sans-serif;--font-d:'Barlow',sans-serif;--font-m:'JetBrains Mono',monospace;
 }
-
 /* ── DARK MODE — full overhaul for legibility ── */
 body.dark{
   --bg:#0d1824;
@@ -300,7 +299,7 @@ body.dark #compareBtn:hover { background: linear-gradient(135deg, #1e4d80 0%, #2
 body,html{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s;}
 
 /* ── AUTH ── */
-#auth-screen{display:none;min-height:100vh;}
+#auth-screen{display:none;min-height:100vh;min-height:100dvh;}
 .auth-left{flex:1;display:none;position:relative;overflow:hidden;flex-direction:column;justify-content:center;padding:60px;}
 @media(min-width:900px){.auth-left{display:flex;}}
 .al-bg{position:absolute;inset:0;background:linear-gradient(135deg,#003366 0%,#1a4a8a 50%,#002244 100%);}
@@ -404,7 +403,7 @@ body.dark .prof-backup-btn:hover{background:#1a3d66;color:#fff;}
 .auth-btn:active{transform:scale(.98);}
 
 /* ── APP ── */
-#app{display:none;min-height:100vh;background:var(--bg);}
+#app{display:none;min-height:100vh;min-height:100dvh;background:var(--bg);}
 .app-header{background:var(--brand);color:#fff;height:58px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,51,102,.25);}
 .hdr-left{display:flex;align-items:center;gap:10px;}
 .hdr-logo{width:30px;height:30px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;}
@@ -421,8 +420,17 @@ body.dark .penny-sidebar-close{background:rgba(255,255,255,.1);color:#eef2ff;}
 body.dark .penny-sidebar-close:hover{background:rgba(255,255,255,.2);}
 #pennySidebarBackdrop{display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:9;cursor:pointer;}
 
-.nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:58px;z-index:90;}
+.nav-tabs-wrap{position:sticky;top:58px;z-index:90;}
+.nav-tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:relative;}
 .nav-tabs::-webkit-scrollbar{display:none;}
+.nav-scroll-cue{display:none;position:absolute;top:0;bottom:1px;width:28px;pointer-events:none;z-index:2;opacity:0;transition:opacity .2s ease;}
+.nav-scroll-cue-left{left:0;background:linear-gradient(to right,var(--white),transparent);}
+.nav-scroll-cue-right{right:0;background:linear-gradient(to left,var(--white),transparent);}
+@media(max-width:480px){
+  .nav-scroll-cue{display:block;}
+  .nav-tabs-wrap.can-scroll-left .nav-scroll-cue-left,
+  .nav-tabs-wrap.can-scroll-right .nav-scroll-cue-right{opacity:1;}
+}
 .nav-tab{flex:1;min-width:72px;padding:14px 8px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:.2s;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
 .nav-tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .nav-tab.active{color:var(--brand);border-bottom-color:var(--brand);}
@@ -524,7 +532,7 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 /* ── ONBOARDING STEPPER ── */
 #onboarding-screen{display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;padding:16px;}
 #onboarding-screen::before{content:'';position:fixed;inset:0;background:rgba(0,20,50,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:-1;}
-.onboard-card{background:var(--white);border-radius:22px;padding:36px 32px;max-width:520px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.35);max-height:92vh;overflow-y:auto;position:relative;z-index:1;}
+.onboard-card{background:var(--white);border-radius:22px;padding:36px 32px;max-width:520px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.35);max-height:92vh;max-height:92dvh;overflow-y:auto;position:relative;z-index:1;}
 .onboard-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:6px;opacity:.8;}
 .onboard-tailor-badge{display:inline-flex;align-items:center;gap:7px;background:var(--brand-light);border:1px solid var(--brand);border-radius:40px;padding:7px 16px;margin-bottom:14px;}
 .onboard-tailor-badge span{font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.6px;}
@@ -563,7 +571,7 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
   .compare-wrap{padding:16px 14px 8px;}
   .toolbar{padding:10px 14px;gap:6px;}
   .tool-btn{padding:8px 12px;font-size:12px;}
-  .nav-tab{font-size:11px;padding:10px 4px;min-width:52px;}
+  .nav-tab{flex:0 0 auto;font-size:11px;padding:10px 8px;min-width:52px;}
   .nav-tab svg{width:13px;height:13px;}
   .onboard-card{padding:24px 18px;}
   .auth-right{padding:20px 16px;}
@@ -598,7 +606,7 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 #tab-grocery{display:none;padding:0;}
 
 /* sidebar + content layout */
-.grocery-layout{display:flex;min-height:calc(100vh - 120px);}
+.grocery-layout{display:flex;min-height:calc(100vh - 120px);min-height:calc(100dvh - 120px);}
 .grocery-sidebar{
   width:220px;flex-shrink:0;
   background:var(--white);border-right:1px solid var(--border);
@@ -719,6 +727,7 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   background: #000;
   z-index: 2000;
   display: none;
@@ -731,7 +740,8 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(95%, 800px); 
-  height: min(75vh, 500px); 
+  height: min(75vh, 500px);
+  height: min(75dvh, 500px);
   border: 4px solid rgba(255, 255, 255, 0.9); 
   border-radius: 32px; 
   z-index: 2002;
@@ -789,7 +799,7 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 
 /* ── MODALS ── */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;z-index:1000;backdrop-filter:blur(2px);}
-.modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);width:min(440px,94vw);padding:28px;border-radius:22px;z-index:1001;display:none;box-shadow:0 20px 60px rgba(0,0,0,.22);color:var(--text);max-height:90vh;overflow-y:auto;}
+.modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);width:min(440px,94vw);padding:28px;border-radius:22px;z-index:1001;display:none;box-shadow:0 20px 60px rgba(0,0,0,.22);color:var(--text);max-height:90vh;max-height:90dvh;overflow-y:auto;}
 .modal-x{position:absolute;top:16px;right:16px;background:var(--input-bg);color:var(--muted);border:none;width:34px;height:34px;border-radius:9px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .modal-title{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--brand);margin-bottom:20px;}
 .modal-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:15px;font-family:var(--font);color:var(--text);background:var(--input-bg);outline:none;margin-bottom:14px;}
@@ -835,7 +845,7 @@ input:checked+.slider:before{transform:translateX(20px);}
 
 /* ── PENNY FULL TAB ── */
 #tab-penny{flex-direction:column;overflow:hidden;}
-.penny-layout{display:flex;flex:1;height:calc(100dvh - 116px);height:calc(100vh - 116px);overflow:hidden;position:relative;}
+.penny-layout{display:flex;flex:1;height:calc(100vh - 116px);height:calc(100dvh - 116px);overflow:hidden;position:relative;}
 .penny-sidebar{width:220px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .25s;}
 .penny-sidebar.collapsed{width:0;overflow:hidden;}
 .penny-sidebar-top{display:flex;align-items:center;justify-content:space-between;padding:14px 12px 10px;flex-shrink:0;}
@@ -948,7 +958,7 @@ body.dark .pmsg-edit-cancel{border-color:#2a4060;color:#eef2ff;}
 .penny-send-btn:disabled{opacity:.4;cursor:not-allowed;}
 /* Mobile: sidebar hidden by default */
 @media(max-width:600px){
-  .penny-layout{height:calc(100dvh - 116px);height:calc(100vh - 116px);}
+  .penny-layout{height:calc(100vh - 116px);height:calc(100dvh - 116px);}
   .penny-sidebar{position:absolute;top:0;left:0;height:100%;z-index:10;box-shadow:4px 0 20px rgba(0,0,0,.15);width:85%;max-width:280px;}
   .penny-sidebar.collapsed{width:0;}
   .penny-main{width:100%;}
@@ -956,10 +966,31 @@ body.dark .pmsg-edit-cancel{border-color:#2a4060;color:#eef2ff;}
   #pennyPricePanel{padding:10px 12px;}
   .penny-chat-header{padding:8px 10px;gap:6px;}
   .penny-context-btn{padding:5px 8px;font-size:11px;}
-  .penny-sidebar-toggle{padding:10px;min-width:40px;min-height:40px;}
+  .penny-sidebar-toggle{padding:10px;min-width:44px;min-height:44px;}
   .penny-messages{padding:12px 10px;}
   .penny-input-area{padding:8px 10px;}
   .penny-textarea{font-size:16px;} /* prevent iOS zoom */
+}
+@media (hover:none), (pointer:coarse){
+  .penny-sidebar-close,
+  .penny-sidebar-toggle,
+  .penny-attach-btn,
+  .penny-send-btn,
+  .penny-new-btn,
+  .penny-context-btn,
+  .penny-textarea,
+  .pmsg-edit-cancel,
+  .pmsg-edit-save,
+  .nav-tab,
+  .penny-sug{min-width:44px;min-height:44px;}
+  .penny-session-item{min-height:44px;padding-top:0;padding-bottom:0;}
+  .penny-session-del{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;opacity:1;}
+  .pmsg-actions{opacity:1;}
+  .pmsg-act-btn{min-width:44px;min-height:44px;justify-content:center;}
+  .penny-attach-btn{padding:0;}
+  .penny-send-btn{width:44px;height:44px;}
+  .penny-attach-thumb-del{width:44px;height:44px;top:0;right:0;background:transparent;font-size:0;}
+  .penny-attach-thumb-del::before{content:'×';position:absolute;inset:11px;background:rgba(0,0,0,.7);border-radius:50%;font-size:14px;display:flex;align-items:center;justify-content:center;}
 }
 /* Dark mode Penny */
 body.dark .penny-sidebar{background:#111f2e;border-color:#2a4060;}
@@ -1457,6 +1488,7 @@ body.dark .bm-num{color:#34d399;}
     </div>
   </header>
 
+  <div class="nav-tabs-wrap" id="navTabsWrap">
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="goTab('compare')" id="nt-compare"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Compare</span></button>
     <button class="nav-tab" onclick="goTab('history')" id="nt-history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></button>
@@ -1465,6 +1497,9 @@ body.dark .bm-num{color:#34d399;}
     <button class="nav-tab" onclick="goTab('penny')" id="nt-penny"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 1.5 0 0 1 12 8a3.5 1.5 0 0 1 3.5 1.5c0 .83-.78 1.5-2 1.5h-3c-1.22 0-2 .67-2 1.5A3.5 1.5 0 0 0 12 14a3.5 1.5 0 0 0 3.5-1.5"/></svg><span>Penny</span></button>
     <button class="nav-tab" onclick="goTab('profile')" id="nt-profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
   </nav>
+    <span class="nav-scroll-cue nav-scroll-cue-left" aria-hidden="true"></span>
+    <span class="nav-scroll-cue nav-scroll-cue-right" aria-hidden="true"></span>
+  </div>
 
   <div id="adBanner" style="display:none;align-items:center;justify-content:space-between;gap:10px;background:var(--brand);color:#fff;padding:10px 16px;font-size:13px;">
     <span>Free plan — limited Penny messages, scans &amp; lists. <strong>Go Pro</strong> for unlimited access and no ads.</span>
@@ -1523,7 +1558,7 @@ body.dark .bm-num{color:#34d399;}
     <div id="presetList"></div>
   </div>
 
-  <div id="tab-penny" style="display:none;height:calc(100dvh - 116px);height:calc(100vh - 116px);flex-direction:column;">
+  <div id="tab-penny" style="display:none;height:calc(100vh - 116px);height:calc(100dvh - 116px);flex-direction:column;">
     
     <div class="penny-layout">
       
@@ -1707,7 +1742,7 @@ body.dark .bm-num{color:#34d399;}
       <video id="cameraVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
       
       <div style="position:absolute;inset:0;pointer-events:none;">
-        <div style="position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);width:min(95%,800px);height:min(75vh,500px);border:4px solid rgba(255,255,255,.9);border-radius:32px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6);"></div>
+        <div style="position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);width:min(95%,800px);height:min(75vh,500px);height:min(75dvh,500px);border:4px solid rgba(255,255,255,.9);border-radius:32px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6);"></div>
       </div>
       
       <div style="position:absolute;top:0;left:0;right:0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
@@ -3296,6 +3331,20 @@ function changeLang(src){
   document.getElementById('setLang').value = lang;
   localStorage.setItem('bp_lang', lang);
   applyLang();
+  requestAnimationFrame(_updateNavScrollCues);
+}
+
+const _navCueTabs = document.querySelector('.nav-tabs');
+const _navCueWrap = document.getElementById('navTabsWrap');
+function _updateNavScrollCues(){
+  if(!_navCueTabs || !_navCueWrap) return;
+  const maxScroll = _navCueTabs.scrollWidth - _navCueTabs.clientWidth;
+  _navCueWrap.classList.toggle('can-scroll-left', _navCueTabs.scrollLeft > 1);
+  _navCueWrap.classList.toggle('can-scroll-right', maxScroll - _navCueTabs.scrollLeft > 1);
+}
+if(_navCueTabs){
+  _navCueTabs.addEventListener('scroll', _updateNavScrollCues, { passive: true });
+  window.addEventListener('resize', _updateNavScrollCues);
 }
 
 function setMode(mode){
@@ -3631,6 +3680,7 @@ async function showApp(isNewUser=false){
   if(carry) restoreGuestCards(carry);
   if(groceryLists.length) { activeListId = groceryLists[0].id; renderGroceryContent(); }
   applyLang();
+  requestAnimationFrame(_updateNavScrollCues);
   document.getElementById('landing-penny-fab').style.display='flex';
   if(isNewUser){
     obSkipped = {1:false,2:false,3:false,4:false,5:false};
