@@ -448,6 +448,9 @@
     },
     create: async name => { const id = await rpc('create_household', { p_name: name }); return id; },
     invite: hid => rpc('create_invite', { p_household: hid }),
+    rename: (hid, name) => rpc('rename_household', { p_household: hid, p_name: name }),
+    setMemberRole: (hid, uid, role) => rpc('set_household_member_role', { p_household: hid, p_user: uid, p_role: role }),
+    transferLeadership: (hid, uid) => rpc('transfer_household_leadership', { p_household: hid, p_user: uid }),
     async join(code) { const id = await rpc('join_household', { p_code: code }); await pull({ full: true }); return id; },
     async leave(hid) { await rpc('leave_household', { p_household: hid }); await pull({ full: true }); },
     async removeMember(hid, uid) { await rpc('remove_household_member', { p_household: hid, p_user: uid }); },
@@ -569,4 +572,3 @@
   bp.normItem = normItem;
   if (typeof module !== 'undefined' && module.exports) module.exports = bp;
 })(typeof window !== 'undefined' ? window : globalThis);
- 
