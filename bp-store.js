@@ -278,6 +278,7 @@
     return r.data;
   }
   const strip = o => { const c = { ...o }; delete c.inflight; return c; };
+  const errorText = e => typeof e === 'string' ? e : (e && (e.message || e.details || e.hint)) || '';
 
   function applyRow(table, row) {                 // table: 'lists' | 'items'
     const bag = S.srv[table];
@@ -297,6 +298,7 @@
     S.flushing = true; S.error = null;
     const generation = S.generation, sb = S.sb;
     let sawDuplicate = false;
+    const rejectedOps = [];
     try {
       while (S.outbox.length) {
         if (generation !== S.generation) return;
@@ -308,7 +310,13 @@
           if (generation !== S.generation) return;
           batch.forEach(o => { delete o.inflight; });
           if (e && e.code === '22023') {              // malformed batch: retrying can never succeed, drop it rather than loop
-            console.error('bp: dropping malformed batch', e); S.outbox.splice(0, batch.length); persist(); bp.host.toast("Some changes couldn't be saved."); continue;
+            const message = errorText(e) || 'Malformed operation batch';
+            const detail = { type: 'batch', op_ids: batch.map(o => o.op_id), message };
+            console.error('bp: dropping malformed batch', detail);
+            rejectedOps.push(detail);
+            S.outbox.splice(0, batch.length); persist(); materialize();
+            bp.host.toast(`Could not save list changes: ${message}`);
+            continue;
           }
           throw e;
         }
@@ -334,7 +342,18 @@
         }
         if (rejected.length) {
           const hard = rejected.filter(x => x.r.status === 'rejected');
-          if (hard.length) { console.error('bp: ops rejected', hard.map(x => x.r)); bp.host.toast("Some changes couldn't be saved and were reverted."); }
+          if (hard.length) {
+            const detail = hard.map(({ op, r }) => ({
+              type: op.type, id: op.id, op_id: op.op_id,
+              message: r.message || r.error_message || r.error || r.reason || r.details || r.hint || null,
+            }));
+            rejectedOps.push(...detail);
+            console.error('bp: ops rejected', detail);
+            const message = detail.find(x => x.message)?.message;
+            bp.host.toast(message
+              ? `Could not save list changes: ${errorText(message)}`
+              : "A change couldn't be saved. Your saved list was restored. Please try again; if this keeps happening, contact support.");
+          }
           sawDuplicate = true;                        // force a resync so local state matches the server
         }
         if (done.size < batch.length) throw new Error('server returned no verdict for some ops');
@@ -348,6 +367,7 @@
       if (generation === S.generation) { S.flushing = false; pushStatus(); }
     }
     if (sawDuplicate || S.pullAgain) bp.refreshSoon(true);
+    return { rejected: rejectedOps };
   }
   bp.flush = flush;
   bp.retryNow = () => { S.error = null; clearTimeout(S.timers.retry); return flush(); };
