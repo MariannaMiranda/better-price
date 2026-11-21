@@ -15,6 +15,10 @@
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
   const toast = (m, t) => bp.host.toast(m, t);
   const online = () => navigator.onLine !== false;
+  const askConfirm = (title, message, action) => {
+    if (ui.host.confirm) return ui.host.confirm(title, message, action);
+    toast(tr('err_generic'));
+  };
 
   /* ------------------------------ i18n ------------------------------ */
   // Every user-visible string in this file lives here. {name} placeholders are substituted by tr(); keys ending in
@@ -96,6 +100,8 @@
       delete_group: 'Delete group', confirm_delete_group: 'Delete this group for everyone? Shared lists will become private for their owners.',
       confirm_leave_owner: 'Leave this group? The longest-standing List Editor will become the new Leader. Your lists will become private.',
       group_left: 'You left the group.', group_deleted: 'Group deleted.',
+      member_removed: 'Member removed.', member_role_saved: 'Member role updated.',
+      group_settings: 'Group settings', edit_member: 'Edit', make_leader: 'Make leader',
       leader: 'Leader', editor: 'List Editor', checker: 'List Checker',
       leader_access: 'Manage members, roles, invites, and shared lists.',
       editor_access: 'Create lists and add, change, remove, or check off items.',
@@ -118,6 +124,8 @@
       rep_bought: 'bought {n}× · last {date}', pin: 'Pin', unpin: 'Unpin', pin_aria: 'Pin {name}', unpin_aria: 'Unpin {name}', hide_aria: 'Hide {name}',
       rep_add: 'Add selected to list', rep_empty_1: 'Nothing to replenish yet.', rep_empty_2: 'Items you add to lists show up here for one-tap re-adding.',
       added_one: 'Added {n} item', added_other: 'Added {n} items',
+      rep_add_custom: 'Add a staple', rep_custom_ph: 'e.g. Grapes or bottled water', rep_custom_added: 'Saved as a Replenish staple. It appears when not already on your active list.',
+      rep_removed: 'Removed from Replenish. Add it to a list again to restore it.',
 
       sh_title: 'Share this list',
       sh_chip_private: 'Private',
@@ -235,6 +243,8 @@
       delete_group: 'Eliminar grupo', confirm_delete_group: '¿Eliminar este grupo para todos? Las listas compartidas volverán a ser privadas para sus propietarios.',
       confirm_leave_owner: '¿Salir del grupo? El editor de listas que lleve más tiempo será el nuevo líder. Tus listas volverán a ser privadas.',
       group_left: 'Saliste del grupo.', group_deleted: 'Grupo eliminado.',
+      member_removed: 'Se eliminó al miembro.', member_role_saved: 'Se actualizó el rol.',
+      group_settings: 'Configuración del grupo', edit_member: 'Editar', make_leader: 'Hacer líder',
       leader: 'Líder', editor: 'Editor de listas', checker: 'Solo marcar',
       leader_access: 'Administra a las personas, los roles, las invitaciones y las listas compartidas.',
       editor_access: 'Crea listas y agrega, cambia, elimina o marca artículos.',
@@ -257,6 +267,8 @@
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fijar', unpin: 'Quitar fijado', pin_aria: 'Fijar {name}', unpin_aria: 'Quitar fijado de {name}', hide_aria: 'Ocultar {name}',
       rep_add: 'Agregar seleccionados a la lista', rep_empty_1: 'Aún no hay nada que reponer.', rep_empty_2: 'Los artículos que agregues a tus listas aparecerán aquí para volver a agregarlos con un toque.',
       added_one: 'Se agregó {n} artículo', added_other: 'Se agregaron {n} artículos',
+      rep_add_custom: 'Agregar un básico', rep_custom_ph: 'p. ej., uvas o agua embotellada', rep_custom_added: 'Se guardó como básico de Reponer. Aparecerá cuando no esté en tu lista activa.',
+      rep_removed: 'Se quitó de Reponer. Agrégalo a una lista para recuperarlo.',
 
       sh_title: 'Compartir esta lista',
       sh_chip_private: 'Privada',
@@ -374,6 +386,8 @@
       delete_group: 'Excluir grupo', confirm_delete_group: 'Excluir este grupo para todos? As listas compartilhadas voltarão a ser privadas para seus proprietários.',
       confirm_leave_owner: 'Sair do grupo? O Editor de listas com mais tempo no grupo será o novo Líder. Suas listas voltarão a ser privadas.',
       group_left: 'Você saiu do grupo.', group_deleted: 'Grupo excluído.',
+      member_removed: 'Membro removido.', member_role_saved: 'Função atualizada.',
+      group_settings: 'Configurações do grupo', edit_member: 'Editar', make_leader: 'Tornar líder',
       leader: 'Líder', editor: 'Editor de listas', checker: 'Só marcar itens',
       leader_access: 'Administra pessoas, funções, convites e listas compartilhadas.',
       editor_access: 'Cria listas e adiciona, altera, remove ou marca itens.',
@@ -396,6 +410,8 @@
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fixar', unpin: 'Desafixar', pin_aria: 'Fixar {name}', unpin_aria: 'Desafixar {name}', hide_aria: 'Ocultar {name}',
       rep_add: 'Adicionar selecionados à lista', rep_empty_1: 'Nada para repor ainda.', rep_empty_2: 'Os itens que você adiciona às listas aparecem aqui para readicionar com um toque.',
       added_one: '{n} item adicionado', added_other: '{n} itens adicionados',
+      rep_add_custom: 'Adicionar um básico', rep_custom_ph: 'ex.: uvas ou água engarrafada', rep_custom_added: 'Salvo como básico do Repor. Aparece quando não estiver na lista ativa.',
+      rep_removed: 'Removido do Repor. Adicione a uma lista para restaurá-lo.',
 
       sh_title: 'Compartilhar esta lista',
       sh_chip_private: 'Privada',
@@ -520,7 +536,7 @@
   .bpx-dc.needclip .bpx-dc-up{opacity:.75}
   .bpx-dc-act{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
   .bpx-more{margin:0 0 6px}.bpx-more>summary{cursor:pointer;font:600 12px var(--font,system-ui);color:var(--muted);padding:2px 0 6px;list-style:revert}
-  /* ---- share-list flow + tabs ---- */
+  /* ---- Groups and savings tabs ---- */
   .bpx-tabs .bpx-tab{padding:9px 4px;line-height:1.2}
   .bpx-step{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.bpx-step:last-of-type{border-bottom:none}
   .bpx-stepn{flex:none;width:24px;height:24px;border-radius:50%;background:var(--input-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font:700 12px var(--font,system-ui)}
@@ -534,11 +550,28 @@
   .bpx-role-help{position:relative;display:inline-block}
   .bpx-role-help summary{list-style:none;border:1px solid var(--border);border-radius:50%;width:23px;height:23px;display:grid;place-items:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted)}
   .bpx-role-help summary::-webkit-details-marker{display:none}
-  .bpx-group-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .bpx-role-help[open] .bpx-role-pop{position:absolute;z-index:2;right:0;top:28px;width:min(280px,75vw);padding:10px 38px 10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--card-bg,var(--white));box-shadow:0 6px 20px rgba(0,0,0,.15);font-size:12px;line-height:1.5}
+  .bpx-group-actions{display:flex;align-items:center;gap:8px;flex:none}
+  .bpx-help-btn,.bpx-gear-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--card-bg,var(--white));color:var(--muted);display:grid;place-items:center;cursor:pointer;font:700 15px var(--font,system-ui)}
+  .bpx-role-help>.bpx-help-btn{width:34px;height:34px;border-radius:9px}
+  .bpx-help-btn:hover,.bpx-gear-btn:hover{color:var(--text);border-color:var(--muted)}
+  .bpx-gear-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .bpx-group-menu{position:fixed;z-index:10020;width:min(240px,calc(100vw - 24px));overflow-y:auto;overscroll-behavior:contain;padding:6px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg,var(--white));box-shadow:0 10px 28px rgba(0,0,0,.2)}
+  .bpx-group-menu button,.bpx-member-menu button{display:block;width:100%;padding:10px 11px;text-align:left;border:0;border-radius:8px;background:transparent;color:var(--text);font:500 13px var(--font,system-ui);cursor:pointer}
+  .bpx-group-menu button:hover,.bpx-member-menu button:hover{background:var(--input-bg)}
+  .bpx-group-menu .d,.bpx-member-menu .d{color:var(--danger,#dc2626)}
+  .bpx-group-menu[hidden],.bpx-member-menu[hidden]{display:none}
+  .bpx-menu-scrim{position:fixed;inset:0;z-index:10019}
+  .bpx-member-edit{flex:none}
+  .bpx-member-menu{position:absolute;z-index:4;right:0;top:calc(100% + 4px);width:170px;padding:5px;border:1px solid var(--border);border-radius:10px;background:var(--card-bg,var(--white));box-shadow:0 8px 22px rgba(0,0,0,.17)}
+  .bpx-member-edit-wrap{position:relative}
+  .bpx-member-edit-wrap>summary{list-style:none}
+  .bpx-member-edit-wrap>summary::-webkit-details-marker{display:none}
+  .bpx-role-help[open] .bpx-role-pop{position:fixed;z-index:10022;right:12px;top:80px;width:min(280px,75vw);padding:10px 38px 10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--card-bg,var(--white));box-shadow:0 6px 20px rgba(0,0,0,.15);font-size:12px;line-height:1.5}
   .bpx-role-close{position:absolute;top:5px;right:5px;width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer}
   .bpx-role-close:hover{background:var(--border)}
   .bpx-select-scroll{max-height:160px;overflow:auto}
+  .bpx-rep-add{display:grid;grid-template-columns:1fr auto;gap:7px;margin:10px 0}
+  .bpx-rep-add input{min-width:0}
   `;
 
   /* ------------------------------ mount ------------------------------ */
@@ -673,6 +706,13 @@
   const tabsList = () => [['book', tr('tab_book')], ['deals', tr('tab_deals')], ['house', tr('tab_house')]];
   async function openHub(tab) {
     openSheet(tr('sheet_title'), '', tabsList(), tab);
+    sheetEl.addEventListener('click', e => {
+      if (!e.target.closest('.bpx-group-actions')) {
+        $$('.bpx-group-menu', sheetEl).forEach(m => { m.hidden = true; });
+        $$('[data-a="groupmenu"]', sheetEl).forEach(b => b.setAttribute('aria-expanded', 'false'));
+      }
+      if (!e.target.closest('.bpx-member-edit-wrap')) $$('.bpx-member-edit-wrap[open]', sheetEl).forEach(d => d.removeAttribute('open'));
+    });
     sheetEl.addEventListener('click', hubClick);
     sheetEl.addEventListener('change', e => { if (e.target.matches('[data-a="setrole"]')) hubClick(e); });
     sheetEl.addEventListener('submit', e => e.preventDefault());
@@ -700,6 +740,32 @@
     try {
       if (a === 'close') return closeSheet();
       if (a === 'rolehelpclose') { el.closest('details')?.removeAttribute('open'); return; }
+      if (a === 'groupmenu') {
+        const menu = document.getElementById(`bpxMenu${el.dataset.id}`);
+        if (!menu) return;
+        const opening = menu.hidden;
+        $$('.bpx-group-menu', body()).forEach(m => { m.hidden = true; });
+        $$('[data-a="groupmenu"]', body()).forEach(b => b.setAttribute('aria-expanded', 'false'));
+        if (opening) {
+          menu.hidden = false;
+          const r = el.getBoundingClientRect();
+          const width = Math.min(240, window.innerWidth - 24);
+          const left = Math.max(12, Math.min(window.innerWidth - width - 12, r.right - width));
+          const maxHeight = Math.max(80, window.innerHeight - 24);
+          const menuHeight = Math.min(menu.scrollHeight, maxHeight);
+          const top = Math.max(12, Math.min(window.innerHeight - menuHeight - 12, r.bottom + 6));
+          menu.style.left = `${left}px`;
+          menu.style.top = `${top}px`;
+          menu.style.maxHeight = `${maxHeight}px`;
+          el.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+      if (a === 'groupmenuclose') {
+        const menu = el.closest('.bpx-group-menu');
+        if (menu) { menu.hidden = true; menu.parentElement.querySelector('[data-a="groupmenu"]')?.setAttribute('aria-expanded', 'false'); }
+        return;
+      }
       if (a === 'tab') return showTab(el.dataset.k);
       if (a === 'product') return renderProduct(el.dataset.k);
       if (a === 'back') return showTab('book');
@@ -730,6 +796,8 @@
       if (a === 'mkhouse') return mkHouse();
       if (a === 'joinhouse') return joinHouse();
       if (a === 'renamegroup') {
+        const menu = el.closest('.bpx-group-menu');
+        if (menu) { menu.hidden = true; menu.parentElement.querySelector('[data-a="groupmenu"]')?.setAttribute('aria-expanded', 'false'); }
         const name = prompt(tr('rename_group_prompt'), el.dataset.name || '');
         if (name == null) return;
         const trimmed = name.trim();
@@ -742,28 +810,38 @@
         const role = el.value;
         try { await bp.households.setMemberRole(el.dataset.hid, el.dataset.uid, role); }
         catch (err) { el.value = el.dataset.currentRole; throw err; }
-        toast(tr('role_updated'), 'ok'); return showTab('house');
+        toast(tr('member_role_saved'), 'ok'); return showTab('house');
+      }
+      if (a === 'setmemberrole') {
+        await bp.households.setMemberRole(el.dataset.hid, el.dataset.uid, el.dataset.role);
+        toast(tr('member_role_saved'), 'ok'); return showTab('house');
       }
       if (a === 'transfer') {
-        if (!confirm(tr('confirm_transfer'))) return;
-        await bp.households.transferLeadership(el.dataset.hid, el.dataset.uid);
-        toast(tr('leadership_transferred'), 'ok'); return showTab('house');
+        return askConfirm(tr('transfer_leadership'), tr('confirm_transfer'), async () => {
+          await bp.households.transferLeadership(el.dataset.hid, el.dataset.uid);
+          toast(tr('leadership_transferred'), 'ok'); await showTab('house');
+        });
       }
-      if (a === 'invite') { const c = await bp.households.invite(el.dataset.id), b = $('#bpxInv' + el.dataset.id); b.innerHTML = `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code">${h(c)}</div><button class="bpx-btn" data-a="copyinvite" data-code="${h(c)}">${h(tr('copy'))}</button>`; el.textContent = tr('invite_again'); return; }
+      if (a === 'invite') { const menu = el.closest('.bpx-group-menu'); if (menu) { menu.hidden = true; menu.parentElement.querySelector('[data-a="groupmenu"]')?.setAttribute('aria-expanded', 'false'); } const c = await bp.households.invite(el.dataset.id), b = $('#bpxInv' + el.dataset.id); b.innerHTML = `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code">${h(c)}</div><button class="bpx-btn" data-a="copyinvite" data-code="${h(c)}">${h(tr('copy'))}</button>`; toast(tr('invite_again'), 'ok'); return; }
       if (a === 'leave') {
         const confirmation = el.dataset.owner === 'true' ? tr('confirm_leave_owner') : tr('confirm_leave');
-        if (!confirm(confirmation)) return;
-        await bp.households.leave(el.dataset.id);
-        toast(tr('group_left'), 'ok');
-        return showTab('house');
+        return askConfirm(tr('leave'), confirmation, async () => {
+          await bp.households.leave(el.dataset.id);
+          toast(tr('group_left'), 'ok'); await showTab('house');
+        });
       }
       if (a === 'deletegroup') {
-        if (!confirm(tr('confirm_delete_group'))) return;
-        await bp.households.delete(el.dataset.id);
-        toast(tr('group_deleted'), 'ok');
-        return showTab('house');
+        return askConfirm(tr('delete_group'), tr('confirm_delete_group'), async () => {
+          await bp.households.delete(el.dataset.id);
+          toast(tr('group_deleted'), 'ok'); await showTab('house');
+        });
       }
-      if (a === 'kick') { if (confirm(tr('confirm_kick'))) { await bp.households.removeMember(el.dataset.hid, el.dataset.uid); return showTab('house'); } }
+      if (a === 'kick') {
+        return askConfirm(tr('remove'), tr('confirm_kick'), async () => {
+          await bp.households.removeMember(el.dataset.hid, el.dataset.uid);
+          toast(tr('member_removed'), 'ok'); await showTab('house');
+        });
+      }
     } catch (err) {
       console.error(err);
       toast(errMsg(err, a === 'mkhouse'), '');
@@ -1091,12 +1169,12 @@
     let html = '';
     html += hs.length ? hs.map(x => {
       const owner = x.members.some(m => m.is_me && m.role === 'owner');
-      return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div><div class="bpx-group-actions">${owner ? `<details class="bpx-role-help"><summary aria-label="${h(tr('roles_help'))}">?</summary><div class="bpx-role-pop">${h(tr('roles_help'))}<button class="bpx-role-close" type="button" data-a="rolehelpclose" aria-label="${h(tr('close'))}">&times;</button></div></details><button class="bpx-btn" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><button class="bpx-btn" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button><button class="bpx-btn" data-a="leave" data-id="${h(x.id)}" data-owner="true">${h(tr('leave'))}</button><button class="bpx-btn d" data-a="deletegroup" data-id="${h(x.id)}">${h(tr('delete_group'))}</button>` : `<button class="bpx-btn d" data-a="leave" data-id="${h(x.id)}">${h(tr('leave'))}</button>`}</div></div>
+      return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div><div class="bpx-group-actions"><details class="bpx-role-help"><summary class="bpx-help-btn" aria-label="${h(tr('roles_help'))}">?</summary><div class="bpx-role-pop">${h(tr('roles_help'))}<button class="bpx-role-close" type="button" data-a="rolehelpclose" aria-label="${h(tr('close'))}">&times;</button></div></details><button class="bpx-gear-btn" type="button" data-a="groupmenu" data-id="${h(x.id)}" aria-label="${h(tr('group_settings'))}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 2.9-.2-.1a1.7 1.7 0 0 0-1.8.1l-.1.1h-3.4l-.1-.2a1.7 1.7 0 0 0-1.5-1 1.7 1.7 0 0 0-.8.2l-.2.1-2.9-1.7.1-.2a1.7 1.7 0 0 0-.1-1.8l-.1-.1v-3.4l.2-.1a1.7 1.7 0 0 0 .8-1.5 1.7 1.7 0 0 0-.2-.8l-.1-.2 1.7-2.9.2.1a1.7 1.7 0 0 0 1.8-.1l.1-.1h3.4l.1.2a1.7 1.7 0 0 0 1.5 1 1.7 1.7 0 0 0 .8-.2l.2-.1 2.9 1.7-.1.2a1.7 1.7 0 0 0 .1 1.8l.1.1v3.4l-.2.1a1.7 1.7 0 0 0-.8 1.5z"></path></svg></button><div class="bpx-group-menu" id="bpxMenu${h(x.id)}" hidden role="menu">${owner ? `<button type="button" role="menuitem" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><button type="button" role="menuitem" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button>` : ''}<button type="button" role="menuitem" data-a="leave" data-id="${h(x.id)}" data-owner="${owner}">${h(tr('leave'))}</button>${owner ? `<button type="button" class="d" role="menuitem" data-a="deletegroup" data-id="${h(x.id)}">${h(tr('delete_group'))}</button>` : ''}</div></div></div>
         <div id="bpxInv${h(x.id)}"></div>
         ${x.members.map(m => {
           const role = m.role === 'owner' ? 'leader' : m.role === 'checker' ? 'checker' : 'editor';
           const controls = owner && !m.is_me
-            ? `<div class="bpx-member-controls"><select class="bpx-in" data-a="setrole" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}" data-current-role="${h(role)}" aria-label="${h(tr('role_for', { name: firstName(m) }))}"><option value="editor"${role === 'editor' ? ' selected' : ''}>${h(tr('editor'))}</option><option value="checker"${role === 'checker' ? ' selected' : ''}>${h(tr('checker'))}</option></select><button class="bpx-btn" data-a="transfer" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('transfer_leadership'))}</button><button class="bpx-btn d" data-a="kick" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('remove'))}</button></div>`
+            ? `<details class="bpx-member-edit-wrap"><summary class="bpx-btn">${h(tr('edit_member'))}</summary><div class="bpx-member-menu" role="menu">${role !== 'editor' ? `<button type="button" role="menuitem" data-a="setmemberrole" data-role="editor" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('editor'))}</button>` : ''}${role !== 'checker' ? `<button type="button" role="menuitem" data-a="setmemberrole" data-role="checker" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('checker'))}</button>` : ''}<button type="button" role="menuitem" data-a="transfer" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('make_leader'))}</button><button type="button" class="d" role="menuitem" data-a="kick" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('remove'))}</button></div></details>`
             : '';
           return `<div class="bpx-member-row"><span class="bpx-member-name">${h(firstName(m))}${m.is_me ? ' ' + h(tr('you')) : ''} · ${h(tr(role))}</span>${controls}</div>`;
         }).join('')}</div>`;
@@ -1133,15 +1211,26 @@
       const favs = await bp.favorites.list(list && list.householdId);
       const onList = new Set((ui.host.listItems(lid) || []).map(i => bp.normKey(i.name)));
       const rows = favs.filter(f => !onList.has(f.name_key));
-      b.innerHTML = rows.length ? `<div class="bpx-note">${h(tr('rep_help'))}</div><div class="bpx-note">${h(tr('rep_note'))}</div>${rows.map((f, i) => `<label class="bpx-card bpx-row"><input type="checkbox" data-i="${i}"${f.pinned || f.add_count > 1 ? ' checked' : ''}>
+      b.innerHTML = `<div class="bpx-note">${h(tr('rep_help'))}</div><div class="bpx-note">${h(tr('rep_note'))}</div><form class="bpx-rep-add" id="bpxRepAdd"><input class="bpx-in" id="bpxRepName" maxlength="120" placeholder="${h(tr('rep_custom_ph'))}" aria-label="${h(tr('rep_custom_ph'))}" required><button class="bpx-btn" type="submit">${h(tr('rep_add_custom'))}</button></form>${rows.length ? `${rows.map((f, i) => `<label class="bpx-card bpx-row"><input type="checkbox" data-i="${i}"${f.pinned || f.add_count > 1 ? ' checked' : ''}>
         <span class="bpx-grow"><span class="bpx-name">${h(f.name)}</span><br><span class="bpx-sub">${h(tr('rep_bought', { n: f.add_count, date: fmtDate(f.last_added_at.slice(0, 10)) }))}${f.default_store ? ' · ' + h(f.default_store) : ''}</span></span>
         <button class="bpx-btn" data-pin="${h(f.id)}" data-v="${f.pinned ? 0 : 1}" aria-label="${h(tr(f.pinned ? 'unpin_aria' : 'pin_aria', { name: f.name }))}">${h(tr(f.pinned ? 'unpin' : 'pin'))}</button>
-        <button class="bpx-btn d" data-hide="${h(f.id)}" aria-label="${h(tr('hide_aria', { name: f.name }))}">&#10005;</button></label>`).join('')}
-        <button class="bpx-btn p" id="bpxAddFav" style="width:100%;margin-top:8px">${h(tr('rep_add'))}</button>` : `<div class="bpx-empty">${h(tr('rep_empty_1'))}<br>${h(tr('rep_empty_2'))}</div>`;
+        <button class="bpx-btn d" data-hide="${h(f.id)}" aria-label="${h(tr('hide_aria', { name: f.name }))}" title="${h(tr('rep_removed'))}">&#10005;</button></label>`).join('')}
+        <button class="bpx-btn p" id="bpxAddFav" style="width:100%;margin-top:8px">${h(tr('rep_add'))}</button>` : `<div class="bpx-empty">${h(tr('rep_empty_1'))}<br>${h(tr('rep_empty_2'))}</div>`}`;
+      b.onsubmit = async e => {
+        if (e.target.id !== 'bpxRepAdd') return;
+        e.preventDefault();
+        const name = $('#bpxRepName', b).value.trim();
+        if (!name) return;
+        try {
+          await bp.favorites.add(name, list && list.householdId);
+          toast(tr('rep_custom_added'), 'ok');
+          await openReplenish();
+        } catch (e) { toast(e.message || tr('e_generic')); }
+      };
       b.onclick = async e => {
         const pin = e.target.closest('[data-pin]'), hide = e.target.closest('[data-hide]');
         if (pin) { e.preventDefault(); await bp.favorites.pin(pin.dataset.pin, pin.dataset.v === '1'); return openReplenish(); }
-        if (hide) { e.preventDefault(); await bp.favorites.hide(hide.dataset.hide); return openReplenish(); }
+        if (hide) { e.preventDefault(); await bp.favorites.hide(hide.dataset.hide); toast(tr('rep_removed'), 'ok'); return openReplenish(); }
         if (e.target.id === 'bpxAddFav') {
           const chosen = rows.filter((f, i) => b.querySelector(`[data-i="${i}"]`).checked).map(f => ({ name: f.name, qty: f.default_qty, store: f.default_store }));
           const n = ui.host.addItems(chosen); closeSheet(); toast(n ? trn('added', n) : tr('nothing_sel'), n ? 'ok' : '');
