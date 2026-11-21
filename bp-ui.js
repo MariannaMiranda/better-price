@@ -1,5 +1,5 @@
 /* bp-ui.js — UI for the relational features. Depends on bp-store.js. All strings are escaped via h().
- * v3: contextual "Share list" flow (openShareList), browse-first "Deals & coupons" tab, "Price history" wording (was "Price Book"),
+ * v3: dedicated Groups home, browse-first "Deals & coupons" tab, "Price history" wording (was "Price Book"),
  *     and the matching en/es/pt strings. Host may optionally provide goCompare() to jump to the Compare tab.
  * v2: calmer sync pill, "Lowest you've recorded" price-book copy, streamlined deal cards (also inline in the shopping list),
  *     and en/es/pt strings for every label in the Savings hub (see STR below).
@@ -34,12 +34,12 @@
       pill_error_tip_other: "{n} changes haven't synced yet. They're safe on this device. Tap to retry.",
       toast_synced: 'Everything is synced.', toast_offline: "You're offline. Changes are saved on this device.", toast_retrying: 'Retrying sync…',
 
-      hub_tip: 'Savings: price history, deals, group', hub_aria: 'Savings hub',
-      bar_replenish: 'Replenish', bar_share: 'Share list', bar_deals: 'Deals',
+      hub_tip: 'Savings: price history, deals, groups', hub_aria: 'Savings hub',
+      bar_replenish: 'Replenish', bar_groups: 'Groups', bar_deals: 'Deals',
       save_prices_btn: 'Save these prices to my price history',
       toast_alert: 'Good price: {name} hit {price}/{unit}', toast_alert_at: 'Good price: {name} at {store} hit {price}/{unit}',
 
-      sheet_title: 'Savings', close: 'Close', tab_book: 'Price history', tab_deals: 'Deals & coupons', tab_house: 'Group',
+      sheet_title: 'Savings', close: 'Close', tab_book: 'Price history', tab_deals: 'Deals & coupons', tab_house: 'Groups',
       install_app: 'Install app', ios_install: 'Install on iPhone/iPad: tap Share, then Add to Home Screen.',
       loading: 'Loading…', err_generic: 'Something went wrong. Try again in a moment.', err_offline: 'You are offline. This section needs a connection.',
 
@@ -93,6 +93,9 @@
 
       hh_intro: 'Create a group for a home, office, daycare, restaurant, or any team that shares shopping lists.',
       invite: 'Invite', invite_again: 'New code', leave: 'Leave group', you: '(you)', owner: 'Leader', member: 'List Editor',
+      delete_group: 'Delete group', confirm_delete_group: 'Delete this group for everyone? Shared lists will become private for their owners.',
+      confirm_leave_owner: 'Leave this group? The longest-standing List Editor will become the new Leader. Your lists will become private.',
+      group_left: 'You left the group.', group_deleted: 'Group deleted.',
       leader: 'Leader', editor: 'List Editor', checker: 'List Checker',
       leader_access: 'Manage members, roles, invites, and shared lists.',
       editor_access: 'Create lists and add, change, remove, or check off items.',
@@ -109,7 +112,7 @@
       confirm_leave: 'Leave this group? Lists you own will become private and stay yours. You will lose access to lists owned by others.', confirm_kick: 'Remove this member?',
       e_invite: 'That invite code is invalid, expired or has no uses left. Ask a leader to create a fresh code.', e_full: 'That group is full.', e_limit: 'You have reached the group limit.',
       e_offline: 'You are offline.', e_generic: 'That did not work. Please try again.',
-      need_hh_name: 'Give the group a name.', need_code: 'Enter the invite code.', hh_created: 'Group created', hh_joined: 'Joined. Shared lists are loading.',
+      need_hh_name: 'Give the group a name.', need_code: 'Enter the invite code.', hh_created: 'Group created', hh_created_named: 'Created "{name}"', hh_joined: 'Joined. Shared lists are loading.',
 
       rep_title: 'Replenish', rep_open_list: 'Open a list first.', rep_note: 'Pinned and most-bought first. Items already on this list are hidden.',
       rep_bought: 'bought {n}× · last {date}', pin: 'Pin', unpin: 'Unpin', pin_aria: 'Pin {name}', unpin_aria: 'Unpin {name}', hide_aria: 'Hide {name}',
@@ -126,7 +129,7 @@
       sh_step3: 'Add people',
       sh_done: 'done',
       sh_hh_none: 'Lists are shared through a group. Create one or join one to continue.',
-      sh_create_btn: 'Create & share',
+      sh_create_btn: 'Create',
       sh_join_lbl: 'Join with a code',
       sh_share_btn: 'Share with {name}',
       sh_share_sel: 'Share this list',
@@ -175,12 +178,12 @@
       pill_error_tip_other: 'Aún no se sincronizaron {n} cambios. Están a salvo en este dispositivo. Toca para reintentar.',
       toast_synced: 'Todo está sincronizado.', toast_offline: 'Sin conexión. Los cambios se guardan en este dispositivo.', toast_retrying: 'Reintentando sincronizar…',
 
-      hub_tip: 'Ahorros: historial de precios, ofertas, grupo', hub_aria: 'Centro de ahorros',
-      bar_replenish: 'Reponer', bar_share: 'Compartir lista', bar_deals: 'Ofertas',
+      hub_tip: 'Ahorros: historial de precios, ofertas, grupos', hub_aria: 'Centro de ahorros',
+      bar_replenish: 'Reponer', bar_groups: 'Grupos', bar_deals: 'Ofertas',
       save_prices_btn: 'Guardar estos precios en mi historial de precios',
       toast_alert: 'Buen precio: {name} llegó a {price}/{unit}', toast_alert_at: 'Buen precio: {name} en {store} llegó a {price}/{unit}',
 
-      sheet_title: 'Ahorros', close: 'Cerrar', tab_book: 'Historial de precios', tab_deals: 'Ofertas y cupones', tab_house: 'Grupo',
+      sheet_title: 'Ahorros', close: 'Cerrar', tab_book: 'Historial de precios', tab_deals: 'Ofertas y cupones', tab_house: 'Grupos',
       install_app: 'Instalar app', ios_install: 'Instalar en iPhone/iPad: toca Compartir y luego Agregar a pantalla de inicio.',
       loading: 'Cargando…', err_generic: 'Algo salió mal. Inténtalo de nuevo en un momento.', err_offline: 'Estás sin conexión. Esta sección necesita conexión.',
 
@@ -229,6 +232,9 @@
 
       hh_intro: 'Crea un grupo para un hogar, oficina, guardería, restaurante o cualquier equipo que comparta listas de compras.',
       invite: 'Invitar', invite_again: 'Nuevo código', leave: 'Salir del grupo', you: '(tú)', owner: 'Líder', member: 'Editor de listas',
+      delete_group: 'Eliminar grupo', confirm_delete_group: '¿Eliminar este grupo para todos? Las listas compartidas volverán a ser privadas para sus propietarios.',
+      confirm_leave_owner: '¿Salir del grupo? El editor de listas que lleve más tiempo será el nuevo líder. Tus listas volverán a ser privadas.',
+      group_left: 'Saliste del grupo.', group_deleted: 'Grupo eliminado.',
       leader: 'Líder', editor: 'Editor de listas', checker: 'Solo marcar',
       leader_access: 'Administra a las personas, los roles, las invitaciones y las listas compartidas.',
       editor_access: 'Crea listas y agrega, cambia, elimina o marca artículos.',
@@ -245,7 +251,7 @@
       confirm_leave: '¿Salir de este grupo? Tus listas volverán a ser privadas y seguirán siendo tuyas. Perderás acceso a las listas de otras personas.', confirm_kick: '¿Quitar a este miembro?',
       e_invite: 'El código no es válido, venció o ya no tiene usos. Pide a un líder que cree uno nuevo.', e_full: 'Ese grupo está lleno.', e_limit: 'Alcanzaste el límite de grupos.',
       e_offline: 'Estás sin conexión.', e_generic: 'No funcionó. Inténtalo de nuevo.',
-      need_hh_name: 'Ponle un nombre al grupo.', need_code: 'Ingresa el código de invitación.', hh_created: 'Grupo creado', hh_joined: 'Te uniste. Se están cargando las listas compartidas.',
+      need_hh_name: 'Ponle un nombre al grupo.', need_code: 'Ingresa el código de invitación.', hh_created: 'Grupo creado', hh_created_named: 'Se creó "{name}"', hh_joined: 'Te uniste. Se están cargando las listas compartidas.',
 
       rep_title: 'Reponer', rep_open_list: 'Abre una lista primero.', rep_note: 'Primero los fijados y los más comprados. Los artículos que ya están en esta lista se ocultan.',
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fijar', unpin: 'Quitar fijado', pin_aria: 'Fijar {name}', unpin_aria: 'Quitar fijado de {name}', hide_aria: 'Ocultar {name}',
@@ -262,7 +268,7 @@
       sh_step3: 'Agregar personas',
       sh_done: 'hecho',
       sh_hh_none: 'Las listas se comparten mediante un grupo. Crea uno o únete a uno para continuar.',
-      sh_create_btn: 'Crear y compartir',
+      sh_create_btn: 'Crear',
       sh_join_lbl: 'Unirse con un código',
       sh_share_btn: 'Compartir con {name}',
       sh_share_sel: 'Compartir esta lista',
@@ -311,12 +317,12 @@
       pill_error_tip_other: '{n} alterações ainda não foram sincronizadas. Elas estão seguras neste aparelho. Toque para tentar de novo.',
       toast_synced: 'Tudo está sincronizado.', toast_offline: 'Você está offline. As alterações ficam salvas neste aparelho.', toast_retrying: 'Tentando sincronizar de novo…',
 
-      hub_tip: 'Economia: histórico de preços, ofertas, grupo', hub_aria: 'Central de economia',
-      bar_replenish: 'Repor', bar_share: 'Compartilhar lista', bar_deals: 'Ofertas',
+      hub_tip: 'Economia: histórico de preços, ofertas, grupos', hub_aria: 'Central de economia',
+      bar_replenish: 'Repor', bar_groups: 'Grupos', bar_deals: 'Ofertas',
       save_prices_btn: 'Salvar estes preços no meu histórico de preços',
       toast_alert: 'Bom preço: {name} chegou a {price}/{unit}', toast_alert_at: 'Bom preço: {name} em {store} chegou a {price}/{unit}',
 
-      sheet_title: 'Economia', close: 'Fechar', tab_book: 'Histórico de preços', tab_deals: 'Ofertas e cupons', tab_house: 'Grupo',
+      sheet_title: 'Economia', close: 'Fechar', tab_book: 'Histórico de preços', tab_deals: 'Ofertas e cupons', tab_house: 'Grupos',
       install_app: 'Instalar app', ios_install: 'Instalar no iPhone/iPad: toque em Compartilhar e depois em Adicionar à Tela de Início.',
       loading: 'Carregando…', err_generic: 'Algo deu errado. Tente de novo em instantes.', err_offline: 'Você está offline. Esta seção precisa de conexão.',
 
@@ -365,6 +371,9 @@
 
       hh_intro: 'Crie um grupo para uma casa, escritório, creche, restaurante ou qualquer equipe que compartilhe listas de compras.',
       invite: 'Convidar', invite_again: 'Novo código', leave: 'Sair do grupo', you: '(você)', owner: 'Líder', member: 'Editor de listas',
+      delete_group: 'Excluir grupo', confirm_delete_group: 'Excluir este grupo para todos? As listas compartilhadas voltarão a ser privadas para seus proprietários.',
+      confirm_leave_owner: 'Sair do grupo? O Editor de listas com mais tempo no grupo será o novo Líder. Suas listas voltarão a ser privadas.',
+      group_left: 'Você saiu do grupo.', group_deleted: 'Grupo excluído.',
       leader: 'Líder', editor: 'Editor de listas', checker: 'Só marcar itens',
       leader_access: 'Administra pessoas, funções, convites e listas compartilhadas.',
       editor_access: 'Cria listas e adiciona, altera, remove ou marca itens.',
@@ -381,7 +390,7 @@
       confirm_leave: 'Sair deste grupo? Suas listas voltarão a ser privadas e continuarão sendo suas. Você perderá acesso às listas de outras pessoas.', confirm_kick: 'Remover esta pessoa?',
       e_invite: 'O código é inválido, expirou ou não tem mais usos. Peça a um líder para criar outro.', e_full: 'Esse grupo está cheio.', e_limit: 'Você atingiu o limite de grupos.',
       e_offline: 'Você está offline.', e_generic: 'Não funcionou. Tente novamente.',
-      need_hh_name: 'Dê um nome ao grupo.', need_code: 'Informe o código de convite.', hh_created: 'Grupo criado', hh_joined: 'Você entrou. As listas compartilhadas estão carregando.',
+      need_hh_name: 'Dê um nome ao grupo.', need_code: 'Informe o código de convite.', hh_created: 'Grupo criado', hh_created_named: 'Grupo "{name}" criado', hh_joined: 'Você entrou. As listas compartilhadas estão carregando.',
 
       rep_title: 'Repor', rep_open_list: 'Abra uma lista primeiro.', rep_note: 'Fixados e mais comprados primeiro. Itens que já estão nesta lista ficam ocultos.',
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fixar', unpin: 'Desafixar', pin_aria: 'Fixar {name}', unpin_aria: 'Desafixar {name}', hide_aria: 'Ocultar {name}',
@@ -398,7 +407,7 @@
       sh_step3: 'Adicionar pessoas',
       sh_done: 'concluído',
       sh_hh_none: 'As listas são compartilhadas por meio de um grupo. Crie um ou entre em um para continuar.',
-      sh_create_btn: 'Criar e compartilhar',
+      sh_create_btn: 'Criar',
       sh_join_lbl: 'Entrar com um código',
       sh_share_btn: 'Compartilhar com {name}',
       sh_share_sel: 'Compartilhar esta lista',
@@ -555,13 +564,14 @@
     const gl = $('#tab-grocery .grocery-layout');
     if (gl) {
       bar = document.createElement('div'); bar.className = 'bpx-bar';
-      bar.onclick = e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'replenish') openReplenish(); else if (a === 'sharelist') openShareList(); else if (a === 'listdeals') openHub('deals'); };
+      bar.onclick = e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'replenish') openReplenish(); else if (a === 'groups') openHub('house'); else if (a === 'listdeals') openHub('deals'); };
       gl.parentNode.insertBefore(bar, gl);
     }
     const aw = $('.analysis-wrap');
     if (aw) { const b = document.createElement('button'); b.id = 'bpxSavePrices'; b.className = 'bpx-btn'; b.style.cssText = 'display:none;margin:8px 0'; b.onclick = openSavePrices; aw.appendChild(b); }
     labelStatics();
     bp.on('status', s => { renderStatus(s); if (s.state === 'synced') { mcache.forEach(c => { c.at = 0; }); ui.decorateList(); } });
+    bp.on('households', () => { if (sheetEl && activeHubTab === 'house') showTab('house'); });
     bp.on('alert', a => {
       alertCount++; setBadge();
       if (a) toast(tr(a.store ? 'toast_alert_at' : 'toast_alert', { name: a.product_name, store: a.store, price: money(a.unit_price), unit: a.base_unit }), 'ok');
@@ -572,7 +582,7 @@
   };
   function labelStatics() {                                     // everything that is set once but must follow the language
     if (hubBtn) { hubBtn.title = tr('hub_tip'); hubBtn.setAttribute('aria-label', tr('hub_aria')); }
-    if (bar) bar.innerHTML = `<button class="bpx-btn" data-a="replenish">${h(tr('bar_replenish'))}</button><button class="bpx-btn" data-a="sharelist">${h(tr('bar_share'))}</button><button class="bpx-btn" data-a="listdeals">${h(tr('bar_deals'))}</button>`;
+    if (bar) bar.innerHTML = `<button class="bpx-btn" data-a="replenish">${h(tr('bar_replenish'))}</button><button class="bpx-btn" data-a="groups">${h(tr('bar_groups'))}</button><button class="bpx-btn" data-a="listdeals">${h(tr('bar_deals'))}</button>`;
     const sb = $('#bpxSavePrices'); if (sb) sb.textContent = tr('save_prices_btn');
   }
   ui.relang = function () {                                     // call from applyLang()
@@ -641,6 +651,7 @@
 
   /* ------------------------------ sheet plumbing ------------------------------ */
   let sheetEl = null, lastFocus = null;
+  let activeHubTab = null;
   function openSheet(title, bodyHtml, tabs, active) {
     closeSheet(); lastFocus = document.activeElement;
     sheetEl = document.createElement('div'); sheetEl.className = 'bpx-ov';
@@ -676,6 +687,7 @@
     await showTab(tab);
   }
   async function showTab(tab) {
+    activeHubTab = tab;
     $$('.bpx-tab').forEach(t => t.setAttribute('aria-selected', t.dataset.k === tab));
     busy();
     try { await ({ book: renderBook, deals: renderDeals, house: renderHouse })[tab](); } catch (e) { fail(e); }
@@ -709,15 +721,7 @@
         if (res.some(r => r.n && !/^Item \d+$/.test(r.n))) return openSavePrices();
         closeSheet(); if (ui.host.goCompare) ui.host.goCompare(); toast(tr('pb_go_compare')); return;
       }
-      if (a === 'shmk') return shMake();
-      if (a === 'shjoin') return shJoin();
-      if (a === 'shshare') return shShare(el);
-      if (a === 'shinvite') { shInvite = { hid: el.dataset.id, code: await bp.households.invite(el.dataset.id) }; const box = $('#shInv'); if (box) box.innerHTML = inviteHtml(shInvite.code); return; }
-      if (a === 'shcopy') return shCopy();
       if (a === 'copyinvite') return copyCode(el.dataset.code);
-      if (a === 'shsend') return shSend();
-      if (a === 'shstop') return shStop();
-      if (a === 'shmanage') return openHub('house');
       if (a === 'adddeal' || a === 'savedeal') return submitDeal();
       if (a === 'editdeal') return beginEditDeal(el.dataset.id);
       if (a === 'clip') { await bp.deals.clip(el.dataset.id, el.dataset.v === '1'); patchCachedDeal(el.dataset.id, { clipped: el.dataset.v === '1' }); return showTab('deals'); }
@@ -746,17 +750,29 @@
         toast(tr('leadership_transferred'), 'ok'); return showTab('house');
       }
       if (a === 'invite') { const c = await bp.households.invite(el.dataset.id), b = $('#bpxInv' + el.dataset.id); b.innerHTML = `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code">${h(c)}</div><button class="bpx-btn" data-a="copyinvite" data-code="${h(c)}">${h(tr('copy'))}</button>`; el.textContent = tr('invite_again'); return; }
-      if (a === 'leave') { if (confirm(tr('confirm_leave'))) { await bp.households.leave(el.dataset.id); return showTab('house'); } }
+      if (a === 'leave') {
+        const confirmation = el.dataset.owner === 'true' ? tr('confirm_leave_owner') : tr('confirm_leave');
+        if (!confirm(confirmation)) return;
+        await bp.households.leave(el.dataset.id);
+        toast(tr('group_left'), 'ok');
+        return showTab('house');
+      }
+      if (a === 'deletegroup') {
+        if (!confirm(tr('confirm_delete_group'))) return;
+        await bp.households.delete(el.dataset.id);
+        toast(tr('group_deleted'), 'ok');
+        return showTab('house');
+      }
       if (a === 'kick') { if (confirm(tr('confirm_kick'))) { await bp.households.removeMember(el.dataset.hid, el.dataset.uid); return showTab('house'); } }
     } catch (err) {
       console.error(err);
-      toast(errMsg(err, a === 'mkhouse' || a === 'shmk'), '');
+      toast(errMsg(err, a === 'mkhouse'), '');
     }
   }
   function errMsg(e, showBackend = false) {
     const m = (e && e.message) || '';
     if (showBackend && m) return m;
-    if (/invalid_or_expired_invite/.test(m)) return tr('e_invite');
+    if (/invalid_or_expired_invite|expired|invite.*(?:invalid|unavailable)|invalid.*(?:invite|code)/i.test(m)) return tr('e_invite');
     if (/household is full/.test(m)) return tr('e_full');
     if (/limit reached/.test(m)) return tr('e_limit');
     if (!online()) return tr('e_offline');
@@ -1075,7 +1091,7 @@
     let html = '';
     html += hs.length ? hs.map(x => {
       const owner = x.members.some(m => m.is_me && m.role === 'owner');
-      return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div>${owner ? `<div class="bpx-group-actions"><button class="bpx-btn" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><details class="bpx-role-help"><summary aria-label="${h(tr('roles_help'))}">?</summary><div class="bpx-role-pop">${h(tr('roles_help'))}<button class="bpx-role-close" type="button" data-a="rolehelpclose" aria-label="${h(tr('close'))}">&times;</button></div></details><button class="bpx-btn" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button></div>` : `<button class="bpx-btn d" data-a="leave" data-id="${h(x.id)}">${h(tr('leave'))}</button>`}</div>
+      return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div><div class="bpx-group-actions">${owner ? `<details class="bpx-role-help"><summary aria-label="${h(tr('roles_help'))}">?</summary><div class="bpx-role-pop">${h(tr('roles_help'))}<button class="bpx-role-close" type="button" data-a="rolehelpclose" aria-label="${h(tr('close'))}">&times;</button></div></details><button class="bpx-btn" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><button class="bpx-btn" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button><button class="bpx-btn" data-a="leave" data-id="${h(x.id)}" data-owner="true">${h(tr('leave'))}</button><button class="bpx-btn d" data-a="deletegroup" data-id="${h(x.id)}">${h(tr('delete_group'))}</button>` : `<button class="bpx-btn d" data-a="leave" data-id="${h(x.id)}">${h(tr('leave'))}</button>`}</div></div>
         <div id="bpxInv${h(x.id)}"></div>
         ${x.members.map(m => {
           const role = m.role === 'owner' ? 'leader' : m.role === 'checker' ? 'checker' : 'editor';
@@ -1100,114 +1116,14 @@
     body().innerHTML = html;
     $$('select[data-share]', body()).forEach(sel => sel.onchange = () => { try { bp.shareList(sel.dataset.share, sel.value || null); toast(tr(sel.value ? 'shared' : 'private'), 'ok'); } catch (e) { toast(e.message); } });
   }
-  async function mkHouse() { const n = $('#hhName').value.trim(); if (!n) return toast(tr('need_hh_name')); await bp.households.create(n); toast(tr('hh_created'), 'ok'); showTab('house'); }
+  async function mkHouse() { const n = $('#hhName').value.trim(); if (!n) return toast(tr('need_hh_name')); const group = await bp.households.create(n); toast(tr('hh_created_named', { name: group.name }), 'ok'); showTab('house'); }
   async function joinHouse() { const c = $('#hhCode').value.trim(); if (!c) return toast(tr('need_code')); await bp.households.join(c); toast(tr('hh_joined'), 'ok'); showTab('house'); }
 
-  /* ------------------------------ share THIS list (contextual flow) ------------------------------
-   * Opened from the "Share list" button under the list header. Everything is about the active list: its state (private /
-   * shared), then the three steps (household -> share -> invite), then who it is shared with and "Stop sharing".
-   * The general Household tab (members, leave, per-list selectors) is untouched and reachable via "Manage household". */
-  let shInvite = null, shOv = null;                          // shOv: optimistic householdId for ~5 s, until the projection catches up
-  const curList = () => {
-    const lid = ui.host.activeListId(); if (lid == null) return null;
-    const l = ((ui.host.lists && ui.host.lists()) || []).find(x => String(x.id) === String(lid)); if (!l) return null;
-    return shOv && String(shOv.id) === String(l.id) && Date.now() - shOv.at < 5000 ? Object.assign({}, l, { householdId: shOv.hid }) : l;
-  };
-  const isOwnerOf = x => x.members.some(m => m.is_me && m.role === 'owner');
   const canEditGroup = x => x.members.some(m => m.is_me && ['owner', 'editor'].includes(m.role));
-  function inviteHtml(code) {
-    return `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code" id="shCodeOut">${h(code)}</div>
-      <div class="bpx-row" style="margin-top:6px"><button class="bpx-btn" data-a="shcopy">${h(tr('sh_copy'))}</button>${navigator.share ? `<button class="bpx-btn p" data-a="shsend">${h(tr('sh_send'))}</button>` : ''}</div>`;
-  }
   async function copyCode(code) {
     try { await navigator.clipboard.writeText(code); toast(tr('sh_copied'), 'ok'); }
     catch (e) { toast(tr('sh_copy_failed')); }
   }
-  async function openShareList() {
-    if (!curList()) return toast(tr('rep_open_list'));
-    shInvite = null; shOv = null;
-    openSheet(tr('sh_title'), '', null);
-    sheetEl.addEventListener('click', hubClick);
-    sheetEl.addEventListener('submit', e => e.preventDefault());
-    sheetEl.addEventListener('keydown', e => {
-      if (e.key !== 'Enter' || !e.target.matches || !e.target.matches('#shName,#shCode')) return;
-      e.preventDefault(); const b = $(e.target.id === 'shName' ? '[data-a="shmk"]' : '[data-a="shjoin"]', sheetEl); if (b) b.click();
-    });
-    busy();
-    try { await renderShare(); } catch (e) { fail(e); }
-  }
-  async function renderShare() {
-    if (!sheetEl) return;
-    const l = curList(); if (!l) return closeSheet();
-    const hs = await bp.households.list(), me = bp.me();
-    if (!sheetEl) return;
-    const mine = l.ownerId === me, shared = !!l.householdId;
-    const hh = shared ? hs.find(x => String(x.id) === String(l.householdId)) : null, hhName = hh ? hh.name : (hs[0] ? hs[0].name : '');
-    const canManage = (mine && (!shared || (hh && canEditGroup(hh)))) || (hh && canEditGroup(hh));
-    const canShareGroups = hs.filter(canEditGroup);
-    const people = x => x.members.map(m => {
-      const name = String(m.display_name || '').trim().split(/\s+/)[0] || '';
-      const role = m.role === 'owner' ? 'leader' : m.role === 'checker' ? 'checker' : 'editor';
-      return `<div class="bpx-row bpx-sub"><span>${h(name.length > 20 ? name.slice(0, 20) + '...' : name)}${m.is_me ? ' ' + h(tr('you')) : ''} · ${h(tr(role))}</span></div>`;
-    }).join('');
-    const step = (n, title, done, inner) => `<div class="bpx-step${done ? ' done' : ''}"><div class="bpx-stepn" aria-hidden="true">${done ? '&#10003;' : n}</div><div class="bpx-grow"><div class="bpx-name">${h(title)}${done ? `<span class="bpx-sr"> (${h(tr('sh_done'))})</span>` : ''}</div>${inner}</div></div>`;
-    // a) Is it private or shared?
-    let html = `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow"><div class="bpx-name">${h(l.name)}</div>
-      <div class="bpx-sub">${h(shared ? tr('sh_status_shared', { name: hhName || tr('sh_chip_shared') }) : tr('sh_status_private'))}</div></div>
-      <span class="bpx-chip ${shared ? 'g' : 'n'}">${h(tr(shared ? 'sh_chip_shared' : 'sh_chip_private'))}</span></div></div>`;
-    if (!canManage) {                                         // non-leaders can view a shared list's sharing status
-      html += `<div class="bpx-note">${h(tr('sh_owner_only'))}</div>` + (hh ? `<span class="bpx-lbl">${h(tr('sh_with_lbl'))}</span><div class="bpx-people">${people(hh)}</div>` : '');
-      body().innerHTML = html; return;
-    }
-    // b) Household: create or join when there is none.
-    html += step(1, tr('sh_step1'), hs.length > 0, hs.length
-      ? `<div class="bpx-sub">${h(hs.map(x => x.name).join(', '))}</div>`
-      : `<div class="bpx-note">${h(tr('sh_hh_none'))}</div>
-         <span class="bpx-lbl">${h(tr('hh_create_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="shName" maxlength="80" placeholder="${h(tr('hh_ph'))}" aria-label="${h(tr('hh_create_lbl'))}"><button class="bpx-btn p" data-a="shmk">${h(tr('sh_create_btn'))}</button></div>
-         <span class="bpx-lbl">${h(tr('sh_join_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="shCode" maxlength="16" autocapitalize="characters" placeholder="${h(tr('code_ph'))}" aria-label="${h(tr('sh_join_lbl'))}"><button class="bpx-btn" data-a="shjoin">${h(tr('join'))}</button></div>`);
-    // Share this list with a household.
-    html += step(2, tr('sh_step2'), shared, shared ? `<div class="bpx-sub">${h(tr('sh_step2_done', { name: hhName }))}</div>`
-      : hs.length === 0 ? `<div class="bpx-sub">${h(tr('sh_need_hh'))}</div>`
-      : canShareGroups.length === 0 ? `<div class="bpx-sub">${h(tr('share_editor_only'))}</div>`
-      : canShareGroups.length === 1 ? `<div class="bpx-row" style="margin-top:4px"><button class="bpx-btn p" data-a="shshare" data-id="${h(canShareGroups[0].id)}">${h(tr('sh_share_btn', { name: canShareGroups[0].name }))}</button></div>`
-      : `<div class="bpx-row" style="margin-top:4px"><select class="bpx-in bpx-grow" id="shHh" aria-label="${h(tr('sh_step1'))}">${canShareGroups.map(x => `<option value="${h(x.id)}">${h(x.name)}</option>`).join('')}</select><button class="bpx-btn p" data-a="shshare">${h(tr('sh_share_sel'))}</button></div>`);
-    // c) Invite someone.
-    const target = hh || hs.find(isOwnerOf) || hs[0];
-    html += step(3, tr('sh_step3'), false, !target ? `<div class="bpx-sub">${h(tr('sh_need_hh'))}</div>`
-      : !isOwnerOf(target) ? `<div class="bpx-sub">${h(tr('sh_invite_owner_only'))}</div>`
-      : `<div class="bpx-note">${h(tr('sh_invite_help'))}</div><button class="bpx-btn" data-a="shinvite" data-id="${h(target.id)}">${h(tr('sh_invite_btn'))}</button><div id="shInv">${shInvite && String(shInvite.hid) === String(target.id) ? inviteHtml(shInvite.code) : ''}</div>`);
-    // d) Who can see it now + stop sharing.
-    if (shared && hh) {
-      html += `<span class="bpx-lbl">${h(tr('sh_with_lbl'))}</span><div class="bpx-people">${people(hh)}</div>` + (hh.members.length < 2 ? `<div class="bpx-note">${h(tr('sh_only_you'))}</div>` : '');
-      html += `<div class="bpx-row" style="margin-top:10px"><button class="bpx-btn d" data-a="shstop">${h(tr('sh_stop'))}</button></div>`;
-    } else if (shared) {
-      html += `<div class="bpx-row" style="margin-top:10px"><button class="bpx-btn d" data-a="shstop">${h(tr('sh_stop'))}</button></div>`;
-    }
-    if (hs.some(isOwnerOf)) html += `<div class="bpx-row" style="margin-top:8px"><button class="bpx-btn" data-a="shmanage">${h(tr('sh_manage'))}</button></div>`;
-    body().innerHTML = html;
-  }
-  function shareNow(householdId) {                           // the database enforces list-owner/group-leader permissions
-    const l = curList(); bp.shareList(l.id, householdId || null); shOv = { id: l.id, hid: householdId || null, at: Date.now() };
-  }
-  async function shMake() {
-    const n = $('#shName').value.trim(); if (!n) return toast(tr('need_hh_name'));
-    await bp.households.create(n);
-    toast(tr('hh_created'), 'ok'); await renderShare();
-  }
-  async function shJoin() { const c = $('#shCode').value.trim(); if (!c) return toast(tr('need_code')); await bp.households.join(c); toast(tr('hh_joined'), 'ok'); await renderShare(); }
-  async function shShare(el) { const hid = el.dataset.id || ($('#shHh') || {}).value; if (!hid) return; shareNow(hid); toast(tr('shared'), 'ok'); await renderShare(); }
-  async function shStop() { if (!confirm(tr('sh_stop_confirm'))) return; shareNow(null); shInvite = null; toast(tr('private'), 'ok'); await renderShare(); }
-  async function shCopy() {
-    const c = shInvite && shInvite.code; if (!c) return;
-    try { await navigator.clipboard.writeText(c); toast(tr('sh_copied'), 'ok'); }
-    catch (e) { const el = $('#shCodeOut'); if (el) { const r = document.createRange(); r.selectNodeContents(el); const s = global.getSelection(); s.removeAllRanges(); s.addRange(r); } toast(tr('sh_copy_failed')); }
-  }
-  async function shSend() {
-    const c = shInvite && shInvite.code; if (!c) return;
-    try { await navigator.share({ title: 'Better Price', text: tr('sh_invite_msg', { code: c }), url: location.origin }); }
-    catch (e) { if (e && e.name !== 'AbortError') return shCopy(); }
-  }
-
   /* ------------------------------ replenish ------------------------------ */
   async function openReplenish() {
     const lid = ui.host.activeListId(); if (!lid) return toast(tr('rep_open_list'));
@@ -1233,5 +1149,5 @@
       };
     } catch (e) { fail(e); }
   }
-  ui.openReplenish = openReplenish; ui.openHub = openHub; ui.openShareList = openShareList;
+  ui.openReplenish = openReplenish; ui.openHub = openHub;
 })(window);
