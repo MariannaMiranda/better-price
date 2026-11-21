@@ -38,7 +38,7 @@
     idmap: {},                               // legacy non-uuid id -> uuid (stable across saves)
     hydrated: false, migrated: false,
     loc: { lists: {}, items: {} },           // current projection (app shape), used for diffing
-    flushing: false, pulling: false, pullAgain: false, error: null, retryN: 0,
+    flushing: false, pulling: false, pullAgain: false, pullAgainFull: false, error: null, retryN: 0,
     timers: { flush: null, retry: null, pull: null },
     chan: null, lastFullPull: 0, listeners: {}, extras: {}, session: null,
   };
@@ -376,7 +376,7 @@
   async function pull(opts) {
     const full = !!(opts && opts.full);
     if (!S.enabled || (global.navigator && navigator.onLine === false)) return;
-    if (S.pulling) { S.pullAgain = true; return; }
+    if (S.pulling) { S.pullAgain = true; S.pullAgainFull ||= full; return; }
     S.pulling = true; S.pullAgain = false;
     const generation = S.generation, sb = S.sb;
     try {
@@ -400,12 +400,19 @@
       S.hydrated = true;
       persist(); materialize();
     } finally { if (generation === S.generation) S.pulling = false; }
-    if (S.pullAgain) { S.pullAgain = false; return pull(); }
+    if (S.pullAgain) {
+      const fullAgain = S.pullAgainFull;
+      S.pullAgain = false; S.pullAgainFull = false;
+      return pull({ full: fullAgain });
+    }
   }
   bp.pull = pull;
   bp.refreshSoon = function (full) {
     clearTimeout(S.timers.pull);
-    S.timers.pull = setTimeout(() => { if (S.flushing) { S.pullAgain = true; return; } pull({ full: !!full }).catch(e => console.error('bp pull failed', e)); }, 400);
+    S.timers.pull = setTimeout(() => {
+      if (S.flushing) { S.pullAgain = true; S.pullAgainFull ||= !!full; return; }
+      pull({ full: !!full }).catch(e => console.error('bp pull failed', e));
+    }, 400);
   };
 
   /* ------------------------------ lifecycle ------------------------------ */
@@ -468,6 +475,14 @@
     S.chan = S.sb.channel('bp-' + S.uid)
       .on('postgres_changes', on('lists'), () => bp.refreshSoon(false))
       .on('postgres_changes', on('list_items'), () => bp.refreshSoon(false))
+      .on('postgres_changes', on('households'), () => {
+        bp.refreshSoon(true);
+        emit('households');
+      })
+      .on('postgres_changes', on('household_members'), () => {
+        bp.refreshSoon(true);
+        emit('households');
+      })
       .on('postgres_changes', on('favorite_items'), () => emit('favorites'))
       .on('postgres_changes', on('deals'), () => emit('deals'))
       .on('postgres_changes', on('price_alerts', null, 'user_id=eq.' + S.uid), p => emit('alert', p.new))
@@ -480,7 +495,7 @@
     try { if (S.chan) S.sb.removeChannel(S.chan); } catch (e) { /* ignore */ }
     Object.values(S.timers).forEach(clearTimeout);
     S.generation++; S.chan = null; S.enabled = false; bp.enabled = false; S.uid = null;
-    S.sb = null; S.session = null; S.email = ''; S.flushing = false; S.pulling = false; S.pullAgain = false;
+    S.sb = null; S.session = null; S.email = ''; S.flushing = false; S.pulling = false; S.pullAgain = false; S.pullAgainFull = false;
     S.retryN = 0; S.error = null;
     S.srv = { lists: {}, items: {} }; S.cursor = { lists: 0, items: 0 }; S.outbox = []; S.idmap = {}; S.extras = {}; S.hydrated = false; S.migrated = false;
     S.loc = { lists: {}, items: {} }; lastProjectionJson = '';
@@ -488,6 +503,20 @@
 
   /* ------------------------------ households ------------------------------ */
   const rpc = (fn, args) => call(() => S.sb.rpc(fn, args));
+  function uniqueGroupName(name, existingNames) {
+    const clean = String(name || '').trim().slice(0, 80);
+    const taken = new Set(existingNames.map(value => String(value || '').trim().toLowerCase()));
+    if (!taken.has(clean.toLowerCase())) return clean;
+    const match = /^(.*?)(?:\s+\((\d+)\))$/.exec(clean);
+    const stem = (match ? match[1] : clean).trim();
+    let suffix = match ? Number(match[2]) + 1 : 1;
+    let candidate;
+    do {
+      const ending = ` (${suffix++})`;
+      candidate = `${stem.slice(0, 80 - ending.length).trimEnd()}${ending}`;
+    } while (taken.has(candidate.toLowerCase()));
+    return candidate;
+  }
   bp.households = {
     async list() {
       const hs = await call(() => S.sb.from('households').select('id,name,created_at').order('created_at'));
@@ -495,13 +524,18 @@
       for (const h of hs) out.push({ ...h, members: await rpc('bp_household_members', { p_household: h.id }) });
       return out;
     },
-    create: async name => { const id = await rpc('create_household', { p_name: name }); return id; },
+    create: async name => {
+      const actualName = uniqueGroupName(name, (await bp.households.list()).map(h => h.name));
+      const id = await rpc('create_household', { p_name: actualName });
+      return { id, name: actualName };
+    },
     invite: hid => rpc('create_invite', { p_household: hid }),
     rename: (hid, name) => rpc('rename_household', { p_household: hid, p_name: name }),
     setMemberRole: (hid, uid, role) => rpc('set_household_member_role', { p_household: hid, p_user: uid, p_role: role }),
     transferLeadership: (hid, uid) => rpc('transfer_household_leadership', { p_household: hid, p_user: uid }),
     async join(code) { const id = await rpc('join_household', { p_code: code }); await pull({ full: true }); return id; },
     async leave(hid) { await rpc('leave_household', { p_household: hid }); await pull({ full: true }); },
+    async delete(hid) { await rpc('delete_household', { p_household: hid }); await pull({ full: true }); },
     async removeMember(hid, uid) { await rpc('remove_household_member', { p_household: hid, p_user: uid }); },
   };
   // Sharing is queued like any list edit; database role policies decide who can change it.
