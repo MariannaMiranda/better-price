@@ -1,5 +1,5 @@
 /* bp-ui.js — UI for the relational features. Depends on bp-store.js. All strings are escaped via h().
- * v3: contextual "Share list" flow (openShareList), browse-first "Offers & coupons" tab, "Price history" wording (was "Price Book"),
+ * v3: contextual "Share list" flow (openShareList), browse-first "Deals & coupons" tab, "Price history" wording (was "Price Book"),
  *     and the matching en/es/pt strings. Host may optionally provide goCompare() to jump to the Compare tab.
  * v2: calmer sync pill, "Lowest you've recorded" price-book copy, streamlined deal cards (also inline in the shopping list),
  *     and en/es/pt strings for every label in the Savings hub (see STR below).
@@ -34,12 +34,12 @@
       pill_error_tip_other: "{n} changes haven't synced yet. They're safe on this device. Tap to retry.",
       toast_synced: 'Everything is synced.', toast_offline: "You're offline. Changes are saved on this device.", toast_retrying: 'Retrying sync…',
 
-      hub_tip: 'Savings: price history, offers, group', hub_aria: 'Savings hub',
-      bar_replenish: 'Replenish', bar_share: 'Share list', bar_deals: 'Offers',
+      hub_tip: 'Savings: price history, deals, group', hub_aria: 'Savings hub',
+      bar_replenish: 'Replenish', bar_share: 'Share list', bar_deals: 'Deals',
       save_prices_btn: 'Save these prices to my price history',
       toast_alert: 'Good price: {name} hit {price}/{unit}', toast_alert_at: 'Good price: {name} at {store} hit {price}/{unit}',
 
-      sheet_title: 'Savings', close: 'Close', tab_book: 'Price history', tab_deals: 'Offers & coupons', tab_house: 'Group',
+      sheet_title: 'Savings', close: 'Close', tab_book: 'Price history', tab_deals: 'Deals & coupons', tab_house: 'Group',
       install_app: 'Install app', ios_install: 'Install on iPhone/iPad: tap Share, then Add to Home Screen.',
       loading: 'Loading…', err_generic: 'Something went wrong. Try again in a moment.', err_offline: 'You are offline. This section needs a connection.',
 
@@ -86,7 +86,7 @@
       compare: 'Compare', clip: 'Clip', unclip: 'Unclip', delete: 'Delete',
       how_p: '{v}% off', how_d: '{v} off', how_bogo: 'Buy {buy}, get {get} free', how_sale: 'Sale price', bogo_note: 'priced per full set',
       cmp_same: 'Same as your best', cmp_below: '{n}% below your best', cmp_above: '{n}% above your best',
-      deal_added: 'Offer added', deal_saved: 'Offer updated', need_fields: 'Product, price and pack size are required.', need_dv: 'Enter the discount value.',
+      deal_added: 'Deal added', deal_saved: 'Deal updated', need_fields: 'Product, price and pack size are required.', need_dv: 'Enter the discount value.',
       pct_max: 'Percent off cannot exceed 100.', need_bogo: 'Enter how many to buy and how many are free.',
       deal_on_card: 'Deal added to a comparison card', no_empty_card: 'No empty comparison card. Add a card first.',
       clipped: 'Coupon clipped', unclipped: 'Coupon unclipped',
@@ -146,11 +146,11 @@
       sh_stop_confirm: 'Stop sharing this list? It will be private again.',
       sh_owner_only: 'Only the list owner or a group Leader can delete a list. List Editors can change sharing.',
       sh_manage: 'Manage group',
-      sh_created_shared: 'Group created. List shared.',
-      offers_empty: 'No saved offers yet. Offers are added by you or your group; live store ads aren\'t connected.',
-      offers_scope_note: 'Offers are added by you or your group; live store ads aren\'t connected.',
-      lbl_other: 'Other saved offers',
-      lbl_all: 'All saved offers',
+      offers_empty: 'No saved deals yet. Deals are added by you or your group; live store ads aren\'t connected.',
+      offers_scope_note: 'Deals are added by you or your group; live store ads aren\'t connected.',
+      lbl_other: 'Other saved deals',
+      lbl_all: 'All saved deals',
+      groups_independent_note: 'Groups can exist without shared lists. You can share a list later.',
       act_add: 'Add an offer',
       more_opts: 'Discount, coupon & expiry (optional)',
       unit_aria: 'Size unit',
@@ -282,11 +282,11 @@
       sh_stop_confirm: '¿Dejar de compartir esta lista? Volverá a ser privada.',
       sh_owner_only: 'Solo el propietario o el líder puede eliminar una lista. Los editores pueden cambiar el uso compartido.',
       sh_manage: 'Administrar grupo',
-      sh_created_shared: 'Grupo creado. Lista compartida.',
-      offers_empty: 'Todavía no hay ofertas guardadas que coincidan con esta lista. Las ofertas las agregas tú o tu grupo; los folletos de las tiendas en vivo no están conectados.',
-      offers_scope_note: 'Las ofertas las agregas tú o tu grupo; los folletos de las tiendas en vivo no están conectados.',
+      offers_empty: 'Todavía no hay ofertas guardadas que coincidan con esta lista. Tú o tu grupo agregan las ofertas; no hay folletos de tiendas en vivo.',
+      offers_scope_note: 'Tú o tu grupo agregan las ofertas; no hay folletos de tiendas en vivo.',
       lbl_other: 'Otras ofertas guardadas',
       lbl_all: 'Todas las ofertas guardadas',
+      groups_independent_note: 'Los grupos pueden existir sin listas compartidas. Puedes compartir una lista más adelante.',
       act_add: 'Agregar una oferta',
       more_opts: 'Descuento, cupón y vencimiento (opcional)',
       unit_aria: 'Unidad del tamaño',
@@ -418,11 +418,11 @@
       sh_stop_confirm: 'Parar de compartilhar esta lista? Ela voltará a ser privada.',
       sh_owner_only: 'Só o dono da lista ou o líder pode excluir uma lista. Editores podem alterar o compartilhamento.',
       sh_manage: 'Gerenciar grupo',
-      sh_created_shared: 'Grupo criado. Lista compartilhada.',
-      offers_empty: 'Ainda não há ofertas salvas que correspondam a esta lista. As ofertas são adicionadas por você ou pelo seu grupo; os encartes das lojas ao vivo não estão conectados.',
-      offers_scope_note: 'As ofertas são adicionadas por você ou pelo seu grupo; os encartes das lojas ao vivo não estão conectados.',
+      offers_empty: 'Ainda não há ofertas salvas que correspondam a esta lista. Você ou seu grupo cadastram as ofertas; não há encartes de lojas ao vivo.',
+      offers_scope_note: 'Você ou seu grupo cadastram as ofertas; não há encartes de lojas ao vivo.',
       lbl_other: 'Outras ofertas salvas',
       lbl_all: 'Todas as ofertas salvas',
+      groups_independent_note: 'Grupos podem existir sem listas compartilhadas. Você pode compartilhar uma lista depois.',
       act_add: 'Adicionar uma oferta',
       more_opts: 'Desconto, cupom e validade (opcional)',
       unit_aria: 'Unidade do tamanho',
@@ -525,7 +525,10 @@
   .bpx-role-help{position:relative;display:inline-block}
   .bpx-role-help summary{list-style:none;border:1px solid var(--border);border-radius:50%;width:23px;height:23px;display:grid;place-items:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted)}
   .bpx-role-help summary::-webkit-details-marker{display:none}
-  .bpx-role-help[open] .bpx-role-pop{position:absolute;z-index:2;right:0;top:28px;width:min(280px,75vw);padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--card-bg,var(--white));box-shadow:0 6px 20px rgba(0,0,0,.15);font-size:12px;line-height:1.5}
+  .bpx-group-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .bpx-role-help[open] .bpx-role-pop{position:absolute;z-index:2;right:0;top:28px;width:min(280px,75vw);padding:10px 38px 10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--card-bg,var(--white));box-shadow:0 6px 20px rgba(0,0,0,.15);font-size:12px;line-height:1.5}
+  .bpx-role-close{position:absolute;top:5px;right:5px;width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer}
+  .bpx-role-close:hover{background:var(--border)}
   .bpx-select-scroll{max-height:160px;overflow:auto}
   `;
 
@@ -684,6 +687,7 @@
     if (a === 'setrole' && e.type !== 'change') return;
     try {
       if (a === 'close') return closeSheet();
+      if (a === 'rolehelpclose') { el.closest('details')?.removeAttribute('open'); return; }
       if (a === 'tab') return showTab(el.dataset.k);
       if (a === 'product') return renderProduct(el.dataset.k);
       if (a === 'back') return showTab('book');
@@ -691,7 +695,7 @@
       if (a === 'settarget') return saveTarget(el.dataset.k);
       if (a === 'deltarget') { await bp.price.deleteTarget(el.dataset.id); toast(tr('t_removed'), 'ok'); return renderProduct(el.dataset.k); }
       if (a === 'delentry') { await bp.price.remove(el.dataset.id); toast(tr('p_removed'), 'ok'); return renderProduct(el.dataset.k); }
-      if (a === 'toggle') {                                   // Offers tab: reveal one secondary panel at a time
+      if (a === 'toggle') {                                   // Deals tab: reveal one secondary panel at a time
         const open = document.getElementById(el.dataset.t).hidden;
         ['dlAddPanel'].forEach(id => {
           const p = document.getElementById(id), b = sheetEl.querySelector('[data-t="' + id + '"]'), on = open && id === el.dataset.t;
@@ -744,10 +748,14 @@
       if (a === 'invite') { const c = await bp.households.invite(el.dataset.id), b = $('#bpxInv' + el.dataset.id); b.innerHTML = `<div class="bpx-note">${h(tr('invite_note'))}</div><div class="bpx-code">${h(c)}</div><button class="bpx-btn" data-a="copyinvite" data-code="${h(c)}">${h(tr('copy'))}</button>`; el.textContent = tr('invite_again'); return; }
       if (a === 'leave') { if (confirm(tr('confirm_leave'))) { await bp.households.leave(el.dataset.id); return showTab('house'); } }
       if (a === 'kick') { if (confirm(tr('confirm_kick'))) { await bp.households.removeMember(el.dataset.hid, el.dataset.uid); return showTab('house'); } }
-    } catch (err) { console.error(err); toast(errMsg(err), ''); }
+    } catch (err) {
+      console.error(err);
+      toast(errMsg(err, a === 'mkhouse' || a === 'shmk'), '');
+    }
   }
-  function errMsg(e) {
+  function errMsg(e, showBackend = false) {
     const m = (e && e.message) || '';
+    if (showBackend && m) return m;
     if (/invalid_or_expired_invite/.test(m)) return tr('e_invite');
     if (/household is full/.test(m)) return tr('e_full');
     if (/limit reached/.test(m)) return tr('e_limit');
@@ -908,7 +916,7 @@
     return { sorted, topIsBest: comparable > 1 };
   }
 
-  /* inline: matched offers under each shopping-list item */
+  /* inline: matched deals under each shopping-list item */
   const MATCH_TTL = 60000;
   const mcache = new Map(), inflight = new Set();               // listId -> { at, sig, matches, best }
   const listSig = lid => (ui.host.listItems ? ui.host.listItems(lid) : []).map(i => i.id + ':' + bp.normKey(i.name)).join('|');
@@ -1067,9 +1075,8 @@
     let html = '';
     html += hs.length ? hs.map(x => {
       const owner = x.members.some(m => m.is_me && m.role === 'owner');
-      return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div>${owner ? `<button class="bpx-btn" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><button class="bpx-btn" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button>` : `<button class="bpx-btn d" data-a="leave" data-id="${h(x.id)}">${h(tr('leave'))}</button>`}</div>
+      return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div>${owner ? `<div class="bpx-group-actions"><button class="bpx-btn" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><details class="bpx-role-help"><summary aria-label="${h(tr('roles_help'))}">?</summary><div class="bpx-role-pop">${h(tr('roles_help'))}<button class="bpx-role-close" type="button" data-a="rolehelpclose" aria-label="${h(tr('close'))}">&times;</button></div></details><button class="bpx-btn" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button></div>` : `<button class="bpx-btn d" data-a="leave" data-id="${h(x.id)}">${h(tr('leave'))}</button>`}</div>
         <div id="bpxInv${h(x.id)}"></div>
-        <div class="bpx-row" style="justify-content:flex-end"><details class="bpx-role-help"><summary aria-label="${h(tr('roles_help'))}">?</summary><div class="bpx-role-pop">${h(tr('roles_help'))}</div></details></div>
         ${x.members.map(m => {
           const role = m.role === 'owner' ? 'leader' : m.role === 'checker' ? 'checker' : 'editor';
           const controls = owner && !m.is_me
@@ -1078,7 +1085,7 @@
           return `<div class="bpx-member-row"><span class="bpx-member-name">${h(firstName(m))}${m.is_me ? ' ' + h(tr('you')) : ''} · ${h(tr(role))}</span>${controls}</div>`;
         }).join('')}</div>`;
     }).join('') : `<div class="bpx-note">${h(tr('hh_intro'))}</div>`;
-    html += `<div class="bpx-card"><span class="bpx-lbl" style="margin-top:0">${h(tr('hh_create_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhName" maxlength="80" placeholder="${h(tr('hh_ph'))}"><button class="bpx-btn p" data-a="mkhouse">${h(tr('create'))}</button></div>
+    html += `<div class="bpx-card"><span class="bpx-lbl" style="margin-top:0">${h(tr('hh_create_lbl'))}</span><div class="bpx-note">${h(tr('groups_independent_note'))}</div><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhName" maxlength="80" placeholder="${h(tr('hh_ph'))}"><button class="bpx-btn p" data-a="mkhouse">${h(tr('create'))}</button></div>
       <span class="bpx-lbl">${h(tr('join_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhCode" maxlength="16" autocapitalize="characters" placeholder="${h(tr('code_ph'))}"><button class="bpx-btn" data-a="joinhouse">${h(tr('join'))}</button></div></div>`;
     const shareableGroups = hs.filter(canShareIn);
     const manageable = lists.filter(l => l.ownerId === me || (l.householdId && hs.some(x => String(x.id) === String(l.householdId) && canShareIn(x))));
@@ -1184,9 +1191,8 @@
   }
   async function shMake() {
     const n = $('#shName').value.trim(); if (!n) return toast(tr('need_hh_name'));
-    const id = await bp.households.create(n); let ok = false;
-    if (id) { try { shareNow(id); ok = true; } catch (e) { console.error(e); } }
-    toast(tr(ok ? 'sh_created_shared' : 'hh_created'), 'ok'); await renderShare();
+    await bp.households.create(n);
+    toast(tr('hh_created'), 'ok'); await renderShare();
   }
   async function shJoin() { const c = $('#shCode').value.trim(); if (!c) return toast(tr('need_code')); await bp.households.join(c); toast(tr('hh_joined'), 'ok'); await renderShare(); }
   async function shShare(el) { const hid = el.dataset.id || ($('#shHh') || {}).value; if (!hid) return; shareNow(hid); toast(tr('shared'), 'ok'); await renderShare(); }
