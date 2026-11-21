@@ -1758,7 +1758,7 @@ body.dark .bm-num{color:#34d399;}
     </div>
 
     <div class="help-section">
-      <div class="help-h" id="helpMoreTitle">Offers, groups &amp; Replenish</div>
+      <div class="help-h" id="helpMoreTitle">Deals, groups &amp; Replenish</div>
       <div class="help-tip" id="helpMoreOffers"></div>
       <div class="help-tip" id="helpMoreGroups"></div>
       <div class="help-tip" id="helpMoreReplenish"></div>
@@ -1997,7 +1997,7 @@ body.dark .bm-num{color:#34d399;}
 <div class="modal-box" id="settingsModal">
   <button class="modal-x" onclick="closeModals()">&#10005;</button>
   <div class="modal-title">Settings</div>
-  <div class="setting-row"><span class="s-label">Dark Mode</span><label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label></div>
+  <div class="setting-row"><span class="s-label">Theme</span><select class="s-select" id="themeSelect" onchange="setThemeMode(this.value)"><option value="auto">Auto</option><option value="dark">Forced Dark</option><option value="light">Forced Light</option></select></div>
   <div class="setting-row"><span class="s-label">Language</span><select class="s-select" id="setLang" onchange="changeLang('settings')"><option value="en">🇺🇸 English</option><option value="es">🇪🇸 Español</option><option value="pt">🇧🇷 Português</option></select></div>
   <div class="setting-row"><span class="s-label">Number of Items</span><select class="s-select" id="setCount"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
   <input type="hidden" id="setCurr" value="$">
@@ -2619,16 +2619,35 @@ let dupItemId = null;
 const CURR_RATES = { '$':1 };
 const UNIT_RATES = { oz:1, lb:16, g:0.035274, kg:35.274, ml:0.033814, l:33.814, gal:128, count:1, sheets:1, ft:1, in:0.083333, yd:3, m:3.28084 };
 
-function initTheme(){ applyTheme(localStorage.getItem('bp_theme')==='dark'); }
-function toggleTheme(){ applyTheme(!document.body.classList.contains('dark')); }
-function applyTheme(dark){
+let themeMediaQuery = null;
+function initTheme(){
+  const saved = localStorage.getItem('bp_theme');
+  const mode = ['auto','dark','light'].includes(saved) ? saved : 'auto';
+  if(themeMediaQuery?.removeEventListener) themeMediaQuery.removeEventListener('change', onSystemThemeChange);
+  else themeMediaQuery?.removeListener?.(onSystemThemeChange);
+  themeMediaQuery = window.matchMedia?.('(prefers-color-scheme: dark)') || null;
+  if(themeMediaQuery?.addEventListener) themeMediaQuery.addEventListener('change', onSystemThemeChange);
+  else themeMediaQuery?.addListener?.(onSystemThemeChange);
+  applyTheme(mode);
+}
+function onSystemThemeChange(){ if((localStorage.getItem('bp_theme') || 'auto') === 'auto') applyTheme('auto'); }
+function setThemeMode(mode){
+  if(!['auto','dark','light'].includes(mode)) return;
+  localStorage.setItem('bp_theme', mode);
+  applyTheme(mode);
+}
+function toggleTheme(){
+  const modes=['auto','dark','light'], current=localStorage.getItem('bp_theme') || 'auto';
+  setThemeMode(modes[(modes.indexOf(current)+1)%modes.length]);
+}
+function applyTheme(mode){
+  const dark = mode === 'dark' || (mode === 'auto' && !!themeMediaQuery?.matches);
   document.body.classList.toggle('dark', dark);
-  localStorage.setItem('bp_theme', dark?'dark':'light');
-  const ic=document.getElementById('themeIcon'), sw=document.getElementById('themeSwitch');
+  const ic=document.getElementById('themeIcon'), select=document.getElementById('themeSelect');
   if(ic) ic.innerHTML = dark
     ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
     : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
-  if(sw) sw.checked = dark;
+  if(select) select.value = mode;
 }
 
 const TRANSLATIONS = {
@@ -2653,7 +2672,7 @@ const TRANSLATIONS = {
     presetsTitle:'Saved Presets', saveCurrent:'Save Current',
     presetPh:'Name this preset (e.g. Mayonnaise)',
     presetSave:'Save', presetCancel:'Cancel',
-    settingsTitle:'Settings', darkMode:'Dark Mode', language:'Language',
+    settingsTitle:'Settings', darkMode:'Theme', themeAuto:'Auto', themeDark:'Forced Dark', themeLight:'Forced Light', language:'Language',
     numItems:'Number of Items',
     applyBtn:'Apply',
     exportTitle:'Export Results', exportRunFirst:'Run a comparison first.',
@@ -2688,8 +2707,8 @@ const TRANSLATIONS = {
     hf3:'Save a Compare setup and reload it any time. Great for items you compare repeatedly.',
     hf4:'After comparing, tap Export to share or copy results.',
     hf6:'History, grocery lists, and presets are private to your account and sync across devices when you sign in.',
-    helpMoreTitle:'Offers, groups & Replenish',
-    helpMoreOffers:'Offers are entered by you or your group; live store ads are not connected. Add the shelf price, package size, and optional discount. You can link an offer to a list or item and set an optional expiration date.',
+    helpMoreTitle:'Deals, groups & Replenish',
+    helpMoreOffers:'Deals are entered by you or your group; live store ads are not connected. Add the shelf price, package size, and optional discount. You can link a deal to a list or item and set an optional expiration date.',
     helpMoreGroups:'A Leader manages members and group settings. List Editors can manage items and sharing. List Checkers can only check or uncheck items.',
     helpMoreReplenish:'Replenish suggests items you often add or pin. Select the items you need and add them to the open list in one tap.',
     ht1title:'Duplicate a Card', ht1desc:'The copy icon on each product card duplicates it into the next empty slot — great for same item, different sizes.',
@@ -2813,7 +2832,7 @@ const TRANSLATIONS = {
     presetsTitle:'Preajustes guardados', saveCurrent:'Guardar actual',
     presetPh:'Nombre del preajuste (p.ej. Mayonesa)',
     presetSave:'Guardar', presetCancel:'Cancelar',
-    settingsTitle:'Ajustes', darkMode:'Modo oscuro', language:'Idioma',
+    settingsTitle:'Ajustes', darkMode:'Tema', themeAuto:'Automático', themeDark:'Oscuro forzado', themeLight:'Claro forzado', language:'Idioma',
     numItems:'Número de productos',
     applyBtn:'Aplicar',
     exportTitle:'Exportar resultados', exportRunFirst:'Ejecuta una comparación primero.',
@@ -2972,7 +2991,7 @@ const TRANSLATIONS = {
     presetsTitle:'Predefinições salvas', saveCurrent:'Salvar atual',
     presetPh:'Nome da predefinição (ex. Maionese)',
     presetSave:'Salvar', presetCancel:'Cancelar',
-    settingsTitle:'Configurações', darkMode:'Modo escuro', language:'Idioma',
+    settingsTitle:'Configurações', darkMode:'Tema', themeAuto:'Automático', themeDark:'Escuro forçado', themeLight:'Claro forçado', language:'Idioma',
     numItems:'Número de itens',
     applyBtn:'Aplicar',
     exportTitle:'Exportar resultados', exportRunFirst:'Execute uma comparação primeiro.',
@@ -3189,6 +3208,12 @@ function applyLang(){
   setQ('#settingsModal .modal-title', t.settingsTitle);
   const sRows = document.querySelectorAll('#settingsModal .s-label');
   if(sRows[0]) sRows[0].innerText=t.darkMode;
+  const themeSelect=document.getElementById('themeSelect');
+  if(themeSelect){
+    themeSelect.options[0].text=t.themeAuto;
+    themeSelect.options[1].text=t.themeDark;
+    themeSelect.options[2].text=t.themeLight;
+  }
   if(sRows[1]) sRows[1].innerText=t.language;
   if(sRows[2]) sRows[2].innerText=t.numItems;
   const applyBtnEl = document.querySelector('#settingsModal .auth-btn');
@@ -5195,6 +5220,18 @@ function renderListNav(){
 
 function selectList(id){ activeListId=String(id); renderListNav(); renderGroceryContent(); }
 
+function uniqueGroceryListName(name){
+  const clean=String(name||'').trim();
+  const taken=new Set(groceryLists
+    .map(list=>String(list.name||'').trim().toLowerCase()));
+  if(!taken.has(clean.toLowerCase())) return clean;
+  const match=/^(.*?)(?:\s+\((\d+)\))$/.exec(clean);
+  const stem=(match?match[1]:clean).trim();
+  let suffix=match?Number(match[2])+1:1, candidate;
+  do { candidate=`${stem} (${suffix++})`; } while(taken.has(candidate.toLowerCase()));
+  return candidate;
+}
+
 function promptNewList(){
   if(userPlan !== 'pro' && groceryLists.length >= FREE_LIST_LIMIT){
     openUpgradeModal('lists');
@@ -5204,6 +5241,7 @@ function promptNewList(){
   document.getElementById('listNameModalTitle').innerText=t.newListBtn;
   document.getElementById('listNameInput').value='';
   listNameCallback = (name) => {
+    name=uniqueGroceryListName(name);
     const list={id:bpId(),name};
     groceryLists.push(list); saveU('glists',groceryLists);
     activeListId=list.id; renderListNav(); renderGroceryContent();
@@ -5838,6 +5876,7 @@ async function deleteAccount(){
   const session = JSON.parse(localStorage.getItem('bp_session') || '{}');
   const prefixes = [];
   if(session.userId) prefixes.push('bp_' + session.userId + '_');
+  if(session.userId) prefixes.push('bpr_' + session.userId + '_');
   if(session.email) prefixes.push('bp_' + session.email + '_');
   const toRemove = [];
   for(let i = 0; i < localStorage.length; i++){
@@ -5954,6 +5993,27 @@ async function saveProfile(){
   const emailInputEl = document.getElementById('profile-email');
   const newEmail = (emailInputEl?.value || '').trim().toLowerCase();
   if(newEmail && newEmail !== email && newEmail.includes('@') && newEmail.split('@')[1]?.includes('.')){
+    if(window.bp?.flush){
+      try {
+        const syncResult = await bp.flush();
+        if(syncResult?.rejected?.length || bp.status().pending){
+          showToast(lang==='es'
+            ? 'Algunos cambios de listas no se guardaron. Resuelve el error de sincronización antes de cambiar el correo.'
+            : lang==='pt'
+              ? 'Algumas alterações nas listas não foram salvas. Resolva o erro de sincronização antes de mudar o e-mail.'
+              : 'Some list changes could not be saved. Resolve the sync error before changing your email.');
+          return;
+        }
+      } catch(syncError) {
+        console.error('Could not sync list changes before email update:', syncError);
+        showToast(lang==='es'
+          ? 'No se pudieron sincronizar tus listas. Inténtalo de nuevo antes de cambiar el correo.'
+          : lang==='pt'
+            ? 'Não foi possível sincronizar suas listas. Tente novamente antes de mudar o e-mail.'
+            : 'Could not sync your lists. Try again before changing your email.');
+        return;
+      }
+    }
     const { error: emailErr } = await _sb.auth.updateUser({ email: newEmail });
     if(emailErr){ showToast(emailErr.message, 'error'); return; }
     await _sb.auth.updateUser({ data: { firstName, lastName, name: newName } });
@@ -7038,7 +7098,7 @@ COMPARE TAB: The main tab. Users enter up to 8 product cards side by side. Each 
 
 GROCERY TAB: Users create and manage custom shopping lists. Each item has a name, quantity, and optional notes. Check items off while shopping — checked items are crossed out. The + button adds new items. Each item has edit/delete options. Users can copy items to other lists using the copy icon. Replenish suggests frequently added or pinned items for one-tap re-adding. Multiple lists supported — switch between them in the list selector at the top.
 
-OFFERS: Users or their household can enter saved store offers manually; live retailer ads are not connected. Offers can be linked to a list or item and may have an expiration date. When asked how to add one, direct the user to the Offers tab and the Add an offer button.
+DEALS: Users or their household can enter saved store deals manually; live retailer ads are not connected. Deals can be linked to a list or item and may have an expiration date. When asked how to add one, direct the user to the Deals tab and the Add deal button.
 
 HOUSEHOLD GROUPS: The Leader manages members and group settings. List Editors can manage list items and sharing. List Checkers can only check or uncheck items. Do not promise actions a user's role cannot perform.
 
@@ -7423,7 +7483,7 @@ function pennyResolveList(nameHint){
 function pennyEnsureList(name){
   let list = pennyResolveList(name);
   if(!list || (name && list.name.toLowerCase() !== name.toLowerCase() && !list.name.toLowerCase().includes(name.toLowerCase()))){
-    list = { id: bpId(), name: name || 'Penny List' };
+    list = { id: bpId(), name: uniqueGroceryListName(name || 'Penny List') };
     groceryLists.push(list);
     saveU('glists', groceryLists);
     activeListId = list.id;
@@ -7554,7 +7614,7 @@ const DESTRUCTIVE = new Set(['DELETELIST', 'CLEARCHECKED', 'REMOVEITEMS']);
       }
       else if(cmd.type === 'CREATELIST'){
         const lid = bpId();
-        const list = { id: lid, name: d.name || 'New List' };
+        const list = { id: lid, name: uniqueGroceryListName(d.name || 'New List') };
         groceryLists.push(list); saveLists=true; activeListId=lid;
         let n = 0;
         (d.items || []).forEach(item => { if(item.name?.trim()){ groceryItems.push(pennyMakeItem(lid, item)); n++; } });
