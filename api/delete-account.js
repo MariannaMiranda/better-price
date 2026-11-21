@@ -63,14 +63,14 @@ export default async function handler(req, res) {
     }
 
     // Shared lists survive: hand every household-shared list this user owns to another member BEFORE deletion.
-    const hand = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bp_prepare_account_deletion`, {
+    const hand = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bp_prepare_account_deletion_v2`, {
       method: 'POST',
       headers: { ...sbH, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_user: user.id }),
       signal: AbortSignal.timeout(8000),
     });
     if (!hand.ok) {
-      console.error('bp_prepare_account_deletion failed:', hand.status, (await hand.text()).slice(0, 300));
+      console.error('bp_prepare_account_deletion_v2 failed:', hand.status, (await hand.text()).slice(0, 300));
       return res.status(502).json({ error: 'Could not prepare your shared lists. Account deletion aborted.' });
     }
 
