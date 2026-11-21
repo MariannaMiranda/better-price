@@ -31,7 +31,7 @@
   });
 
   const S = {
-    sb: null, uid: null, email: '', enabled: false,
+    sb: null, uid: null, email: '', enabled: false, generation: 0,
     srv: { lists: {}, items: {} },          // last known server rows by id
     cursor: { lists: 0, items: 0 },
     outbox: [],                              // pending ops, in order
@@ -46,7 +46,7 @@
 
   /* ------------------------------ persistence ------------------------------ */
   const stateKey = () => `bpr_${S.uid}_state`;
-  const appKey = k => `bp_${S.email}_${k}`;   // identical to saveU()'s prefix, so loadU() reads our projection
+  const appKey = k => `bp_${S.uid}_${k}`;   // identical to saveU()'s per-user namespace
   function persist() {
     try {
       localStorage.setItem(stateKey(), JSON.stringify({
@@ -264,9 +264,16 @@
 
   /* ------------------------------ server round-trips ------------------------------ */
   const isAuthErr = e => e && (e.status === 401 || e.code === 'PGRST301' || /jwt|not authenticated/i.test(e.message || ''));
-  async function call(fn) {
+  async function call(fn, sb = S.sb) {
+    const generation = S.generation;
     let r = await fn();
-    if (r.error && isAuthErr(r.error)) { await S.sb.auth.refreshSession(); r = await fn(); }
+    if (generation !== S.generation) throw new Error('Account changed while the request was in progress.');
+    if (r.error && isAuthErr(r.error)) {
+      await sb.auth.refreshSession();
+      if (generation !== S.generation) throw new Error('Account changed while the request was in progress.');
+      r = await fn();
+      if (generation !== S.generation) throw new Error('Account changed while the request was in progress.');
+    }
     if (r.error) throw r.error;
     return r.data;
   }
@@ -288,20 +295,24 @@
     if (global.navigator && navigator.onLine === false) { pushStatus(); return; }
     if (!S.outbox.length) { S.error = null; pushStatus(); return; }
     S.flushing = true; S.error = null;
+    const generation = S.generation, sb = S.sb;
     let sawDuplicate = false;
     try {
       while (S.outbox.length) {
+        if (generation !== S.generation) return;
         const batch = S.outbox.slice(0, BATCH); batch.forEach(o => { o.inflight = true; });
         pushStatus();
         let res;
-        try { res = await call(() => S.sb.rpc('apply_ops', { ops: batch.map(strip) })); }
+        try { res = await call(() => sb.rpc('apply_ops', { ops: batch.map(strip) }), sb); }
         catch (e) {
+          if (generation !== S.generation) return;
           batch.forEach(o => { delete o.inflight; });
           if (e && e.code === '22023') {              // malformed batch: retrying can never succeed, drop it rather than loop
             console.error('bp: dropping malformed batch', e); S.outbox.splice(0, batch.length); persist(); bp.host.toast("Some changes couldn't be saved."); continue;
           }
           throw e;
         }
+        if (generation !== S.generation) return;
         const byId = {}; (res || []).forEach(r => { byId[r.op_id] = r; });
         const done = new Set(), conflicts = [], rejected = [];
         for (const op of batch) {
@@ -330,9 +341,12 @@
       }
       S.retryN = 0;
     } catch (e) {
+      if (generation !== S.generation) return;
       console.error('bp sync failed:', e && (e.message || e));
       S.error = e; S.retryN++; scheduleRetry();
-    } finally { S.flushing = false; pushStatus(); }
+    } finally {
+      if (generation === S.generation) { S.flushing = false; pushStatus(); }
+    }
     if (sawDuplicate || S.pullAgain) bp.refreshSoon(true);
   }
   bp.flush = flush;
@@ -344,12 +358,14 @@
     if (!S.enabled || (global.navigator && navigator.onLine === false)) return;
     if (S.pulling) { S.pullAgain = true; return; }
     S.pulling = true; S.pullAgain = false;
+    const generation = S.generation, sb = S.sb;
     try {
       const seen = { lists: new Set(), items: new Set() };
       for (const [table, key] of [['lists', 'lists'], ['list_items', 'items']]) {
         let since = full ? 0 : Math.max(0, S.cursor[key] - PULL_OVERLAP), max = S.cursor[key];
         for (;;) {
-          const rows = await call(() => S.sb.from(table).select('*').gt('seq', since).order('seq', { ascending: true }).limit(1000));
+          const rows = await call(() => sb.from(table).select('*').gt('seq', since).order('seq', { ascending: true }).limit(1000), sb);
+          if (generation !== S.generation) return;
           rows.forEach(r => { applyRow(key, r); if (!r.deleted_at) seen[key].add(r.id); if (r.seq > max) max = r.seq; });
           if (rows.length < 1000) break;
           since = rows[rows.length - 1].seq;
@@ -363,7 +379,7 @@
       }
       S.hydrated = true;
       persist(); materialize();
-    } finally { S.pulling = false; }
+    } finally { if (generation === S.generation) S.pulling = false; }
     if (S.pullAgain) { S.pullAgain = false; return pull(); }
   }
   bp.pull = pull;
@@ -378,21 +394,32 @@
   bp.start = async function (sb, session) {
     if (S.uid && S.uid !== session.user.id) bp.stop();
     S.sb = sb; S.session = session; S.uid = session.user.id; S.email = session.user.email || '';
+    const generation = S.generation;
     restore();
     if (!S.migrated) {
       if (global.navigator && navigator.onLine === false) return false;       // legacy blob mode until we are online once
       try {
-        const flag = await call(() => sb.from('user_flags').select('relational_migrated_at').eq('user_id', S.uid).maybeSingle());
+        const flag = await call(() => sb.from('user_flags').select('relational_migrated_at').eq('user_id', session.user.id).maybeSingle(), sb);
+        if (generation !== S.generation) return false;
         if (!(flag && flag.relational_migrated_at)) {
           if (typeof global._sbFlushSync === 'function') await global._sbFlushSync();   // push the last local blob edits first
-          await call(() => sb.rpc('bp_migrate_blob'));
+          if (generation !== S.generation) return false;
+          await call(() => sb.rpc('bp_migrate_blob'), sb);
         }
+        if (generation !== S.generation) return false;
         S.migrated = true; persist();
-      } catch (e) { console.error('bp: migration failed, staying on legacy storage', e); return false; }
+      } catch (e) {
+        if (generation !== S.generation) return false;
+        console.error('bp: migration failed, staying on legacy storage', e); return false;
+      }
     }
     if (!S.hydrated) {                                                          // never wipe local lists on a failed first load
       try { S.enabled = true; await withTimeout(pull({ full: true }), 10000); }
-      catch (e) { S.enabled = false; console.error('bp: first load failed, staying on legacy storage', e); setTimeout(() => bp.retryStart && bp.retryStart(), 15000); return false; }
+      catch (e) {
+        if (generation !== S.generation) return false;
+        S.enabled = false; console.error('bp: first load failed, staying on legacy storage', e); setTimeout(() => bp.retryStart && bp.retryStart(), 15000); return false;
+      }
+      if (generation !== S.generation) return false;
     }
     S.enabled = true; bp.enabled = true;
     materialize(true);
@@ -432,7 +459,9 @@
   bp.stop = function () {
     try { if (S.chan) S.sb.removeChannel(S.chan); } catch (e) { /* ignore */ }
     Object.values(S.timers).forEach(clearTimeout);
-    S.chan = null; S.enabled = false; bp.enabled = false; S.uid = null;
+    S.generation++; S.chan = null; S.enabled = false; bp.enabled = false; S.uid = null;
+    S.sb = null; S.session = null; S.email = ''; S.flushing = false; S.pulling = false; S.pullAgain = false;
+    S.retryN = 0; S.error = null;
     S.srv = { lists: {}, items: {} }; S.cursor = { lists: 0, items: 0 }; S.outbox = []; S.idmap = {}; S.extras = {}; S.hydrated = false; S.migrated = false;
     S.loc = { lists: {}, items: {} }; lastProjectionJson = '';
   };
@@ -455,10 +484,10 @@
     async leave(hid) { await rpc('leave_household', { p_household: hid }); await pull({ full: true }); },
     async removeMember(hid, uid) { await rpc('remove_household_member', { p_household: hid, p_user: uid }); },
   };
-  // Share / unshare one of MY lists (owner only; the server enforces it). Goes through the outbox like any edit.
+  // Sharing is queued like any list edit; database role policies decide who can change it.
   bp.shareList = function (listId, householdId) {
     const l = S.loc.lists[listId];
-    if (!l || l.ownerId !== S.uid) throw new Error('Only the list owner can share a list.');
+    if (!l) throw new Error('List is not available.');
     enqueue({ type: 'list_patch', id: listId, base_version: (S.srv.lists[listId] || {}).version || 0, patch: { household_id: householdId || null } });
     materialize(); scheduleFlush(0);
   };
@@ -560,10 +589,11 @@
       if (d.discount_type === 'p') { dv = +d.discount_value; dt = 'p'; }
       else if (d.discount_type === 'd') { dv = +d.discount_value; dt = 'f'; }
       else if (d.discount_type === 'bogo') { dv = d.get_qty / (d.buy_qty + d.get_qty) * 100; dt = 'p'; }
-      return { n: d.product_name + (d.store ? ' @ ' + d.store : ''), p: +d.pkg_price, s: +d.pkg_size, q: +d.pkg_qty, u: d.pkg_unit, dv, dt };
+      return { n: d.product_name + (d.store ? ' at ' + d.store : ''), p: +d.pkg_price, s: +d.pkg_size, q: +d.pkg_qty, u: d.pkg_unit, dv, dt };
     },
     list: () => call(() => S.sb.from('deals').select('*').is('deleted_at', null).order('valid_to', { ascending: true, nullsFirst: false }).limit(300)),
     add: d => call(() => S.sb.from('deals').insert(d).select().single()),
+    update: (id, d) => call(() => S.sb.from('deals').update(d).eq('id', id).select().single()),
     clip: (id, clipped) => call(() => S.sb.from('deals').update({ clipped }).eq('id', id)),
     remove: id => call(() => S.sb.from('deals').update({ deleted_at: new Date().toISOString() }).eq('id', id)),
     matchesForList: listId => call(() => S.sb.rpc('bp_match_deals', { p_list: listId })),
