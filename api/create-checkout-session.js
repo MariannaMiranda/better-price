@@ -146,7 +146,14 @@ export default async function handler(req, res) {
       data = await r.json();
     }
     if (!r.ok) {
-      return res.status(500).json({ error: data?.error?.message || 'Could not create checkout session.' });
+      const stripeMessage = data?.error?.message || '';
+      if (/under[\s-]*13|underage|minor|age restriction|age.{0,20}(customer|billing)|(?:customer|billing).{0,20}age/i.test(stripeMessage)) {
+        return res.status(422).json({
+          ageRestricted: true,
+          error: 'Stripe cannot create a billing account for users under 13. Ask a parent or guardian to manage the subscription.',
+        });
+      }
+      return res.status(500).json({ error: stripeMessage || 'Could not create checkout session.' });
     }
 
     return res.status(200).json({ clientSecret: data.client_secret });
