@@ -520,9 +520,10 @@
   bp.households = {
     async list() {
       const hs = await call(() => S.sb.from('households').select('id,name,created_at').order('created_at'));
-      const out = [];
-      for (const h of hs) out.push({ ...h, members: await rpc('bp_household_members', { p_household: h.id }) });
-      return out;
+      return Promise.all(hs.map(async h => ({
+        ...h,
+        members: await rpc('bp_household_members', { p_household: h.id }),
+      })));
     },
     create: async name => {
       const actualName = uniqueGroupName(name, (await bp.households.list()).map(h => h.name));
@@ -558,6 +559,28 @@
     },
     pin: (id, pinned) => call(() => S.sb.from('favorite_items').update({ pinned }).eq('id', id)),
     hide: id => call(() => S.sb.from('favorite_items').update({ hidden: true, pinned: false }).eq('id', id)),
+    async add(name, householdId) {
+      const clean = String(name || '').trim().slice(0, 120);
+      if (!clean) throw new Error('Enter a staple name.');
+      const nameKey = normKey(clean);
+      const findExisting = () => {
+        let query = S.sb.from('favorite_items').select('id').eq('name_key', nameKey);
+        query = householdId ? query.eq('household_id', householdId) : query.is('household_id', null);
+        return query.limit(1);
+      };
+      const existing = (await call(findExisting))[0];
+      const values = {
+        name: clean, name_key: nameKey, household_id: householdId || null,
+        user_id: S.uid, default_qty: 1, add_count: 1, hidden: false, pinned: true,
+        last_added_at: new Date().toISOString(),
+      };
+      if (existing) {
+        await call(() => S.sb.from('favorite_items').update(values).eq('id', existing.id));
+        return existing.id;
+      }
+      const inserted = await call(() => S.sb.from('favorite_items').insert(values).select('id').single());
+      return inserted.id;
+    },
   };
 
   /* ------------------------------ price book ------------------------------ */
