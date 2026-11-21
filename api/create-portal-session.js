@@ -48,7 +48,15 @@ export default async function handler(req, res) {
       `${SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=stripe_customer_id`,
       { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` }, signal: AbortSignal.timeout(6000) }
     );
-    const subRows = subR.ok ? await subR.json() : [];
+    if (!subR.ok) {
+      console.error('create-portal-session: subscription lookup failed:', subR.status, (await subR.text()).slice(0, 300));
+      return res.status(503).json({ error: 'Billing is temporarily unavailable. Please try again in a moment.' });
+    }
+    const subRows = await subR.json();
+    if (!Array.isArray(subRows)) {
+      console.error('create-portal-session: subscription lookup returned an unexpected payload');
+      return res.status(503).json({ error: 'Could not verify your billing account. Please try again.' });
+    }
     const customerId = subRows?.[0]?.stripe_customer_id;
     if (!customerId) {
       return res.status(400).json({ error: 'No billing account found for this user yet.' });
@@ -62,6 +70,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: toFormBody({ customer: customerId, return_url: `${origin}/?billing_return=1` }),
+      signal: AbortSignal.timeout(10000),
     });
 
     const data = await r.json();
