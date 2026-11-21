@@ -19,7 +19,7 @@ async function getUserFromToken(token) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-  if (!SERVICE_ROLE_KEY || !STRIPE_SECRET_KEY) {
+  if (!SERVICE_ROLE_KEY) {
     return res.status(500).json({ error: 'Account deletion is not configured.' });
   }
 
@@ -48,6 +48,9 @@ export default async function handler(req, res) {
 
     const subId = subscriptions[0]?.stripe_subscription_id;
     if (subId) {
+      if (!STRIPE_SECRET_KEY) {
+        return res.status(500).json({ error: 'Subscription cancellation is not configured. Account deletion aborted.' });
+      }
       const c = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(subId)}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` },
@@ -66,7 +69,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({ p_user: user.id }),
       signal: AbortSignal.timeout(8000),
     });
-    if (!hand.ok && hand.status !== 404) {
+    if (!hand.ok) {
       console.error('bp_prepare_account_deletion failed:', hand.status, (await hand.text()).slice(0, 300));
       return res.status(502).json({ error: 'Could not prepare your shared lists. Account deletion aborted.' });
     }
