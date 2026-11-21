@@ -1360,9 +1360,9 @@ body.dark .bm-num{color:#34d399;}
       <details class="people-breakdown">
         <summary id="ob-breakdown-title">Add age breakdown (optional)</summary>
         <div class="people-breakdown-rows">
-          <label><span id="ob-babies-label">Babies (under 2)</span><input id="ob-babies" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('ob')"></label>
-          <label><span id="ob-children-label">Children (2–17)</span><input id="ob-children" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('ob')"></label>
-          <label><span id="ob-adults-label">Adults (18+)</span><input id="ob-adults" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('ob')"></label>
+          <label><span id="ob-babies-label">Babies (under 2)</span><input id="ob-babies" type="number" min="0" max="15" inputmode="numeric" data-numeric="integer" oninput="updatePeopleBreakdown('ob')"></label>
+          <label><span id="ob-children-label">Children (2–17)</span><input id="ob-children" type="number" min="0" max="15" inputmode="numeric" data-numeric="integer" oninput="updatePeopleBreakdown('ob')"></label>
+          <label><span id="ob-adults-label">Adults (18+)</span><input id="ob-adults" type="number" min="0" max="15" inputmode="numeric" data-numeric="integer" oninput="updatePeopleBreakdown('ob')"></label>
         </div>
         <div class="people-breakdown-note" id="ob-breakdown-note" aria-live="polite">Enter any age counts; the total updates automatically. Leave all blank to use only the total.</div>
       </details>
@@ -1756,6 +1756,13 @@ body.dark .bm-num{color:#34d399;}
       <div class="help-h">Profile Tab</div>
       <div class="help-tip">Update your name, email, and password here. You can also update the number of people you shop for, optional age details, shopping frequency, budget, ZIP code, and preferred stores — Penny uses these to tailor advice.</div>
     </div>
+
+    <div class="help-section">
+      <div class="help-h" id="helpMoreTitle">Offers, groups &amp; Replenish</div>
+      <div class="help-tip" id="helpMoreOffers"></div>
+      <div class="help-tip" id="helpMoreGroups"></div>
+      <div class="help-tip" id="helpMoreReplenish"></div>
+    </div>
     </div>
   </div>
 
@@ -1871,9 +1878,9 @@ body.dark .bm-num{color:#34d399;}
       <details class="people-breakdown" style="margin:10px 0 0;">
         <summary id="profile-breakdown-title">Add age breakdown (optional)</summary>
         <div class="people-breakdown-rows">
-          <label><span id="profile-babies-label">Babies (under 2)</span><input id="profile-babies" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('profile')"></label>
-          <label><span id="profile-children-label">Children (2–17)</span><input id="profile-children" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('profile')"></label>
-          <label><span id="profile-adults-label">Adults (18+)</span><input id="profile-adults" type="number" min="0" max="15" inputmode="numeric" oninput="updatePeopleBreakdown('profile')"></label>
+          <label><span id="profile-babies-label">Babies (under 2)</span><input id="profile-babies" type="number" min="0" max="15" inputmode="numeric" data-numeric="integer" oninput="updatePeopleBreakdown('profile')"></label>
+          <label><span id="profile-children-label">Children (2–17)</span><input id="profile-children" type="number" min="0" max="15" inputmode="numeric" data-numeric="integer" oninput="updatePeopleBreakdown('profile')"></label>
+          <label><span id="profile-adults-label">Adults (18+)</span><input id="profile-adults" type="number" min="0" max="15" inputmode="numeric" data-numeric="integer" oninput="updatePeopleBreakdown('profile')"></label>
         </div>
         <div class="people-breakdown-note" id="profile-breakdown-note" aria-live="polite">Enter any age counts; the total updates automatically. Leave all blank to use only the total.</div>
       </details>
@@ -2122,6 +2129,7 @@ let userPlan = 'free';
 const FREE_LIST_LIMIT = 3;
 let isGuest = false;          // true until a Supabase session exists
 let _appShown = false;        // showApp() is single-shot (handleAuth + onAuthStateChange both call it)
+let _accountGeneration = 0;
 const GUEST_GATED = { grocery:true, presets:true, penny:true, profile:true };
 
 // Re-reads the subscriptions row. Returns { ok, pro }:
@@ -2129,12 +2137,15 @@ const GUEST_GATED = { grocery:true, presets:true, penny:true, profile:true };
 //         so a transient failure can never silently downgrade a paying user's UI to Free.
 //   pro = the row says active/trialing (server truth; a local webhook-lag hint only affects the UI, never this flag).
 async function refreshUserPlan(){
+  const generation = _accountGeneration;
   try {
     const { data: { user }, error: authErr } = await _sb.auth.getUser();
     if(authErr) throw authErr;
+    if(generation !== _accountGeneration) return { ok: false, pro: false };
     if(!user){ userPlan = 'free'; lastSubRow = null; updateAdVisibility(); updateProfilePlanUI(); return { ok: true, pro: false }; }
     const { data, error } = await _sb.from('subscriptions').select('plan,status,current_period_end,trial_end').eq('user_id', user.id).maybeSingle();
     if(error) throw error;                       // supabase-js RETURNS errors instead of throwing them
+    if(generation !== _accountGeneration || user.id !== _sbSessionId()) return { ok: false, pro: false };
     const serverPro = !!(data && data.plan === 'pro' && (data.status === 'active' || data.status === 'trialing'));
     userPlan = serverPro ? 'pro' : 'free';
     lastSubRow = data || null;
@@ -2150,14 +2161,15 @@ async function refreshUserPlan(){
     } else if(hint){
       saveU('plan_hint', null);
     }
-    try { localStorage.setItem('bp_plan_' + (user.email || ''), userPlan); } catch(e){}
+    try { localStorage.setItem('bp_plan_' + user.id, userPlan); } catch(e){}
     updateAdVisibility();
     updateProfilePlanUI();
     return { ok: true, pro: serverPro };
   } catch(e){
     console.error('refreshUserPlan failed:', e?.code || '', e?.message || e);
+    if(generation !== _accountGeneration) return { ok: false, pro: false };
     if(navigator.onLine === false){       // offline cold start: trust the last known plan for UI gating only
-      const c = localStorage.getItem('bp_plan_' + _sbSessionEmail());
+      const c = localStorage.getItem('bp_plan_' + _sbSessionId());
       if(c === 'pro' || c === 'free'){ userPlan = c; updateAdVisibility(); updateProfilePlanUI(); }
     }
     return { ok: false, pro: false };
@@ -2343,7 +2355,7 @@ async function startUpgradeCheckout(plan){
     }
     await mountEmbeddedCheckout(data.clientSecret);
   } catch(e){
-    showToast('Could not start checkout', '');
+    showToast(e?.message || 'Could not start checkout. Check your connection and try again.', '');
   }
 }
 
@@ -2385,38 +2397,73 @@ async function openBillingPortal(){
     if(!r.ok || !data.url){ showToast(data.error || 'Could not open billing portal', ''); return; }
     window.location.href = data.url;
   } catch(e){
-    showToast('Could not open billing portal', '');
+    showToast(e?.message || 'Could not open billing portal. Check your connection and try again.', '');
   }
 }
 
-function _sbSessionEmail(){ try { return JSON.parse(localStorage.getItem('bp_session')||'{}').email || ''; } catch(e){ return ''; } }
-// Keys changed locally but not yet confirmed written to Supabase, per account. Lives OUTSIDE the synced
-// "bp_<email>_" namespace so it is never uploaded itself.
-const _sbDirtyStoreKey = email => 'bpdirty_' + email;
-function _sbReadDirty(email){ try { return JSON.parse(localStorage.getItem(_sbDirtyStoreKey(email)) || '{}') || {}; } catch(e){ return {}; } }
-function _sbWriteDirty(email, map){
+function _sbSessionId(){
+  try { return JSON.parse(localStorage.getItem('bp_session')||'{}').userId || _sbAuthCache?.userId || ''; }
+  catch(e){ return _sbAuthCache?.userId || ''; }
+}
+function _sbMigrateLegacyStorage(session){
   try {
-    if(Object.keys(map).length) localStorage.setItem(_sbDirtyStoreKey(email), JSON.stringify(map));
-    else localStorage.removeItem(_sbDirtyStoreKey(email));
+    if(!session?.userId || !session.email) return;
+    let previous = {};
+    try { previous = JSON.parse(localStorage.getItem('bp_session') || '{}') || {}; } catch(e){}
+    if(previous.userId && previous.userId !== session.userId) return;
+    if(!previous.userId && previous.email && previous.email.toLowerCase() !== session.email.toLowerCase()) return;
+    const legacyEmail = previous.userId === session.userId ? previous.email : session.email;
+    if(!legacyEmail) return;
+    const oldPrefix = 'bp_' + legacyEmail + '_', newPrefix = 'bp_' + session.userId + '_';
+    const legacyKeys = [];
+    for(let i=0; i<localStorage.length; i++){
+      const key = localStorage.key(i);
+      if(key?.startsWith(oldPrefix)){
+        const next = newPrefix + key.slice(oldPrefix.length);
+        if(localStorage.getItem(next) === null) localStorage.setItem(next, localStorage.getItem(key));
+        legacyKeys.push(key);
+      }
+    }
+    legacyKeys.forEach(key => localStorage.removeItem(key));
+    const oldDirty = 'bpdirty_' + legacyEmail, newDirty = 'bpdirty_' + session.userId;
+    if(localStorage.getItem(newDirty) === null && localStorage.getItem(oldDirty) !== null){
+      localStorage.setItem(newDirty, localStorage.getItem(oldDirty));
+    }
+    localStorage.removeItem(oldDirty);
+    const oldPlan = 'bp_plan_' + legacyEmail, newPlan = 'bp_plan_' + session.userId;
+    if(localStorage.getItem(newPlan) === null && localStorage.getItem(oldPlan) !== null){
+      localStorage.setItem(newPlan, localStorage.getItem(oldPlan));
+    }
+    localStorage.removeItem(oldPlan);
+  } catch(e) { console.error('legacy account storage migration failed:', e); }
+}
+// Dirty markers are outside the synced per-user namespace, so they are never uploaded.
+const _sbDirtyStoreKey = userId => 'bpdirty_' + userId;
+function _sbReadDirty(userId){ try { return JSON.parse(localStorage.getItem(_sbDirtyStoreKey(userId)) || '{}') || {}; } catch(e){ return {}; } }
+function _sbWriteDirty(userId, map){
+  try {
+    if(Object.keys(map).length) localStorage.setItem(_sbDirtyStoreKey(userId), JSON.stringify(map));
+    else localStorage.removeItem(_sbDirtyStoreKey(userId));
   } catch(e){}
 }
 function _sbMarkDirty(k){
-  const email = _sbSessionEmail(); if(!email) return;
-  const map = _sbReadDirty(email); map[k] = Date.now(); _sbWriteDirty(email, map);
+  const userId = _sbSessionId(); if(!userId) return;
+  const map = _sbReadDirty(userId); map[k] = Date.now(); _sbWriteDirty(userId, map);
 }
 
 function saveU(k, v){
   // lists/items live in relational tables once migrated: bp diffs the array into record-level ops (no JSON-blob write)
   if(window.bp && bp.interceptSave(k, v)) return;
-  const email = _sbSessionEmail();
-  const prefix = email ? 'bp_'+email+'_' : 'bp_';
+  const userId = _sbSessionId();
+  const prefix = userId ? 'bp_'+userId+'_' : 'bp_';
   try { localStorage.setItem(prefix+k, JSON.stringify(v)); } catch(e){ console.error('saveU',e); }
   _sbEditSeq++;                       // lets hydration detect an edit that raced its fetch
   _sbMarkDirty(k);
   _sbScheduleSync();
 }
 function loadU(k, def){
-  const prefix = _sbSessionEmail() ? 'bp_'+_sbSessionEmail()+'_' : 'bp_';
+  const userId = _sbSessionId();
+  const prefix = userId ? 'bp_'+userId+'_' : 'bp_';
   try {
     const raw = localStorage.getItem(prefix+k);
     if(raw !== null) return JSON.parse(raw);
@@ -2472,10 +2519,10 @@ _sb.auth.onAuthStateChange((_ev, session) => { _sbAuthCache = { token: session?.
 _sb.auth.getSession().then(({ data }) => { if(data?.session && !_sbAuthCache.token) _sbAuthCache = { token: data.session.access_token, userId: data.session.user.id }; }).catch(() => {});
 function _sbBeaconSync(){
   try {
-    const email = _sbSessionEmail();
-    if(!email || !_sbAuthCache.token || !_sbAuthCache.userId) return false;
-    if(!Object.keys(_sbReadDirty(email)).length) return false;       // nothing unsynced
-    const body = JSON.stringify({ user_id: _sbAuthCache.userId, data: _sbSnapshot('bp_' + email + '_'), updated_at: new Date().toISOString() });
+    const userId = _sbSessionId();
+    if(!userId || userId !== _sbAuthCache.userId || !_sbAuthCache.token) return false;
+    if(!Object.keys(_sbReadDirty(userId)).length) return false;       // nothing unsynced
+    const body = JSON.stringify({ user_id: userId, data: _sbSnapshot('bp_' + userId + '_'), updated_at: new Date().toISOString() });
     if(body.length > 60000){ console.warn('unload sync skipped: snapshot too large for keepalive'); return false; }
     fetch(SUPABASE_URL + '/rest/v1/user_data', {
       method: 'POST', keepalive: true,
@@ -2489,11 +2536,11 @@ function _sbBeaconSync(){
 async function _sbDoSync(){
   const { data: { user } } = await _sb.auth.getUser();
   if(!user) return true;
-  const email = _sbSessionEmail();
-  if(!email) return true;
-  const prefix = 'bp_' + email + '_';
+  const userId = _sbSessionId();
+  if(!userId || user.id !== userId) return true;
+  const prefix = 'bp_' + userId + '_';
   _sbWriteCount++;                              // lets hydration detect a write that raced its fetch
-  const dirtyAtStart = _sbReadDirty(email);
+  const dirtyAtStart = _sbReadDirty(userId);
   const allData = _sbSnapshot(prefix);
   const row = { user_id: user.id, data: allData, updated_at: new Date().toISOString() };
   let { error } = await _sb.from('user_data').upsert(row);
@@ -2505,9 +2552,9 @@ async function _sbDoSync(){
   }
   _sbWriteCount++;
   // Success: forget only the keys that were NOT edited again while this write was running.
-  const nowDirty = _sbReadDirty(email);
+  const nowDirty = _sbReadDirty(userId);
   for(const k of Object.keys(dirtyAtStart)){ if(nowDirty[k] === dirtyAtStart[k]) delete nowDirty[k]; }
-  _sbWriteDirty(email, nowDirty);
+  _sbWriteDirty(userId, nowDirty);
   return true;
 }
 // Push everything NOW and wait for it (used before sign-out and when the tab is hidden/closed).
@@ -2524,14 +2571,18 @@ window.addEventListener('online', () => { _sbRunSync(); });
 
 async function loadUserDataFromSupabase(){
   const { data: { user } } = await _sb.auth.getUser();
-  if(!user) return;
+  if(!user || user.id !== _sbSessionId()) return;
+  const userId = user.id;
+  const generation = _accountGeneration;
   let row = null;
   // The fetch can overlap a local edit or one of our own writes. A row fetched before such a write would be STALE,
   // so only apply a row when nothing was edited and no write started or finished while the request was out.
   for(let attempt = 0; attempt < 3; attempt++){
     if(_sbSyncInFlight) await _sbSyncInFlight;   // never hydrate while one of OUR writes is mid-flight
+    if(generation !== _accountGeneration || userId !== _sbSessionId()) return;
     const seqBefore = _sbEditSeq, writesBefore = _sbWriteCount;
     const res = await _sb.from('user_data').select('data').eq('user_id', user.id).single();
+    if(generation !== _accountGeneration || userId !== _sbSessionId()) return;
     if(res.error && res.error.code !== 'PGRST116'){ console.error('user_data load failed:', res.error.code || '', res.error.message || res.error); return; }   // PGRST116 = no row yet (new user)
     if(_sbSyncInFlight || seqBefore !== _sbEditSeq || writesBefore !== _sbWriteCount){
       if(attempt === 2){ console.warn('user_data hydration skipped: local changes kept an in-flight fetch stale'); _sbScheduleSync(); return; }
@@ -2541,12 +2592,11 @@ async function loadUserDataFromSupabase(){
     break;
   }
   if(!row || !row.data) return;
-  const email = _sbSessionEmail();
-  if(!email) return;
-  const prefix = 'bp_' + email + '_';
+  if(generation !== _accountGeneration || userId !== _sbSessionId()) return;
+  const prefix = 'bp_' + userId + '_';
   // Keys edited locally but never confirmed written (tab closed / offline / failed sync) are NEWER than the server copy:
   // keep them, hydrate the rest, then push the kept edits up.
-  const dirty = _sbReadDirty(email);
+  const dirty = _sbReadDirty(userId);
   for(const [k, v] of Object.entries(row.data)){
     if(dirty[k]) continue;
     if(window.bp && bp.isRelationalKey(k)) continue;      // server rows are canonical for lists/items now
@@ -2629,7 +2679,7 @@ const TRANSLATIONS = {
     helpGettingStarted:'Getting Started',
     helpFeaturesGuide:'Features Guide',
     helpTips:'Tips',
-    hs1title:'Scan or Enter a Product', hs1desc:'On the Compare tab, tap "Scan Barcode" and point your camera at the barcode. Name and size auto-fill. Or type details manually.',
+    hs1title:'Scan or Enter a Product', hs1desc:'On the Compare tab, tap "Scan Barcode". If found, name, size, and a recognized category auto-fill. Check the size and enter the shelf price.',
     hs2title:'Enter the Price', hs2desc:'Type the shelf price. Add a discount amount in the Discount field and choose % or flat amount.',
     hs3title:'Set Size and Pack Quantity', hs3desc:'Enter size per item and how many are in the pack. For single items, leave Pack Qty at 1.',
     hs4title:'Tap COMPARE', hs4desc:'The best value card turns green. If two items are exactly equal, both show a TIE badge.',
@@ -2637,10 +2687,14 @@ const TRANSLATIONS = {
     hf2:'Create custom lists (Weekly Grocery, Party Snacks, etc.). Add items with name, price, store, quantity, and notes. Tap "Uncheck All" to reset for next trip.',
     hf3:'Save a Compare setup and reload it any time. Great for items you compare repeatedly.',
     hf4:'After comparing, tap Export to share or copy results.',
-    hf6:'History, grocery lists, and presets are tied to your email. Logging in with a different email shows that account\'s data only.',
+    hf6:'History, grocery lists, and presets are private to your account and sync across devices when you sign in.',
+    helpMoreTitle:'Offers, groups & Replenish',
+    helpMoreOffers:'Offers are entered by you or your group; live store ads are not connected. Add the shelf price, package size, and optional discount. You can link an offer to a list or item and set an optional expiration date.',
+    helpMoreGroups:'A Leader manages members and group settings. List Editors can manage items and sharing. List Checkers can only check or uncheck items.',
+    helpMoreReplenish:'Replenish suggests items you often add or pin. Select the items you need and add them to the open list in one tap.',
     ht1title:'Duplicate a Card', ht1desc:'The copy icon on each product card duplicates it into the next empty slot — great for same item, different sizes.',
     ht2title:'Copy Grocery Items', ht2desc:'Each grocery item has a copy button — copy it to any list in one tap.',
-    ht3title:'Compare Up to 5 Items', ht3desc:'Go to Settings and increase the item count to compare up to 5 products at once.',
+    ht3title:'Compare Up to 8 Items', ht3desc:'Go to Settings and increase the item count to compare up to 8 products at once.',
     helpPenny:'Penny (AI Advisor)', helpHistory:'History Tab', helpProfile:'Profile Tab',
     hg1title:'Create a list', hg1desc:'Tap New List on the left sidebar and give it a name — like "Weekly Shop" or "Costco Run".',
     hg2title:'Add items', hg2desc:'Use the form to add items with a quantity, price, store, and any notes. Or ask Penny to add items for you.',
@@ -2665,7 +2719,7 @@ const TRANSLATIONS = {
     errNoAccount:'No account found. Try signing up.', errWrongPass:'Incorrect password.',
     passReqs:['8+ chars','uppercase','lowercase','number','symbol'],
     toastCopied:'Copied to Item', toastNoSlot:'No empty card available.',
-    toastNoProduct:'Product not found.', toastSizeNA:'Size not detected. Enter manually.',
+    toastNoProduct:'Product not found.', toastScanReady:'Product found. Check the size and enter its price to compare.',
     toastCopiedClip:'Copied!', toastCopyFail:'Copy failed.',
     toastRunFirst:'Run a comparison first.', toastEnterPrice:'Enter at least one price to compare.', pennyAddCompareFirst:'Add items to Compare first.',
     toastPresetName:'Enter a preset name first.', toastListName:'Please enter a name.',
@@ -2783,7 +2837,7 @@ const TRANSLATIONS = {
     gNamePh:'p.ej. Leche entera', gQtyPh:'p.ej. 2', gStorePh:'p.ej. Walmart', gNotesPh:'p.ej. solo orgánico',
     addBtn:'Agregar a la lista', uncheckAll:'Desmarcar todo',
     helpGettingStarted:'Primeros pasos', helpFeaturesGuide:'Guía de funciones', helpTips:'Consejos',
-    hs1title:'Escanea o ingresa un producto', hs1desc:'En la pestaña Comparar, toca "Escanear código" y apunta al código de barras.',
+    hs1title:'Escanea o ingresa un producto', hs1desc:'En Comparar, toca "Escanear código". Si se encuentra, se completan el nombre, tamaño y una categoría reconocida. Revisa el tamaño e ingresa el precio.',
     hs2title:'Ingresa el precio', hs2desc:'Escribe el precio. Agrega un descuento y elige % o monto fijo.',
     hs3title:'Establece tamaño y cantidad', hs3desc:'Ingresa el tamaño por unidad y cuántas hay en el paquete.',
     hs4title:'Toca COMPARAR', hs4desc:'La tarjeta de mejor valor se pone verde.',
@@ -2791,10 +2845,14 @@ const TRANSLATIONS = {
     hf2:'Crea listas personalizadas con nombre, precio, tienda, cantidad y notas.',
     hf3:'Guarda una configuración de Comparar y cárgala cuando quieras.',
     hf4:'Después de comparar, toca Exportar para compartir o copiar.',
-    hf6:'El historial, listas y preajustes están vinculados a tu correo.',
+    hf6:'El historial, las listas y los preajustes son privados en tu cuenta y se sincronizan entre dispositivos al iniciar sesión.',
+    helpMoreTitle:'Ofertas, grupos y Reponer',
+    helpMoreOffers:'Tú o tu grupo agregan las ofertas; no hay folletos de tiendas en vivo. Ingresa el precio, tamaño del paquete y descuento opcional. Puedes vincular la oferta a una lista o artículo y agregar una fecha de vencimiento.',
+    helpMoreGroups:'El líder administra miembros y el grupo. Los editores administran artículos y uso compartido. Los verificadores solo marcan o desmarcan artículos.',
+    helpMoreReplenish:'Reponer sugiere artículos que agregas con frecuencia o que fijaste. Selecciona lo que necesitas y agrégalo a la lista abierta con un toque.',
     ht1title:'Duplicar una tarjeta', ht1desc:'El ícono de copia duplica la tarjeta en el siguiente espacio vacío.',
     ht2title:'Copiar artículos de la lista', ht2desc:'Cada artículo tiene un botón de copia.',
-    ht3title:'Comparar hasta 5 artículos', ht3desc:'Ve a Ajustes y aumenta el número de artículos.',
+    ht3title:'Compara hasta 8 artículos', ht3desc:'Ve a Ajustes y aumenta el número de artículos hasta 8.',
     helpPenny:'Penny (Asistente IA)', helpHistory:'Pestaña Historial', helpProfile:'Pestaña Perfil',
     hg1title:'Crear una lista', hg1desc:'Toca "Nueva lista" en el panel izquierdo y ponle un nombre.',
     hg2title:'Agregar artículos', hg2desc:'Usa el formulario para agregar artículos con cantidad, precio, tienda y notas. O pídele a Penny que los agregue.',
@@ -2819,7 +2877,8 @@ const TRANSLATIONS = {
     errNoAccount:'Cuenta no encontrada.', errWrongPass:'Contraseña incorrecta.',
     passReqs:['8+ caracteres','mayúscula','minúscula','número','símbolo'],
     toastCopied:'Copiado al artículo', toastNoSlot:'No hay tarjeta vacía.',
-    toastNoProduct:'Producto no encontrado.', toastSizeNA:'Tamaño no detectado.',
+    toastNoProduct:'Producto no encontrado.',
+    toastScanReady:'Producto encontrado. Revisa el tamaño e ingresa su precio para comparar.',
     toastCopiedClip:'¡Copiado!', toastCopyFail:'Error al copiar.',
     toastRunFirst:'Ejecuta una comparación primero.', toastEnterPrice:'Ingresa al menos un precio.', pennyAddCompareFirst:'Primero agrega artículos en Comparar.',
     toastPresetName:'Ingresa un nombre para el preajuste.', toastListName:'Por favor ingresa un nombre.',
@@ -2937,7 +2996,7 @@ const TRANSLATIONS = {
     gNamePh:'ex. Leite integral', gQtyPh:'ex. 2', gStorePh:'ex. Walmart', gNotesPh:'ex. somente orgânico',
     addBtn:'Adicionar à lista', uncheckAll:'Desmarcar tudo',
     helpGettingStarted:'Primeiros passos', helpFeaturesGuide:'Guia de recursos', helpTips:'Dicas',
-    hs1title:'Escaneie ou insira um produto', hs1desc:'Na aba Comparar, toque em "Escanear código".',
+    hs1title:'Escaneie ou insira um produto', hs1desc:'Em Comparar, toque em "Escanear código". Se encontrado, nome, tamanho e uma categoria reconhecida serão preenchidos. Confira o tamanho e informe o preço.',
     hs2title:'Insira o preço', hs2desc:'Digite o preço. Adicione um desconto e escolha % ou valor fixo.',
     hs3title:'Defina tamanho e quantidade', hs3desc:'Insira o tamanho por item e quantos há no pacote.',
     hs4title:'Toque em COMPARAR', hs4desc:'O cartão de melhor valor fica verde.',
@@ -2945,10 +3004,14 @@ const TRANSLATIONS = {
     hf2:'Crie listas personalizadas com nome, preço, loja, quantidade e observações.',
     hf3:'Salve uma configuração de Comparar e recarregue quando quiser.',
     hf4:'Após comparar, toque em Exportar para compartilhar ou copiar.',
-    hf6:'Histórico, listas e predefinições estão vinculados ao seu e-mail.',
+    hf6:'Histórico, listas e predefinições são privados na sua conta e sincronizam entre dispositivos quando você entra.',
+    helpMoreTitle:'Ofertas, grupos e Repor',
+    helpMoreOffers:'Você ou seu grupo cadastram as ofertas; não há encartes de lojas ao vivo. Informe o preço, tamanho da embalagem e desconto opcional. Você pode vincular a oferta a uma lista ou item e definir uma data de validade.',
+    helpMoreGroups:'O líder gerencia membros e configurações do grupo. Editores gerenciam itens e compartilhamento. Conferentes só marcam ou desmarcam itens.',
+    helpMoreReplenish:'Repor sugere itens que você adiciona com frequência ou fixa. Selecione o que precisa e adicione à lista aberta com um toque.',
     ht1title:'Duplicar um cartão', ht1desc:'O ícone de cópia duplica o cartão no próximo espaço vazio.',
     ht2title:'Copiar itens da lista', ht2desc:'Cada item tem um botão de cópia.',
-    ht3title:'Comparar até 5 itens', ht3desc:'Vá em Configurações e aumente o número de itens.',
+    ht3title:'Compare até 8 itens', ht3desc:'Vá em Configurações e aumente o número de itens até 8.',
     helpPenny:'Penny (Assistente IA)', helpHistory:'Aba Histórico', helpProfile:'Aba Perfil',
     hg1title:'Criar uma lista', hg1desc:'Toque em "Nova lista" na barra lateral esquerda e dê um nome.',
     hg2title:'Adicionar itens', hg2desc:'Use o formulário para adicionar itens com quantidade, preço, loja e observações. Ou peça à Penny para adicionar.',
@@ -2973,7 +3036,8 @@ const TRANSLATIONS = {
     errNoAccount:'Conta não encontrada.', errWrongPass:'Senha incorreta.',
     passReqs:['8+ caracteres','maiúscula','minúscula','número','símbolo'],
     toastCopied:'Copiado para item', toastNoSlot:'Nenhum cartão vazio.',
-    toastNoProduct:'Produto não encontrado.', toastSizeNA:'Tamanho não detectado.',
+    toastNoProduct:'Produto não encontrado.',
+    toastScanReady:'Produto encontrado. Confira o tamanho e informe o preço para comparar.',
     toastCopiedClip:'Copiado!', toastCopyFail:'Falha ao copiar.',
     toastRunFirst:'Execute uma comparação primeiro.', toastEnterPrice:'Insira pelo menos um preço.', pennyAddCompareFirst:'Adicione itens em Comparar primeiro.',
     toastPresetName:'Insira um nome para a predefinição.', toastListName:'Por favor insira um nome.',
@@ -3178,6 +3242,11 @@ function applyLang(){
   if(helpSections[3]) helpSections[3].innerText=t.helpPenny;
   if(helpSections[4]) helpSections[4].innerText=t.helpHistory;
   if(helpSections[5]) helpSections[5].innerText=t.helpProfile;
+  const helpMore = document.getElementById('helpMoreTitle');
+  if(helpMore) helpMore.innerText=t.helpMoreTitle;
+  [['helpMoreOffers',t.helpMoreOffers],['helpMoreGroups',t.helpMoreGroups],['helpMoreReplenish',t.helpMoreReplenish]].forEach(([id,text])=>{
+    const el=document.getElementById(id); if(el) el.innerText=text;
+  });
   const hStepTitles = document.querySelectorAll('#helpModal .help-step-title');
   const hStepDescs  = document.querySelectorAll('#helpModal .help-step-desc');
 
@@ -3592,8 +3661,8 @@ async function handleAuth(){
       localStorage.setItem('bp_needs_onboarding', '1');
 
       if(data.session){
-        localStorage.setItem('bp_session', JSON.stringify({email, name, firstName, lastName}));
-        showApp(true);
+        localStorage.setItem('bp_session', JSON.stringify({userId: data.session.user.id, email, name, firstName, lastName}));
+        if(window.__startSession) await window.__startSession(data.session);
       } else {
         showCheckEmail(email);
       }
@@ -3611,11 +3680,8 @@ async function handleAuth(){
       const fName = meta.firstName || '';
       const lName = meta.lastName || '';
       const uName = meta.name || [fName, lName].filter(Boolean).join(' ') || email;
-      localStorage.setItem('bp_session', JSON.stringify({email: data.user.email, name: uName, firstName: fName, lastName: lName}));
-      
-      const onboardedKey = 'bp_onboarded_' + data.user.id;
-      const hasCompletedOnboarding = localStorage.getItem(onboardedKey);
-      showApp(!hasCompletedOnboarding);
+      localStorage.setItem('bp_session', JSON.stringify({userId: data.user.id, email: data.user.email, name: uName, firstName: fName, lastName: lName}));
+      if(window.__startSession) await window.__startSession(data.session);
     }
   } finally {
     if(btn) { btn.disabled = false; btn.textContent = origText; }
@@ -3711,6 +3777,7 @@ function logout(){
 
 async function showApp(isNewUser=false){
   if(_appShown) return;
+  const generation = _accountGeneration;
   _appShown = true;
   const carry = isGuest ? snapshotGuestCards() : null;
   isGuest = false;
@@ -3722,6 +3789,7 @@ async function showApp(isNewUser=false){
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
   document.getElementById('hdr-user-label').innerText = session.name || session.email || '';
   await loadUserDataFromSupabase();
+  if(generation !== _accountGeneration) return;
   loadUserData();
   createStarterGroceryList();
   groceryLists = loadU('glists', []);
@@ -4631,7 +4699,7 @@ function updateGrid(){
       <div class="price-err-msg" id="price-err-${i}">${t.priceErrMsg||'⚠ Please enter a price.'}</div>
       <label class="card-label">${t.sizeLabel}</label>
       <div class="field-row">
-        <input type="number" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}">
+        <input type="number" inputmode="decimal" data-numeric="decimal" class="card-input" style="flex:2" id="s-${i}" placeholder="${t.sizePh}">
         <select class="card-select" style="flex:1" id="u-${i}" onchange="autoUnit(${i})">
           <option value="oz">oz</option><option value="lb">lb</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">L</option><option value="gal">gal</option><option value="count">cnt</option><option value="sheets">sht</option><option value="ft">ft</option><option value="in">in</option><option value="yd">yd</option><option value="m">m</option>
         </select>
@@ -4644,11 +4712,11 @@ function updateGrid(){
       <button type="button" class="details-toggle" id="dtg-${i}" aria-expanded="false" aria-controls="dr-${i}" onclick="toggleCardDetails(${i})"><span class="dt-plus" aria-hidden="true">+</span><span id="dtl-${i}">${tx('addDetails')}</span><span class="dt-sum" id="dts-${i}"></span></button>
       <div class="card-details" id="dr-${i}">
         <div class="field-row" style="margin-top:6px">
-          <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" inputmode="decimal" min="0" class="card-input" id="dv-${i}" value="0"></div>
+          <div style="flex:2"><label class="card-label">${t.discountLabel}</label><input type="number" inputmode="decimal" data-numeric="decimal" min="0" class="card-input" id="dv-${i}" value="0"></div>
           <div style="flex:1"><label class="card-label">${t.typeLabel}</label><select class="card-select" id="dt-${i}"><option value="p">%</option><option value="f">${cur}</option></select></div>
         </div>
         <label class="card-label">${t.packLabel}</label>
-        <input type="number" inputmode="numeric" min="1" class="card-input" id="q-${i}" value="1">
+        <input type="number" inputmode="numeric" data-numeric="integer" min="1" class="card-input" id="q-${i}" value="1">
         <label class="card-label">${t.categoryLabel||'Category'}</label>
         <div class="cat-picker" id="cp-${i}">
         <select class="cat-sel" id="cp-l1-${i}" onchange="catL1Change(${i})">
@@ -5002,8 +5070,8 @@ function compare(opts){
       const total=s*q*UNIT_RATES[u];
       const up=net/total;
       const baseUnit=(['oz','lb','g','kg'].includes(u))?'oz':(['ml','l','gal'].includes(u))?'fl oz':(['ft','in','yd','m'].includes(u))?'ft':u;
-      document.getElementById(`res-${i}`).innerText=`${cur}${up.toFixed(4)} / ${baseUnit}`;
-      itemLines+=`${n}: ${cur}${up.toFixed(4)} ${t.analysisPer} ${baseUnit}.\n`;
+      document.getElementById(`res-${i}`).innerText=`${cur}${up.toFixed(2)} / ${baseUnit}`;
+      itemLines+=`${n}: ${cur}${up.toFixed(2)} ${t.analysisPer} ${baseUnit}.\n`;
       results.push({i,n,up,fam:UNIT_FAMILY[u]||u,price:p,size:s,qty:q,unit:u,baseUnit,dv,dt});
       if(up<best)best=up;
     } else {
@@ -5019,15 +5087,15 @@ function compare(opts){
   if(winners.length>1){
     winners.forEach(w=>document.getElementById(`card-${w.i}`).classList.add('tied'));
     const names=winners.map(w=>w.n).join(' & ');
-    winnerLine=`${t.analysisTie}: ${names} (${cur}${best.toFixed(4)} ${t.analysisPerUnit})`;
-    const entry={date:new Date().toLocaleString(),winner:`${t.analysisTie}: ${names}`,winnerPrice:`${cur}${best.toFixed(4)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(4)}`).join(' | ')};
+    winnerLine=`${t.analysisTie}: ${names} (${cur}${best.toFixed(2)} ${t.analysisPerUnit})`;
+    const entry={date:new Date().toLocaleString(),winner:`${t.analysisTie}: ${names}`,winnerPrice:`${cur}${best.toFixed(2)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(2)}`).join(' | ')};
     compHistory.unshift(entry); if(compHistory.length>50)compHistory.pop();
     saveU('history',compHistory); renderHistory();
   } else {
     const w=winners[0];
     document.getElementById(`card-${w.i}`).classList.add('best');
     winnerLine=`${t.analysisBest}: ${w.n}`;
-    const entry={date:new Date().toLocaleString(),winner:w.n,winnerPrice:`${cur}${w.up.toFixed(4)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(4)}`).join(' | ')};
+    const entry={date:new Date().toLocaleString(),winner:w.n,winnerPrice:`${cur}${w.up.toFixed(2)}`,items:results.map(r=>`${r.n}: ${cur}${r.up.toFixed(2)}`).join(' | ')};
     compHistory.unshift(entry); if(compHistory.length>50)compHistory.pop();
     saveU('history',compHistory); renderHistory();
   }
@@ -5346,6 +5414,18 @@ async function startScan(idx){
   }catch(e){showToast('Camera permission denied.');closeScanner();}
 }
 async function closeScanner(){ document.getElementById('scanner-overlay').style.display='none'; if(scanner){try{await scanner.stop();await scanner.clear();}catch(e){}scanner=null;} }
+function barcodeCategory(name){
+  const n = String(name || '').toLowerCase();
+  if(/\b(milk|half and half|half & half)\b/.test(n)) return 'milk';
+  if(/\b(butter|ghee)\b/.test(n)) return 'butter';
+  if(/\b(yogurt|yoghurt|kefir)\b/.test(n)) return 'yogurt';
+  if(/\b(egg|eggs)\b/.test(n)) return 'eggs';
+  if(/\b(sour cream|dip)\b/.test(n)) return 'sour_cream';
+  if(/\bcream cheese\b/.test(n)) return 'cream_cheese';
+  if(/\bcheese\b/.test(n)) return /\b(shred|shredded|grated)\b/.test(n) ? 'shredded_cheese'
+    : /\b(slice|sliced)\b/.test(n) ? 'sliced_cheese' : 'block_cheese';
+  return '';
+}
 async function fetchProduct(code,idx){
   const t=T();
   let name='', sizeStr='';
@@ -5386,7 +5466,11 @@ async function fetchProduct(code,idx){
     document.getElementById(`n-${idx}`).value=name;
     const res=parseSize(sizeStr)||parseSize(name);
     if(res){document.getElementById(`s-${idx}`).value=res.size;document.getElementById(`u-${idx}`).value=res.unit;autoUnit(idx);}
-    else showToast(t.toastSizeNA);
+    const qtyEl = document.getElementById(`q-${idx}`);
+    if(qtyEl) qtyEl.value = '1';
+    const category = barcodeCategory(name);
+    if(category) catPickerRestore(idx, {cat:category});
+    showToast(t.toastScanReady, 'ok');
     setTimeout(()=>{const pf=document.getElementById(`p-${idx}`);if(pf){pf.focus();pf.select();}},400);
   } else showToast(t.toastNoProduct);
 }
@@ -5674,9 +5758,9 @@ function renderProfileTab(){
 
 function exportUserData(){
   const session = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  const email = session.email || '';
-  const prefix = email ? 'bp_' + email + '_' : 'bp_';
-  const data = { exportedAt: new Date().toISOString(), email, data: {} };
+  const userId = session.userId || '';
+  const prefix = userId ? 'bp_' + userId + '_' : 'bp_';
+  const data = { exportedAt: new Date().toISOString(), email: session.email || '', data: {} };
   for(let i = 0; i < localStorage.length; i++){
     const key = localStorage.key(i);
     if(!key) continue;
@@ -5702,11 +5786,13 @@ function importUserData(input){
       if(!backup?.data || typeof backup.data !== 'object') throw new Error('Invalid backup file');
       showConfirm('Restore Backup', 'This will overwrite your current data with the backup. Continue?', () => {
         const session = JSON.parse(localStorage.getItem('bp_session') || '{}');
-        const prefix = 'bp_' + (session.email || '') + '_';
+        const prefix = 'bp_' + (session.userId || '') + '_';
+        const legacyPrefix = session.email ? 'bp_' + session.email + '_' : '';
         Object.entries(backup.data).forEach(([key, val]) => {
-          const ok = key.startsWith(prefix) || key === 'bp_lang' || key === 'bp_theme';
-          if (!ok) return; // Disallow importing arbitrary or auth keys like bp_session
-          try { localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch(err){}
+          const currentKey = key.startsWith(prefix) ? key
+            : legacyPrefix && key.startsWith(legacyPrefix) ? prefix + key.slice(legacyPrefix.length) : null;
+          if (!currentKey && key !== 'bp_lang' && key !== 'bp_theme') return; // Never import auth keys or another account's data
+          try { localStorage.setItem(currentKey || key, typeof val === 'string' ? val : JSON.stringify(val)); } catch(err){}
         });
         showToast('Backup restored! Reloading…', 'ok');
         setTimeout(() => location.reload(), 1200);
@@ -5750,17 +5836,32 @@ async function deleteAccount(){
   }
 
   const session = JSON.parse(localStorage.getItem('bp_session') || '{}');
-  const email = session.email || '';
-  if(email){
-    const pfx = 'bp_' + email + '_';
-    const toRemove = [];
-    for(let i = 0; i < localStorage.length; i++){
-      const k = localStorage.key(i);
-      if(k && k.startsWith(pfx)) toRemove.push(k);
-    }
-    toRemove.forEach(k => localStorage.removeItem(k));
+  const prefixes = [];
+  if(session.userId) prefixes.push('bp_' + session.userId + '_');
+  if(session.email) prefixes.push('bp_' + session.email + '_');
+  const toRemove = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && (prefixes.some(prefix => key.startsWith(prefix))
+      || key === 'bpdirty_' + session.userId || key === 'bpdirty_' + session.email
+      || key === 'bp_plan_' + session.userId || key === 'bp_plan_' + session.email
+      || key === 'bp_onboarded_' + session.userId || key === 'bp_needs_onboarding')) toRemove.push(key);
   }
-  await _sb.auth.signOut();
+  toRemove.forEach(key => localStorage.removeItem(key));
+  try { await _sb.auth.signOut(); } catch(e) { console.warn('local sign-out after account deletion failed:', e); }
+  try {
+    const projectRef = new URL(SUPABASE_URL).hostname.split('.')[0];
+    localStorage.removeItem(`sb-${projectRef}-auth-token`);
+  } catch(e) {}
+  if(window.indexedDB?.databases){
+    try {
+      const dbs = await window.indexedDB.databases();
+      await Promise.all((dbs || []).filter(db => /^(better-price|bp)(-|$)/i.test(db.name || '')).map(db => new Promise(resolve => {
+        const request = window.indexedDB.deleteDatabase(db.name);
+        request.onsuccess = request.onerror = request.onblocked = () => resolve();
+      })));
+    } catch(e) { console.warn('local account database cleanup failed:', e); }
+  }
   localStorage.removeItem('bp_session');
   showToast(t.deleteAccountDone || 'Account deleted.', 'ok');
   setTimeout(() => location.reload(), 1200);
@@ -5991,7 +6092,7 @@ function pennyNewChat(){
 /* ── PENNY CROSS-SESSION MEMORY ── */
 function _pennyMemoryKey(){
   const sess = JSON.parse(localStorage.getItem('bp_session')||'{}');
-  return sess.email ? 'bp_'+sess.email+'_pmemory' : 'bp_pmemory';
+  return sess.userId ? 'bp_'+sess.userId+'_pmemory' : 'bp_pmemory';
 }
 function loadPennyMemory(){
   try { return JSON.parse(localStorage.getItem(_pennyMemoryKey())||'null') || null; }
@@ -6935,7 +7036,11 @@ APP GUIDE — You know exactly how Better Price! works. When users ask how to do
 
 COMPARE TAB: The main tab. Users enter up to 8 product cards side by side. Each card has: Name (type or scan barcode to auto-fill), Price ($), Size (number + unit: oz/lb/ml/g/gal/ct/pk), Quantity (pack qty), optional Discount (% off or flat $ off), and Category (for cost-per-day estimates). The app instantly calculates unit price (cost per oz/lb/etc.) so users see the best deal highlighted. The "Save to Preset" button saves the entire setup to reuse later. The duplicate card button (two overlapping squares icon) copies a card with all its details, and the + Add Card button in the toolbar adds a blank card without touching existing ones.
 
-GROCERY TAB: Users create and manage custom shopping lists. Each item has a name, quantity, and optional notes. Check items off while shopping — checked items are crossed out. The + button adds new items. Each item has edit/delete options. Users can copy items to other lists using the copy icon. Multiple lists supported — switch between them in the list selector at the top.
+GROCERY TAB: Users create and manage custom shopping lists. Each item has a name, quantity, and optional notes. Check items off while shopping — checked items are crossed out. The + button adds new items. Each item has edit/delete options. Users can copy items to other lists using the copy icon. Replenish suggests frequently added or pinned items for one-tap re-adding. Multiple lists supported — switch between them in the list selector at the top.
+
+OFFERS: Users or their household can enter saved store offers manually; live retailer ads are not connected. Offers can be linked to a list or item and may have an expiration date. When asked how to add one, direct the user to the Offers tab and the Add an offer button.
+
+HOUSEHOLD GROUPS: The Leader manages members and group settings. List Editors can manage list items and sharing. List Checkers can only check or uncheck items. Do not promise actions a user's role cannot perform.
 
 PRESETS TAB: Shows all saved Compare setups. Tap any preset to instantly reload all its card data into the Compare tab — no re-entering needed. Great for regular shopping trips. Presets can be renamed or deleted.
 
@@ -6943,9 +7048,9 @@ HISTORY TAB: Every comparison the user runs is automatically saved here with the
 
 PROFILE TAB: Users set how many people they shop for, an optional age breakdown, preferred grocery stores, ZIP code (for regional pricing), and budget (per shopping period, matching their shopping frequency). These personalize your recommendations. The age breakdown is user-provided context, not a medical or precise nutrition profile.
 
-PENNY TAB (you): Users chat with you here. You can: answer questions, give price advice, recommend stores, help with meal planning, AND directly manage their grocery lists using command tags. You have full list management powers.
+PENNY TAB (you): Users chat with you here. You can: answer questions, give price advice, recommend stores, help with meal planning, AND manage grocery lists using command tags, subject to the user's household role. List Checkers may only check or uncheck items.
 
-BARCODE SCANNING: In the Compare tab, each card has a barcode/camera icon. Tapping it opens the camera to scan a product barcode — name and size auto-fill from the product database.
+BARCODE SCANNING: In the Compare tab, each card has a barcode/camera icon. Tapping it opens the camera to scan a product barcode. If found, name, size, and a recognized category may auto-fill. The user should check the size and enter the shelf price.
 
 LANGUAGE: The app supports English, Spanish (Español), and Portuguese (Português). Inside the app, tap the Settings button (it reads Settings, Ajustes in Spanish, or Configurações in Portuguese) in the top-left toolbar of the Compare tab and pick the language there. On the Sign-In / Sign-Up screen, use the language dropdown in the top-right corner. There is NO globe icon and NO side menu (☰); never mention either.
 
@@ -7571,7 +7676,8 @@ const I18N_X = {
     bmBudgetOnly:'Add your shopping group size in Profile to see how your budget compares with USDA food plans.',
     bmAgeMixNote:'Your optional age breakdown is saved for Penny, but this USDA comparison remains a broad estimate and is not calculated from your exact age mix.',
     bmNoBudget:'Set a weekly budget in Profile and we will show where you land.',
-    bmFoot:'Benchmarks: USDA Food Plans, May 2026 (food at home; assumes adults plus school-age children). Your actual costs vary by region and household.',
+    bmFoot:'A broad comparison using USDA Food Plans (May 2026) for adults and school-age children—not a prediction of your bill. Real costs vary by ages, location, and shopping habits.',
+    bmTooltip:'This estimate uses USDA average food-at-home costs and household-size adjustments. It is not tailored to your exact ages, region, diet, or stores.',
     bmGo:'Start comparing', person:'person', people:'people'
   },
   es: {
@@ -7605,7 +7711,8 @@ const I18N_X = {
     bmBudgetOnly:'Agrega cuántas personas integran tu grupo de compras en Perfil para comparar tu presupuesto con los planes del USDA.',
     bmAgeMixNote:'Penny guardará las edades opcionales, pero esta comparación del USDA sigue siendo una estimación general y no se calcula según esas edades.',
     bmNoBudget:'Define un presupuesto semanal en Perfil y te mostraremos dónde estás.',
-    bmFoot:'Referencias: Planes de alimentos del USDA, mayo de 2026 (comida en casa; supone adultos y niños en edad escolar). Tus costos reales varían por región y hogar.',
+    bmFoot:'Comparación general con los planes de alimentos del USDA (mayo de 2026) para adultos y niños en edad escolar; no predice tu gasto. El costo real varía según edades, región y hábitos de compra.',
+    bmTooltip:'La estimación usa costos promedio de alimentos en casa del USDA y ajustes por tamaño del hogar. No se adapta exactamente a edades, región, dieta o tiendas.',
     bmGo:'Empezar a comparar', person:'persona', people:'personas'
   },
   pt: {
@@ -7639,7 +7746,8 @@ const I18N_X = {
     bmBudgetOnly:'Informe quantas pessoas fazem parte do seu grupo de compras no Perfil para comparar seu orçamento com os planos do USDA.',
     bmAgeMixNote:'As faixas etárias opcionais ficam salvas para Penny, mas esta comparação do USDA continua sendo uma estimativa geral, não calculada pelas idades informadas.',
     bmNoBudget:'Defina um orçamento semanal em Perfil e mostraremos onde você está.',
-    bmFoot:'Referências: Planos alimentares do USDA, maio de 2026 (comida em casa; considera adultos e crianças em idade escolar). Seus custos reais variam por região e casa.',
+    bmFoot:'Comparação geral com os planos alimentares do USDA (maio de 2026) para adultos e crianças em idade escolar; não prevê sua conta. O custo real varia por idade, região e hábitos de compra.',
+    bmTooltip:'A estimativa usa custos médios do USDA para alimentos consumidos em casa e ajustes pelo tamanho do domicílio. Não considera exatamente idades, região, dieta ou lojas.',
     bmGo:'Começar a comparar', person:'pessoa', people:'pessoas'
   }
 };
@@ -7864,6 +7972,8 @@ function renderBenchmark(){
   $('bm-title').textContent   = tx('bmTitle');
   $('bm-go').textContent      = tx('bmGo') + ' \u2192';
   $('bm-foot').textContent    = tx('bmFoot');
+  $('bm-foot').title          = tx('bmTooltip');
+  $('bm-foot').setAttribute('aria-label', tx('bmFoot') + ' ' + tx('bmTooltip'));
 
   const heroEl = $('bm-num'), capEl = $('bm-cap'), barEl = $('bm-bar'), verdict = $('bm-verdict');
   barEl.replaceChildren(); barEl.style.display = 'none';
@@ -7907,6 +8017,18 @@ function renderBenchmark(){
   return true;
 }
 
+document.addEventListener('input', event => {
+  const field = event.target.closest?.('[data-numeric]');
+  if(!field) return;
+  const raw = field.value;
+  let clean = raw.replace(/[^\d.]/g, '');
+  if(field.dataset.numeric === 'integer') clean = clean.replace(/\./g, '');
+  else {
+    const dot = clean.indexOf('.');
+    if(dot !== -1) clean = clean.slice(0, dot + 1) + clean.slice(dot + 1).replace(/\./g, '');
+  }
+  if(clean !== raw) field.value = clean;
+}, true);
 
 window.onload=async ()=>{
   initTheme();
@@ -7931,21 +8053,38 @@ window.onload=async ()=>{
     showToast(oauthError.replace(/\+/g,' '), '');
   }
 let _appStarted = false;
+let _activeSessionUserId = null;
+function resetAccountView(){
+  if(window.bp) bp.stop();
+  _accountGeneration++;
+  compHistory = []; groceryLists = []; groceryItems = []; savedPresets = []; activeListId = null;
+  pennyActiveSession = null; pennySessions = []; pennyPendingImages = []; pennyBusy = false; _lpHistory = [];
+  userPlan = 'free'; lastSubRow = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('onboarding-screen').style.display = 'none';
+  _appStarted = false; _appShown = false;
+}
   async function handleSession(session){
     if(_appStarted || window.__recovery) return;
 
     if(!session){
+      _appStarted = true;
+      _activeSessionUserId = null;
       _stripUrlParams(['embedded_return','billing_return']);
       showGuestApp();               // guest-first: Compare is usable immediately
       return;
     }
 
     _appStarted = true;
+    _activeSessionUserId = session.user.id;
+    const generation = _accountGeneration;
     const meta = session.user.user_metadata || {};
     const firstName = meta.firstName || meta.full_name?.split(' ')[0] || '';
     const lastName  = meta.lastName  || meta.full_name?.split(' ').slice(1).join(' ') || '';
     const name = meta.name || [firstName, lastName].filter(Boolean).join(' ') || session.user.email || '';
-    localStorage.setItem('bp_session', JSON.stringify({email: session.user.email, name, firstName, lastName}));
+    const savedSession = {userId: session.user.id, email: session.user.email, name, firstName, lastName};
+    _sbMigrateLegacyStorage(savedSession);
+    localStorage.setItem('bp_session', JSON.stringify(savedSession));
 
     // Onboarding shows only if THIS account has never completed it on this device.
     // (A brand-new signup naturally has no bp_onboarded_<id> key yet, so this
@@ -7957,16 +8096,32 @@ let _appStarted = false;
     const isNewUser = !hasCompletedOnboarding;
 
     await loadUserPlan();
+    if(generation !== _accountGeneration) return;
     await bpBoot(session);          // migrate (once) + hydrate lists/items BEFORE the UI reads them
-    showApp(isNewUser);
+    if(generation !== _accountGeneration) return;
+    await showApp(isNewUser);
+    if(generation !== _accountGeneration) return;
     await handleEmbeddedReturn();
     await handleBillingReturn();
   }
+  window.__startSession = handleSession;
 
   _sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'SIGNED_OUT' && window.bp){ bp.stop(); if(bp.ui) bp.ui.refresh(); }
     if(event === 'PASSWORD_RECOVERY'){ window.__recovery = true; showResetPassword(); return; }
-    if(!_appStarted && session) await handleSession(session);
+    const nextUserId = session?.user?.id || null;
+    if(nextUserId !== _activeSessionUserId){
+      if(_activeSessionUserId) resetAccountView();
+      _activeSessionUserId = nextUserId;
+      if(!nextUserId){
+        const previous = JSON.parse(localStorage.getItem('bp_session') || '{}');
+        _sbMigrateLegacyStorage(previous);
+        await handleSession(null);
+        if(window.bp?.ui) bp.ui.refresh();
+        return;
+      }
+      _appStarted = false; _appShown = false;
+    }
+    if(session) await handleSession(session);
   });
 
   let session = null;
