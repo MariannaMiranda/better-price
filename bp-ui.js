@@ -16,8 +16,34 @@
   const toast = (m, t) => bp.host.toast(m, t);
   const online = () => navigator.onLine !== false;
   const askConfirm = (title, message, action) => {
-    if (ui.host.confirm) return ui.host.confirm(title, message, action);
+    // Run the confirmed action here so a failure becomes a clear toast (and a log line), never a silent no-op.
+    const safe = async () => { try { await action(); } catch (err) { console.error(err); toast(errMsg(err)); } };
+    if (ui.host.confirm) return ui.host.confirm(title, message, safe);
     toast(tr('err_generic'));
+  };
+  // In-app replacement for window.prompt(): one text field, Save/Cancel, Enter submits, Esc cancels.
+  // onSubmit(value) may throw/return a string to keep the dialog open with a toast; return nothing to close it.
+  const askInput = (opts, onSubmit) => {
+    const prev = document.activeElement;
+    const ov = document.createElement('div'); ov.className = 'bpx-dlg-ov';
+    ov.innerHTML = `<form class="bpx-dlg" role="dialog" aria-modal="true" aria-label="${h(opts.title)}"><h3>${h(opts.title)}</h3>
+      <input class="bpx-in" maxlength="${opts.max || 120}" value="${h(opts.value || '')}" aria-label="${h(opts.label || opts.title)}" autocomplete="off">
+      <div class="bpx-dlg-btns"><button type="button" class="bpx-btn" data-x="cancel">${h(tr('cancel'))}</button><button type="submit" class="bpx-btn p">${h(opts.okLabel || tr('save_btn'))}</button></div></form>`;
+    const input = $('input', ov);
+    const close = () => { ov.remove(); try { prev && prev.focus(); } catch (e) { /* gone */ } };
+    ov.addEventListener('mousedown', e => { if (e.target === ov) close(); });
+    ov.addEventListener('click', e => { if (e.target.closest('[data-x="cancel"]')) close(); });
+    ov.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
+    $('form', ov).addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = $('[type=submit]', ov); btn.disabled = true;
+      try {
+        const msg = await onSubmit(input.value.trim());
+        if (typeof msg === 'string' && msg) { toast(msg); btn.disabled = false; return; }
+        close();
+      } catch (err) { console.error(err); toast(errMsg(err)); btn.disabled = false; }
+    });
+    document.body.appendChild(ov); input.focus(); input.select();
   };
 
   /* ------------------------------ i18n ------------------------------ */
@@ -124,8 +150,11 @@
       rep_bought: 'bought {n}× · last {date}', pin: 'Pin', unpin: 'Unpin', pin_aria: 'Pin {name}', unpin_aria: 'Unpin {name}', hide_aria: 'Hide {name}',
       rep_add: 'Add selected to list', rep_empty_1: 'Nothing to replenish yet.', rep_empty_2: 'Items you add to lists show up here for one-tap re-adding.',
       added_one: 'Added {n} item', added_other: 'Added {n} items',
-      rep_add_custom: 'Add a staple', rep_custom_ph: 'e.g. Grapes or bottled water', rep_custom_added: 'Saved as a Replenish staple. It appears when not already on your active list.',
+      rep_add_custom: 'Add a staple', rep_custom_ph: 'e.g. Bottled water', rep_custom_added: 'Saved as a Replenish staple. It appears when not already on your active list.',
       rep_removed: 'Removed from Replenish. Add it to a list again to restore it.',
+      rep_remove_title: 'Remove "{name}" from Replenish?', rep_remove_msg: 'Do you want to do this?',
+      rep_rename: 'Rename', rep_rename_title: 'Rename staple', rep_rename_aria: 'Rename {name}', rep_renamed: 'Staple renamed.', rep_name_taken: 'You already have a staple with that name.', need_staple_name: 'Enter a staple name.',
+      role_confirm_title: 'Change role?', role_confirm_msg: "Are you sure you want to change this member's role?", cancel: 'Cancel',
 
       sh_title: 'Share this list',
       sh_chip_private: 'Private',
@@ -267,8 +296,12 @@
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fijar', unpin: 'Quitar fijado', pin_aria: 'Fijar {name}', unpin_aria: 'Quitar fijado de {name}', hide_aria: 'Ocultar {name}',
       rep_add: 'Agregar seleccionados a la lista', rep_empty_1: 'Aún no hay nada que reponer.', rep_empty_2: 'Los artículos que agregues a tus listas aparecerán aquí para volver a agregarlos con un toque.',
       added_one: 'Se agregó {n} artículo', added_other: 'Se agregaron {n} artículos',
-      rep_add_custom: 'Agregar un básico', rep_custom_ph: 'p. ej., uvas o agua embotellada', rep_custom_added: 'Se guardó como básico de Reponer. Aparecerá cuando no esté en tu lista activa.',
+      rep_add_custom: 'Agregar un básico', rep_custom_ph: 'p. ej., Agua embotellada', rep_custom_added: 'Se guardó como básico de Reponer. Aparecerá cuando no esté en tu lista activa.',
       rep_removed: 'Se quitó de Reponer. Agrégalo a una lista para recuperarlo.',
+      rep_remove_title: '¿Quitar "{name}" de Reponer?', rep_remove_msg: '¿Quieres hacerlo?',
+      rep_rename: 'Renombrar', rep_rename_title: 'Renombrar básico', rep_rename_aria: 'Renombrar {name}', rep_renamed: 'Se renombró el básico.', rep_name_taken: 'Ya tienes un básico con ese nombre.', need_staple_name: 'Escribe el nombre del básico.',
+      role_confirm_title: '¿Cambiar el rol?', role_confirm_msg: '¿Seguro que quieres cambiar el rol de este miembro?', cancel: 'Cancelar',
+      roles_help: 'Líder: administra el grupo y sus miembros. Editor de listas: administra listas y artículos, incluido compartir. Solo marcar: solo marca o desmarca artículos.',
 
       sh_title: 'Compartir esta lista',
       sh_chip_private: 'Privada',
@@ -410,8 +443,12 @@
       rep_bought: 'comprado {n}× · último {date}', pin: 'Fixar', unpin: 'Desafixar', pin_aria: 'Fixar {name}', unpin_aria: 'Desafixar {name}', hide_aria: 'Ocultar {name}',
       rep_add: 'Adicionar selecionados à lista', rep_empty_1: 'Nada para repor ainda.', rep_empty_2: 'Os itens que você adiciona às listas aparecem aqui para readicionar com um toque.',
       added_one: '{n} item adicionado', added_other: '{n} itens adicionados',
-      rep_add_custom: 'Adicionar um básico', rep_custom_ph: 'ex.: uvas ou água engarrafada', rep_custom_added: 'Salvo como básico do Repor. Aparece quando não estiver na lista ativa.',
+      rep_add_custom: 'Adicionar um básico', rep_custom_ph: 'ex.: Água engarrafada', rep_custom_added: 'Salvo como básico do Repor. Aparece quando não estiver na lista ativa.',
       rep_removed: 'Removido do Repor. Adicione a uma lista para restaurá-lo.',
+      rep_remove_title: 'Remover "{name}" de Repor?', rep_remove_msg: 'Você quer fazer isso?',
+      rep_rename: 'Renomear', rep_rename_title: 'Renomear básico', rep_rename_aria: 'Renomear {name}', rep_renamed: 'Básico renomeado.', rep_name_taken: 'Você já tem um básico com esse nome.', need_staple_name: 'Digite o nome do básico.',
+      role_confirm_title: 'Alterar a função?', role_confirm_msg: 'Tem certeza de que quer alterar a função deste membro?', cancel: 'Cancelar',
+      roles_help: 'Líder: gerencia o grupo e seus membros. Editor de listas: gerencia listas e itens, incluindo o compartilhamento. Só marcar itens: apenas marca ou desmarca itens.',
 
       sh_title: 'Compartilhar esta lista',
       sh_chip_private: 'Privada',
@@ -554,7 +591,16 @@
   .bpx-help-btn,.bpx-gear-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--card-bg,var(--white));color:var(--muted);display:grid;place-items:center;cursor:pointer;font:700 15px var(--font,system-ui)}
   .bpx-role-help>.bpx-help-btn{width:34px;height:34px;border-radius:9px}
   .bpx-help-btn:hover,.bpx-gear-btn:hover{color:var(--text);border-color:var(--muted)}
-  .bpx-gear-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .bpx-gear-btn{flex:0 0 34px;box-sizing:border-box;width:34px;height:34px;min-width:34px;min-height:34px;padding:0;line-height:0;aspect-ratio:1/1;-webkit-appearance:none;appearance:none}
+  .bpx-gear-btn svg{display:block;flex:none;width:18px;height:18px;min-width:18px;min-height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .bpx-group-head{align-items:flex-start}
+  .bpx-group-head .bpx-name{min-width:0;overflow-wrap:anywhere}
+  .bpx-roles-note{margin:2px 0 8px;padding:8px 10px;border-radius:8px;background:var(--input-bg);color:var(--muted);font-size:12px;line-height:1.5}
+  .bpx-dlg-ov{position:fixed;inset:0;z-index:10100;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+  .bpx-dlg{width:min(420px,100%);padding:22px;border-radius:18px;background:var(--card-bg,var(--white));color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.28)}
+  .bpx-dlg h3{margin:0 0 12px;font-size:17px}
+  .bpx-dlg .bpx-in{width:100%;box-sizing:border-box}
+  .bpx-dlg-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
   .bpx-group-menu{position:fixed;z-index:10020;width:min(240px,calc(100vw - 24px));overflow-y:auto;overscroll-behavior:contain;padding:6px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg,var(--white));box-shadow:0 10px 28px rgba(0,0,0,.2)}
   .bpx-group-menu button,.bpx-member-menu button{display:block;width:100%;padding:10px 11px;text-align:left;border:0;border-radius:8px;background:transparent;color:var(--text);font:500 13px var(--font,system-ui);cursor:pointer}
   .bpx-group-menu button:hover,.bpx-member-menu button:hover{background:var(--input-bg)}
@@ -571,6 +617,7 @@
   .bpx-role-close:hover{background:var(--border)}
   .bpx-select-scroll{max-height:160px;overflow:auto}
   .bpx-rep-add{display:grid;grid-template-columns:1fr auto;gap:7px;margin:10px 0}
+  .bpx-rep-actions{display:flex;gap:6px;flex:none;align-items:center}
   .bpx-rep-add input{min-width:0}
   `;
 
@@ -798,23 +845,23 @@
       if (a === 'renamegroup') {
         const menu = el.closest('.bpx-group-menu');
         if (menu) { menu.hidden = true; menu.parentElement.querySelector('[data-a="groupmenu"]')?.setAttribute('aria-expanded', 'false'); }
-        const name = prompt(tr('rename_group_prompt'), el.dataset.name || '');
-        if (name == null) return;
-        const trimmed = name.trim();
-        if (!trimmed) return toast(tr('need_hh_name'));
-        if (trimmed.length > 80) return toast(tr('group_name_long'));
-        await bp.households.rename(el.dataset.id, trimmed);
-        toast(tr('group_renamed'), 'ok'); return showTab('house');
+        const gid = el.dataset.id;
+        return askInput({ title: tr('rename_group_prompt'), label: tr('rename_group'), value: el.dataset.name || '', max: 80, okLabel: tr('rename_group') }, async trimmed => {
+          if (!trimmed) return tr('need_hh_name');
+          if (trimmed.length > 80) return tr('group_name_long');
+          await bp.households.rename(gid, trimmed);
+          toast(tr('group_renamed'), 'ok'); await showTab('house');
+        });
       }
-      if (a === 'setrole') {
-        const role = el.value;
-        try { await bp.households.setMemberRole(el.dataset.hid, el.dataset.uid, role); }
-        catch (err) { el.value = el.dataset.currentRole; throw err; }
-        toast(tr('member_role_saved'), 'ok'); return showTab('house');
-      }
-      if (a === 'setmemberrole') {
-        await bp.households.setMemberRole(el.dataset.hid, el.dataset.uid, el.dataset.role);
-        toast(tr('member_role_saved'), 'ok'); return showTab('house');
+      if (a === 'setrole' || a === 'setmemberrole') {
+        const hid = el.dataset.hid, uid = el.dataset.uid;
+        const role = a === 'setrole' ? el.value : el.dataset.role;
+        if (a === 'setrole') el.value = el.dataset.currentRole;     // show the old role until the change is confirmed
+        el.closest('details')?.removeAttribute('open');
+        return askConfirm(tr('role_confirm_title'), tr('role_confirm_msg'), async () => {
+          await bp.households.setMemberRole(hid, uid, role);
+          toast(tr('member_role_saved'), 'ok'); await showTab('house');
+        });
       }
       if (a === 'transfer') {
         return askConfirm(tr('transfer_leadership'), tr('confirm_transfer'), async () => {
@@ -851,6 +898,7 @@
     const m = (e && e.message) || '';
     if (showBackend && m) return m;
     if (/invalid_or_expired_invite|expired|invite.*(?:invalid|unavailable)|invalid.*(?:invite|code)/i.test(m)) return tr('e_invite');
+    if (/staple_name_taken/.test(m) || (e && e.code === 'staple_name_taken')) return tr('rep_name_taken');
     if (/household is full/.test(m)) return tr('e_full');
     if (/limit reached/.test(m)) return tr('e_limit');
     if (!online()) return tr('e_offline');
@@ -1169,7 +1217,8 @@
     let html = '';
     html += hs.length ? hs.map(x => {
       const owner = x.members.some(m => m.is_me && m.role === 'owner');
-      return `<div class="bpx-card"><div class="bpx-row"><div class="bpx-grow bpx-name">${h(x.name)}</div><div class="bpx-group-actions"><details class="bpx-role-help"><summary class="bpx-help-btn" aria-label="${h(tr('roles_help'))}">?</summary><div class="bpx-role-pop">${h(tr('roles_help'))}<button class="bpx-role-close" type="button" data-a="rolehelpclose" aria-label="${h(tr('close'))}">&times;</button></div></details><button class="bpx-gear-btn" type="button" data-a="groupmenu" data-id="${h(x.id)}" aria-label="${h(tr('group_settings'))}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 2.9-.2-.1a1.7 1.7 0 0 0-1.8.1l-.1.1h-3.4l-.1-.2a1.7 1.7 0 0 0-1.5-1 1.7 1.7 0 0 0-.8.2l-.2.1-2.9-1.7.1-.2a1.7 1.7 0 0 0-.1-1.8l-.1-.1v-3.4l.2-.1a1.7 1.7 0 0 0 .8-1.5 1.7 1.7 0 0 0-.2-.8l-.1-.2 1.7-2.9.2.1a1.7 1.7 0 0 0 1.8-.1l.1-.1h3.4l.1.2a1.7 1.7 0 0 0 1.5 1 1.7 1.7 0 0 0 .8-.2l.2-.1 2.9 1.7-.1.2a1.7 1.7 0 0 0 .1 1.8l.1.1v3.4l-.2.1a1.7 1.7 0 0 0-.8 1.5z"></path></svg></button><div class="bpx-group-menu" id="bpxMenu${h(x.id)}" hidden role="menu">${owner ? `<button type="button" role="menuitem" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><button type="button" role="menuitem" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button>` : ''}<button type="button" role="menuitem" data-a="leave" data-id="${h(x.id)}" data-owner="${owner}">${h(tr('leave'))}</button>${owner ? `<button type="button" class="d" role="menuitem" data-a="deletegroup" data-id="${h(x.id)}">${h(tr('delete_group'))}</button>` : ''}</div></div></div>
+      return `<div class="bpx-card"><div class="bpx-row bpx-group-head"><div class="bpx-grow bpx-name">${h(x.name)}</div><div class="bpx-group-actions"><button class="bpx-gear-btn" type="button" data-a="groupmenu" data-id="${h(x.id)}" aria-label="${h(tr('group_settings'))}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 2.9-.2-.1a1.7 1.7 0 0 0-1.8.1l-.1.1h-3.4l-.1-.2a1.7 1.7 0 0 0-1.5-1 1.7 1.7 0 0 0-.8.2l-.2.1-2.9-1.7.1-.2a1.7 1.7 0 0 0-.1-1.8l-.1-.1v-3.4l.2-.1a1.7 1.7 0 0 0 .8-1.5 1.7 1.7 0 0 0-.2-.8l-.1-.2 1.7-2.9.2.1a1.7 1.7 0 0 0 1.8-.1l.1-.1h3.4l.1.2a1.7 1.7 0 0 0 1.5 1 1.7 1.7 0 0 0 .8-.2l.2-.1 2.9 1.7-.1.2a1.7 1.7 0 0 0 .1 1.8l.1.1v3.4l-.2.1a1.7 1.7 0 0 0-.8 1.5z"></path></svg></button><div class="bpx-group-menu" id="bpxMenu${h(x.id)}" hidden role="menu">${owner ? `<button type="button" role="menuitem" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><button type="button" role="menuitem" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button>` : ''}<button type="button" role="menuitem" data-a="leave" data-id="${h(x.id)}" data-owner="${owner}">${h(tr('leave'))}</button>${owner ? `<button type="button" class="d" role="menuitem" data-a="deletegroup" data-id="${h(x.id)}">${h(tr('delete_group'))}</button>` : ''}</div></div></div>
+        <div class="bpx-roles-note">${h(tr('roles_help'))}</div>
         <div id="bpxInv${h(x.id)}"></div>
         ${x.members.map(m => {
           const role = m.role === 'owner' ? 'leader' : m.role === 'checker' ? 'checker' : 'editor';
@@ -1214,7 +1263,8 @@
       b.innerHTML = `<div class="bpx-note">${h(tr('rep_help'))}</div><div class="bpx-note">${h(tr('rep_note'))}</div><form class="bpx-rep-add" id="bpxRepAdd"><input class="bpx-in" id="bpxRepName" maxlength="120" placeholder="${h(tr('rep_custom_ph'))}" aria-label="${h(tr('rep_custom_ph'))}" required><button class="bpx-btn" type="submit">${h(tr('rep_add_custom'))}</button></form>${rows.length ? `${rows.map((f, i) => `<label class="bpx-card bpx-row"><input type="checkbox" data-i="${i}"${f.pinned || f.add_count > 1 ? ' checked' : ''}>
         <span class="bpx-grow"><span class="bpx-name">${h(f.name)}</span><br><span class="bpx-sub">${h(tr('rep_bought', { n: f.add_count, date: fmtDate(f.last_added_at.slice(0, 10)) }))}${f.default_store ? ' · ' + h(f.default_store) : ''}</span></span>
         <button class="bpx-btn" data-pin="${h(f.id)}" data-v="${f.pinned ? 0 : 1}" aria-label="${h(tr(f.pinned ? 'unpin_aria' : 'pin_aria', { name: f.name }))}">${h(tr(f.pinned ? 'unpin' : 'pin'))}</button>
-        <button class="bpx-btn d" data-hide="${h(f.id)}" aria-label="${h(tr('hide_aria', { name: f.name }))}" title="${h(tr('rep_removed'))}">&#10005;</button></label>`).join('')}
+        <span class="bpx-rep-actions"><button class="bpx-btn" data-ren="${h(f.id)}" data-name="${h(f.name)}" aria-label="${h(tr('rep_rename_aria', { name: f.name }))}">${h(tr('rep_rename'))}</button>
+        <button class="bpx-btn d" data-hide="${h(f.id)}" data-name="${h(f.name)}" aria-label="${h(tr('hide_aria', { name: f.name }))}" title="${h(tr('rep_removed'))}">&#10005;</button></span></label>`).join('')}
         <button class="bpx-btn p" id="bpxAddFav" style="width:100%;margin-top:8px">${h(tr('rep_add'))}</button>` : `<div class="bpx-empty">${h(tr('rep_empty_1'))}<br>${h(tr('rep_empty_2'))}</div>`}`;
       b.onsubmit = async e => {
         if (e.target.id !== 'bpxRepAdd') return;
@@ -1228,9 +1278,26 @@
         } catch (e) { toast(e.message || tr('e_generic')); }
       };
       b.onclick = async e => {
-        const pin = e.target.closest('[data-pin]'), hide = e.target.closest('[data-hide]');
-        if (pin) { e.preventDefault(); await bp.favorites.pin(pin.dataset.pin, pin.dataset.v === '1'); return openReplenish(); }
-        if (hide) { e.preventDefault(); await bp.favorites.hide(hide.dataset.hide); toast(tr('rep_removed'), 'ok'); return openReplenish(); }
+        const pin = e.target.closest('[data-pin]'), hide = e.target.closest('[data-hide]'), ren = e.target.closest('[data-ren]');
+        try {
+          if (pin) { e.preventDefault(); await bp.favorites.pin(pin.dataset.pin, pin.dataset.v === '1'); return openReplenish(); }
+          if (ren) {
+            e.preventDefault();
+            const fid = ren.dataset.ren, scope = list && list.householdId;
+            return askInput({ title: tr('rep_rename_title'), label: tr('rep_rename_title'), value: ren.dataset.name || '', max: 120, okLabel: tr('rep_rename') }, async nv => {
+              if (!nv) return tr('need_staple_name');
+              if (nv !== ren.dataset.name) await bp.favorites.rename(fid, nv, scope);
+              toast(tr('rep_renamed'), 'ok'); await openReplenish();
+            });
+          }
+          if (hide) {
+            e.preventDefault();
+            const fid = hide.dataset.hide;
+            return askConfirm(tr('rep_remove_title', { name: hide.dataset.name || '' }), tr('rep_remove_msg'), async () => {
+              await bp.favorites.hide(fid); toast(tr('rep_removed'), 'ok'); await openReplenish();
+            });
+          }
+        } catch (err) { console.error(err); return toast(errMsg(err)); }
         if (e.target.id === 'bpxAddFav') {
           const chosen = rows.filter((f, i) => b.querySelector(`[data-i="${i}"]`).checked).map(f => ({ name: f.name, qty: f.default_qty, store: f.default_store }));
           const n = ui.host.addItems(chosen); closeSheet(); toast(n ? trn('added', n) : tr('nothing_sel'), n ? 'ok' : '');
