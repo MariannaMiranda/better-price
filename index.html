@@ -803,8 +803,8 @@ body.dark .cat-sel:focus{border-color:#4d8fcc;}
 }
 
 /* ── MODALS ── */
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;z-index:1000;backdrop-filter:blur(2px);}
-.modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);width:min(440px,94vw);padding:28px;border-radius:22px;z-index:1001;display:none;box-shadow:0 20px 60px rgba(0,0,0,.22);color:var(--text);max-height:90vh;overflow-y:auto;}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;z-index:10100;backdrop-filter:blur(2px);}
+.modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--white);width:min(440px,94vw);padding:28px;border-radius:22px;z-index:10101;display:none;box-shadow:0 20px 60px rgba(0,0,0,.22);color:var(--text);max-height:90vh;overflow-y:auto;}
 .checkout-status-icon{width:48px;height:48px;margin:0 auto 8px;display:grid;place-items:center;color:var(--text);}
 .checkout-status-icon svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
 .checkout-status-icon.is-loading svg{animation:checkout-icon-spin 1.2s linear infinite;}
@@ -853,7 +853,7 @@ input:checked+.slider:before{transform:translateX(20px);}
 .export-pre{background:var(--input-bg);border-radius:10px;padding:14px;margin-bottom:14px;font-family:var(--font-m);font-size:12px;color:var(--text);white-space:pre-wrap;max-height:180px;overflow-y:auto;line-height:1.6;}
 
 /* ── TOAST ── */
-#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-90px);background:var(--white);color:var(--text);padding:11px 20px;border-radius:40px;box-shadow:0 8px 28px rgba(0,0,0,.15);display:flex;align-items:center;gap:9px;z-index:3000;opacity:0;transition:all .4s cubic-bezier(.175,.885,.32,1.275);border:1px solid var(--border);font-size:14px;font-family:var(--font);pointer-events:none;max-width:90vw;}
+#toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);left:50%;transform:translateX(-50%) translateY(-90px);background:var(--white);color:var(--text);padding:11px 20px;border-radius:40px;box-shadow:0 8px 28px rgba(0,0,0,.15);display:flex;align-items:center;gap:9px;z-index:10200;opacity:0;transition:all .4s cubic-bezier(.175,.885,.32,1.275);border:1px solid var(--border);font-size:14px;font-family:var(--font);pointer-events:none;max-width:90vw;}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto;}
 .toast-dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex-shrink:0;}
 #toast.ok .toast-dot{background:var(--ok);}
@@ -6127,22 +6127,52 @@ async function anthropicFetch(fetchOptions){
     if(session?.access_token) authHeaders = { Authorization: 'Bearer ' + session.access_token };
   } catch(e){}
 
-  const r = await fetch('/api/penny', {
-    method: 'POST',
-    signal,
-    headers: { 'Content-Type': 'application/json', ...authHeaders },
-    body: JSON.stringify(groqBody)
-  });
+  const payload = JSON.stringify(groqBody);
+  const RETRY_STATUS = new Set([502, 503, 504]);
+  const CLIENT_TIMEOUT_MS = 40000;        // server budget is 30s (vercel.json maxDuration); never hang the UI past this
+  let lastErr = null;
 
-  const data = await r.json().catch(() => ({}));   // a gateway timeout returns HTML, not JSON
-  if (!r.ok) {
-    const err = new Error('HTTP ' + r.status + ': ' + (data?.error || 'Unknown error'));
-    if (data?.limitReached) { err.limitReached = true; err.limitKind = data.kind; err.friendlyMessage = data.error; }
-    throw err;
+  for(let attempt = 0; attempt < 2; attempt++){
+    // Per-attempt timeout that also honours the caller's own abort (the user pressing Stop).
+    const ctrl = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, CLIENT_TIMEOUT_MS);
+    const onUserAbort = () => ctrl.abort();
+    if(signal){ if(signal.aborted) ctrl.abort(); else signal.addEventListener('abort', onUserAbort, { once: true }); }
+
+    try {
+      const r = await fetch('/api/penny', {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: payload
+      });
+      const data = await r.json().catch(() => ({}));   // a gateway timeout returns HTML, not JSON
+      if(!r.ok){
+        const err = new Error('HTTP ' + r.status + ': ' + (data?.error || 'Unknown error'));
+        err.kind = 'http'; err.status = r.status;
+        if(data?.limitReached){ err.limitReached = true; err.limitKind = data.kind; err.friendlyMessage = data.error; }
+        if(RETRY_STATUS.has(r.status) && attempt === 0){ lastErr = err; await new Promise(res => setTimeout(res, 900)); continue; }
+        throw err;
+      }
+      if(data.visionFailed) console.warn('[Penny] the image could not be analyzed; answered from text only');
+      const text = data.text || '';
+      return { ok: true, json: async () => ({ content: [{ type: 'text', text }] }) };
+    } catch(e){
+      if(e.kind === 'http') throw e;                     // real HTTP answer from the server: classify upstream
+      if(signal?.aborted) throw e;                       // user pressed Stop: surface the AbortError untouched
+      const err = new Error(timedOut ? 'Request timed out' : (e?.message || 'Network error'));
+      err.kind = timedOut ? 'timeout' : 'network';
+      console.warn('[Penny] request failed (attempt ' + (attempt + 1) + '):', e);
+      lastErr = err;
+      if(attempt === 0 && navigator.onLine !== false){ await new Promise(res => setTimeout(res, 900)); continue; }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+      if(signal) signal.removeEventListener('abort', onUserAbort);
+    }
   }
-  if (data.visionFailed) console.warn('[Penny] the image could not be analyzed; answered from text only');
-  const text = data.text || '';
-  return { ok: true, json: async () => ({ content: [{ type: 'text', text }] }) };
+  throw lastErr || new Error('Network error');
 }
 
 let pennyAbortCtrl = null;
@@ -6538,16 +6568,30 @@ async function pennyCallAPI(){
     return;
   }
 
+  // The server rejects (HTTP 400) a history over ~24k chars or an app prompt over ~30k chars, which used to
+  // surface as a vague error in long chats. Trim the OLDEST turns client-side so a long thread keeps working.
+  const MAX_HISTORY = 20000, MAX_SYS = 29000;
+  const sizeOf = m => typeof m.content === 'string' ? m.content.length : (m.content || []).reduce((n, p) => n + (p.type === 'text' ? p.text.length : 0), 0);
+  let histChars = apiMessages.reduce((n, m) => n + sizeOf(m), 0);
+  while(apiMessages.length > 1 && histChars > MAX_HISTORY){ histChars -= sizeOf(apiMessages.shift()); }
+  while(apiMessages.length > 1 && apiMessages[0].role !== 'user') apiMessages.shift();
+
   pennyAbortCtrl = new AbortController();
   try {
+    // A bug while assembling local context must not masquerade as a connectivity problem: degrade to no app context.
+    let sysPrompt = '';
+    try { sysPrompt = String(await buildSys() || '').slice(0, MAX_SYS); }
+    catch(sysErr){ console.error('[Penny] buildSys failed; sending without app context:', sysErr); }
     const res = await anthropicFetch({
       method: 'POST', signal: pennyAbortCtrl.signal,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: await buildSys(), messages: apiMessages })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: sysPrompt, messages: apiMessages })
     });
     const data = await res.json();
     const rawTxt = data.content?.[0]?.text || 'Something went wrong. Try again.';
-    const result = pennyExecuteAddList(rawTxt);
+    let result;
+    try { result = pennyExecuteAddList(rawTxt); }
+    catch(actErr){ console.error('[Penny] action handling failed; showing the plain reply:', actErr); result = rawTxt; }
     const txt = typeof result === 'object' ? result.text : result;
     const listLink = typeof result === 'object' ? result.listLink : null;
     const compareLink = typeof result === 'object' ? !!result.compareLink : false;
@@ -6576,8 +6620,13 @@ async function pennyCallAPI(){
         msg = "Penny is sleeping right now. Please try again in a minute.";
       else if(status >= 400)
         msg = "I had trouble with that request. Please try again.";
-      else
+      else if(e.kind === 'network' || e.kind === 'timeout' || navigator.onLine === false)
         msg = "Can't reach Penny right now. Check your connection and try again.";
+      else {
+        // Not a network problem: a bug in our own code. Log it so it can be found instead of blaming the connection.
+        console.error('[Penny] unexpected client error:', e);
+        msg = "Something went wrong on my side. Please try again.";
+      }
       showToast(msg);
       pennyAddMessage('penny', msg, null, null, true /* isError */);
     }
