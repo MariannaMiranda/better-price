@@ -7306,7 +7306,7 @@ ${lines||'(none entered yet)'}
 
 STORE PRICE COMPARISONS — When the user shares a grocery list and asks you to compare prices at local stores, give realistic 2025 US price estimates for each item at each store. Always rank stores cheapest to most expensive with total basket cost. Call out the best deal clearly. Be specific with dollar amounts. Reflect real store price differences (Aldi/Walmart typically cheapest, Whole Foods/Sprouts typically most expensive). If the user has preferred stores in their profile, prioritize those. Use their zip code for regional context.
 
-ACCOUNT ACTIONS — Manage grocery lists by appending command tags at the very end of your reply. Tags are invisible to the user. Each tag type may appear AT MOST ONCE per reply — never repeat the same command.
+ACCOUNT ACTIONS — Manage grocery lists by appending command tags at the very end of your reply. Tags are invisible to the user. ALWAYS write one short, friendly sentence BEFORE a tag (for example: Of course! Let me do that for you.) and never put a command in that sentence. Write each tag EXACTLY as shown below, as valid JSON on its own final line. NEVER invent another format (such as <LIST ADD ... />) and never show command syntax to the user; the app confirms the result with its own notification. Each tag type may appear AT MOST ONCE per reply — never repeat the same command.
 
 Commands (append at end of reply):
 
@@ -7343,14 +7343,12 @@ RULE 1 — CREATING A LIST (always multi-step unless user gives everything upfro
   c. Only after you have name AND item decisions → output CREATELIST exactly once.
   Exception: if the user's message contains both name and items ("make a list called Party with chips and drinks"), create immediately.
 
-RULE 2 — ADDING ITEMS (ask THEN act — NEVER in the same message):
-  Step 1 — ASK ONLY: Your message contains ONLY the confirmation question. Zero command tags. Zero actions.
-    Example: "I'll add bread to your Bread list — sound good?"
-    If the list doesn't exist: "You don't have a Bread list yet — want me to create it and add bread?" — STOP HERE. No tags.
-    If no list was specified: ask which list by name first.
-  Step 2 — ACT ONLY: User says yes/yeah/sure/ok/yep/correct/any affirmative → NOW output the command tag. No question in this message.
+RULE 2 — ADDING ITEMS:
+  When the user clearly asks you to add something and the list is clear (they named it, or it is the only list), DO IT IMMEDIATELY in the same message: one short friendly sentence (for example "Of course! Let me do that for you.") followed by the ADDLIST tag. Do NOT ask for confirmation first.
+  Only ask a question (with NO tag in that message) when something is genuinely unclear: no list was named and there are several lists, the item is ambiguous, or the list doesn't exist yet (then offer to create it).
+  If you ask a question, wait for the answer, then act in the next message.
 
-  ⚠ ABSOLUTE RULE: A message that contains a question mark at the end of a confirmation sentence MUST NOT contain any command tag (ADDLIST, CREATELIST, etc.). Split them into two turns every time.
+  ⚠ ABSOLUTE RULE: A message that asks the user a question MUST NOT contain any command tag (ADDLIST, CREATELIST, etc.). Either ask, or act; never both in one message.
   CRITICAL: If the user names a specific list, ALWAYS use that exact list. Never override with the active list.
   WRONG LIST CORRECTION — if you added to the wrong list, fix in one message: REMOVEITEMS for wrong list + ADDLIST for correct list. Say: "My bad! Moving [item] from [wrong] to [correct] now."
 
@@ -7661,8 +7659,9 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); if(win
 
 function pennyResolveList(nameHint){
   if(!nameHint) return groceryLists.find(l => l.id === activeListId) || groceryLists[0];
-  const lower = nameHint.toLowerCase();
-  return groceryLists.find(l => l.name.toLowerCase() === lower)
+  const lower = String(nameHint).toLowerCase();
+  return groceryLists.find(l => String(l.id) === String(nameHint))
+      || groceryLists.find(l => l.name.toLowerCase() === lower)
       || groceryLists.find(l => l.name.toLowerCase().includes(lower))
       || groceryLists.find(l => lower.includes(l.name.toLowerCase()))
       || null; // never silently fall back to active list when a name was specified
@@ -7688,7 +7687,7 @@ function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
 
 function pennyMd(text){
   // Strip hidden command tags before rendering
-  let s = text.replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|LOADCOMPARE):[^\n]*/gm,'').trim();
+  let s = text.replace(/<\s*LIST[\s_-]*(?:ADD|REMOVE|DELETE|CREATE)\b[^>]*>/gi,'').replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|LOADCOMPARE):[^\n]*/gm,'').trim();
   // Escape HTML
   s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // Markdown pipe tables -> styled <table>. Pulled out into placeholders first so the inline
@@ -7753,7 +7752,25 @@ function pennyNormUnit(raw){
   return { unit: map[k] || 'count', mult: 0 };
 }
 
+// The model occasionally improvises a tag such as <LIST ADD list_id=555 item="milk" />. Convert those into the app's real
+// command lines so the action still happens, and so raw syntax never reaches the chat bubble.
+function pennyNormalizeCommands(raw){
+  const attr = (str, k) => { const m = str.match(new RegExp('\\b' + k + '\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\'|([^\\s/>]+))', 'i')); return m ? (m[1] ?? m[2] ?? m[3] ?? '') : ''; };
+  return String(raw || '').replace(/<\s*LIST[\s_-]*(ADD|REMOVE|DELETE|CREATE)\b([^>]*?)\/?\s*>/gi, (all, verb, rest) => {
+    const list = attr(rest, 'list_name') || attr(rest, 'list') || attr(rest, 'list_id') || attr(rest, 'name');
+    const names = (attr(rest, 'items') || attr(rest, 'item')).split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
+    const v = verb.toUpperCase();
+    let cmd = '';
+    if(v === 'ADD' && names.length) cmd = 'ADDLIST:' + JSON.stringify({ list, items: names.map(name => ({ name, qty: 1 })) });
+    else if(v === 'REMOVE' && names.length) cmd = 'REMOVEITEMS:' + JSON.stringify({ list, items: names });
+    else if(v === 'DELETE' && list) cmd = 'DELETELIST:' + JSON.stringify({ name: list });
+    else if(v === 'CREATE' && list) cmd = 'CREATELIST:' + JSON.stringify({ name: list, items: names.map(name => ({ name, qty: 1 })) });
+    return cmd ? '\n' + cmd + '\n' : '';
+  });
+}
+
 function pennyExecuteActions(rawText){
+  rawText = pennyNormalizeCommands(rawText);
 
 
   const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|LOADCOMPARE):(\{.+\})\s*$/gm;
@@ -7769,7 +7786,7 @@ function pennyExecuteActions(rawText){
     // the tag was malformed or truncated, so nothing was loaded; never leave the user thinking it was
     cleanText += '\n\n' + (lang==='es'?'(No pude cargar las tarjetas en Comparar esta vez. ¿Quieres que lo intente de nuevo?)':lang==='pt'?'(Não consegui carregar os cartões em Comparar desta vez. Quer que eu tente de novo?)':"(I couldn't load those into the Compare tab this time. Want me to try again?)");
   }
-  if(!commands.length) return cleanText;
+  if(!commands.length) return cleanText || (lang==='es'?'No pude hacer eso esta vez. ¿Puedes decírmelo de otra forma?':lang==='pt'?'Não consegui fazer isso desta vez. Pode dizer de outro jeito?':"I couldn't do that one. Could you say it a different way?");
 
   const toasts = [];
   let saveLists = false, saveItms = false;
@@ -7878,6 +7895,17 @@ const DESTRUCTIVE = new Set(['DELETELIST', 'CLEARCHECKED', 'REMOVEITEMS']);
   if(saveItms) saveU('gitems', groceryItems);
   if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
   if(toasts.length) showToast(toasts.join(' · '), 'ok');
+  // Never let a cheerful "Of course!" stand when nothing actually changed.
+  if(!toasts.length && !saveLists && !saveItms && !compareLink){
+    cleanText = lang==='es'?'No pude hacer eso esta vez. ¿Quieres que lo intente de nuevo?':lang==='pt'?'Não consegui fazer isso desta vez. Quer que eu tente de novo?':"I couldn't do that one. Want me to try again?";
+  }
+  // If the model sent only a command, give the user a normal sentence instead of a blank or technical bubble.
+  if(!cleanText){
+    const done = toasts.join(' · ');
+    cleanText = toasts.length
+      ? (lang==='es'?`¡Claro! Listo: ${done}.`:lang==='pt'?`Claro! Pronto: ${done}.`:`Of course! ${done}.`)
+      : (lang==='es'?'No pude hacer eso esta vez. ¿Quieres que lo intente de nuevo?':lang==='pt'?'Não consegui fazer isso desta vez. Quer que eu tente de novo?':"I couldn't do that one. Want me to try again?");
+  }
   return (listLink || compareLink) ? { text: cleanText, listLink, compareLink } : cleanText;
 }
 
@@ -8382,4 +8410,3 @@ function resetAccountView(){
 </script>
 </body>
 </html>
- 
