@@ -535,7 +535,11 @@
     setMemberRole: (hid, uid, role) => rpc('set_household_member_role', { p_household: hid, p_user: uid, p_role: role }),
     transferLeadership: (hid, uid) => rpc('transfer_household_leadership', { p_household: hid, p_user: uid }),
     async join(code) { const id = await rpc('join_household', { p_code: code }); await pull({ full: true }); return id; },
-    async leave(hid) { await rpc('leave_household', { p_household: hid }); await pull({ full: true }); },
+    async leave(hid) {
+      await rpc('leave_household', { p_household: hid });
+      // The server-side leave is done. A failed refresh is not a failed leave: log it and let the next sync catch up.
+      try { await pull({ full: true }); } catch (e) { console.warn('bp: refresh after leaving group failed (will resync):', e); }
+    },
     async delete(hid) { await rpc('delete_household', { p_household: hid }); await pull({ full: true }); },
     async removeMember(hid, uid) { await rpc('remove_household_member', { p_household: hid, p_user: uid }); },
   };
@@ -578,8 +582,18 @@
         await call(() => S.sb.from('favorite_items').update(values).eq('id', existing.id));
         return existing.id;
       }
-      const inserted = await call(() => S.sb.from('favorite_items').insert(values).select('id').single());
-      return inserted.id;
+      await call(() => S.sb.from('favorite_items').insert(values));   // return=minimal: no SELECT-policy check on the new row
+      return null;
+    },
+    // Rename a staple. name_key is what de-duplicates, so it has to follow the name.
+    async rename(id, name, householdId) {
+      const clean = String(name || '').trim().slice(0, 120);
+      if (!clean) throw new Error('Enter a staple name.');
+      const nameKey = normKey(clean);
+      let q = S.sb.from('favorite_items').select('id').eq('name_key', nameKey).neq('id', id);
+      q = householdId ? q.eq('household_id', householdId) : q.is('household_id', null);
+      if ((await call(() => q.limit(1))).length) { const e = new Error('staple_name_taken'); e.code = 'staple_name_taken'; throw e; }
+      await call(() => S.sb.from('favorite_items').update({ name: clean, name_key: nameKey }).eq('id', id));
     },
   };
 
