@@ -7198,7 +7198,7 @@ async function buildSys(){
   const nowStr = new Date().toLocaleString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
   const listContext = groceryLists.slice(0, 20).map(l => {
     const its = groceryItems.filter(gi => gi.listId === l.id);
-    const allNames = its.slice(0, 40).map(i => `${i.done ? '[done] ' : ''}${i.name} ×${i.qty || 1}`).join(', ');
+    const allNames = its.slice(0, 40).map(i => `${i.done ? '[done] ' : ''}${i.name} ×${i.qty || 1}${parseFloat(i.price) > 0 ? ' $' + parseFloat(i.price).toFixed(2) : ''}${i.store ? ' @' + i.store : ''}`).join(', ');
     const more = its.length > 40 ? `, …and ${its.length - 40} more` : '';
     return `"${l.name}" (${its.length} items${its.length ? ': ' + allNames + more : ''})`;
   }).join('\n') || 'none yet';
@@ -7310,8 +7310,11 @@ ACCOUNT ACTIONS — Manage grocery lists by appending command tags at the very e
 
 Commands (append at end of reply):
 
-Add items to an existing list:
-ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"notes":"note"}]}
+Add items to an existing list ("price" and "store" are optional; use them whenever the user gives a price or store, e.g. pineapples for 5.00 means price 5.00):
+ADDLIST:{"list":"List Name","items":[{"name":"Item","qty":1,"price":5.00,"store":"Aldi","notes":"note"}]}
+
+Edit an item that is ALREADY on a list (change its price, quantity, store, notes or name) instead of adding a second copy. Include only the fields that change:
+EDITITEM:{"list":"List Name","item":"current item name","set":{"price":5.00,"qty":2,"store":"Aldi","notes":"note","name":"New name"}}
 
 Remove items by name (partial match ok):
 REMOVEITEMS:{"list":"List Name","items":["egg","rice"]}
@@ -7352,9 +7355,13 @@ RULE 2 — ADDING ITEMS:
   CRITICAL: If the user names a specific list, ALWAYS use that exact list. Never override with the active list.
   WRONG LIST CORRECTION — if you added to the wrong list, fix in one message: REMOVEITEMS for wrong list + ADDLIST for correct list. Say: "My bad! Moving [item] from [wrong] to [correct] now."
 
-RULE 3 — DUPLICATE DETECTION:
-  Before adding, check the grocery list data above. If the same item name (case-insensitive) already exists in the target list, say: "Heads up — [item] is already in [list name]. Want me to add another one anyway, or leave it?"
-  Never add a duplicate without explicit confirmation.
+RULE 3 — EXISTING ITEMS (never create accidental duplicates):
+  The list data above shows each item with its quantity, price and store. Before adding, check whether the same product (ignore case and plural) is already in the TARGET list.
+  - If it is NOT in that list: add it (RULE 2). Put any price or store the user mentioned into the item.
+  - If it IS already there and the user just says add: send NO tag. Ask ONE short question naming what exists, for example: "You already have pineapple in My Weekly Essentials (x1, $4.00). Do you want me to edit it, or add an entirely new one?"
+  - If they say edit / update / change it, or they are clearly changing a detail of an existing item (a new price, quantity or store): use EDITITEM. Never ADDLIST a second copy to change something.
+  - If they say add another / a new one / separate: use ADDLIST with "duplicate":true on that item.
+  - To change a price or quantity the user names an item and the new value, so do it right away with EDITITEM (no confirmation needed). If several items match, ask which one.
 
 RULE 4 — BATCH COMMANDS ALLOWED:
   You CAN output multiple different command tags in a single reply when the user asks for several actions at once (e.g. "add eggs to my weekly list and apples to my fruit list"). Each command type may appear multiple times if targeting different lists.
@@ -7679,15 +7686,34 @@ function pennyEnsureList(name){
   return list;
 }
 
+// "$5", "5.00" or 5 -> "5.00"; anything unusable -> ''
+function pennyPrice(v){
+  if(v === null || v === undefined || String(v).trim() === '') return '';
+  const n = parseFloat(String(v).replace(/[^0-9.]/g, ''));
+  return (isFinite(n) && n >= 0 && n < 100000) ? n.toFixed(2) : '';
+}
+// Loose key so "Pineapples", "pineapple " and "PINEAPPLE" count as the same product.
+function pennyNameKey(name){
+  let k = String(name || '').toLowerCase().replace(/[^a-z0-9\u00c0-\u024f ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const singular = w => {
+    if(w.length <= 3) return w;
+    if(/ies$/.test(w)) return w.replace(/ies$/, 'y');            // berries -> berry
+    if(/(?:ch|sh|ss|x|z|o)es$/.test(w)) return w.replace(/es$/, ''); // peaches, tomatoes -> peach, tomato
+    if(/[^s]s$/.test(w)) return w.slice(0, -1);                   // pineapples -> pineapple
+    return w;
+  };
+  return k.split(' ').map(singular).join(' ');
+}
 function pennyMakeItem(listId, item){
-  return { id: pennyUID(), listId, name: item.name.trim(), qty: item.qty || 1, price: '', store: '', notes: item.notes || '', done: false };
+  return { id: pennyUID(), listId, name: item.name.trim(), qty: item.qty || 1, price: pennyPrice(item.price), store: String(item.store || '').trim().slice(0, 60), notes: item.notes || '', done: false };
 }
 
 function pennyExecuteAddList(rawText){ return pennyExecuteActions(rawText); }
 
 function pennyMd(text){
   // Strip hidden command tags before rendering
-  let s = text.replace(/<\s*LIST[\s_-]*(?:ADD|REMOVE|DELETE|CREATE)\b[^>]*>/gi,'').replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|LOADCOMPARE):[^\n]*/gm,'').trim();
+  let s = text.replace(/<\s*LIST[\s_-]*(?:ADD|REMOVE|DELETE|CREATE)\b[^>]*>/gi,'').replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|EDITITEM|LOADCOMPARE):[^\n]*/gm,'').trim();
+  if(!s && /<\s*LIST[\s_-]*(?:ADD|REMOVE|DELETE|CREATE)\b|\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|EDITITEM|LOADCOMPARE):/.test(text)) s = 'Done.';
   // Escape HTML
   s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // Markdown pipe tables -> styled <table>. Pulled out into placeholders first so the inline
@@ -7761,7 +7787,7 @@ function pennyNormalizeCommands(raw){
     const names = (attr(rest, 'items') || attr(rest, 'item')).split(/\s*,\s*/).map(x => x.trim()).filter(Boolean);
     const v = verb.toUpperCase();
     let cmd = '';
-    if(v === 'ADD' && names.length) cmd = 'ADDLIST:' + JSON.stringify({ list, items: names.map(name => ({ name, qty: 1 })) });
+    if(v === 'ADD' && names.length) cmd = 'ADDLIST:' + JSON.stringify({ list, items: names.map(name => ({ name, qty: 1, price: attr(rest, 'price') })) });
     else if(v === 'REMOVE' && names.length) cmd = 'REMOVEITEMS:' + JSON.stringify({ list, items: names });
     else if(v === 'DELETE' && list) cmd = 'DELETELIST:' + JSON.stringify({ name: list });
     else if(v === 'CREATE' && list) cmd = 'CREATELIST:' + JSON.stringify({ name: list, items: names.map(name => ({ name, qty: 1 })) });
@@ -7773,7 +7799,7 @@ function pennyExecuteActions(rawText){
   rawText = pennyNormalizeCommands(rawText);
 
 
-  const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|LOADCOMPARE):(\{.+\})\s*$/gm;
+  const cmdRx = /\b(ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|EDITITEM|LOADCOMPARE):(\{.+\})\s*$/gm;
   const commands = [];
   let m;
   while((m = cmdRx.exec(rawText)) !== null){
@@ -7781,7 +7807,7 @@ function pennyExecuteActions(rawText){
   }
 
   let cleanText = rawText
-    .replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|LOADCOMPARE):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
+    .replace(/^[^\n]*\b(?:ADDLIST|REMOVEITEMS|CREATELIST|DELETELIST|RENAMELIST|CLEARCHECKED|MOVEITEMS|EDITITEM|LOADCOMPARE):\{[^\n]*/gm, '').replace(/\n{3,}/g,'\n\n').trim();
   if(/LOADCOMPARE:/.test(rawText) && !commands.some(c => c.type === 'LOADCOMPARE')){
     // the tag was malformed or truncated, so nothing was loaded; never leave the user thinking it was
     cleanText += '\n\n' + (lang==='es'?'(No pude cargar las tarjetas en Comparar esta vez. ¿Quieres que lo intente de nuevo?)':lang==='pt'?'(Não consegui carregar os cartões em Comparar desta vez. Quer que eu tente de novo?)':"(I couldn't load those into the Compare tab this time. Want me to try again?)");
@@ -7789,6 +7815,7 @@ function pennyExecuteActions(rawText){
   if(!commands.length) return cleanText || (lang==='es'?'No pude hacer eso esta vez. ¿Puedes decírmelo de otra forma?':lang==='pt'?'Não consegui fazer isso desta vez. Pode dizer de outro jeito?':"I couldn't do that one. Could you say it a different way?");
 
   const toasts = [];
+  const dupeInfo = [], editNotes = [];   // questions to put to the user instead of acting blindly
   let saveLists = false, saveItms = false;
   let listLink = null; // { name, id } of last list modified — for the "View list" chip
   let compareLink = false; // true once LOADCOMPARE filled the Compare tab — for the "View in Compare" chip
@@ -7810,12 +7837,11 @@ const DESTRUCTIVE = new Set(['DELETELIST', 'CLEARCHECKED', 'REMOVEITEMS']);
         (d.items || []).forEach(item => {
           if(!item.name?.trim()) return;
           const nm = item.name.trim();
-          const isDupe = groceryItems.some(gi => gi.listId === list.id && gi.name.toLowerCase() === nm.toLowerCase());
-          if(isDupe){ dupes++; return; }
+          const existing = item.duplicate === true ? null : groceryItems.find(gi => gi.listId === list.id && pennyNameKey(gi.name) === pennyNameKey(nm));
+          if(existing){ dupes++; dupeInfo.push({ list, existing }); return; }
           groceryItems.push(pennyMakeItem(list.id, item)); n++;
         });
         if(n){ saveItms=true; listLink = { name: list.name, id: list.id }; const plural=n!==1?'s':''; const addedMsg=lang==='es'?`${n} artículo${n!==1?'s':''} agregado${n!==1?'s':''} a "${list.name}"`:lang==='pt'?`${n} item${n!==1?'ns':''} adicionado${n!==1?'s':''} em "${list.name}"`:`Added ${n} item${plural} to "${list.name}"`; toasts.push(addedMsg); }
-        if(dupes){ toasts.push(lang==='es'?`${dupes} duplicado${dupes!==1?'s':''} omitido${dupes!==1?'s':''}`:lang==='pt'?`${dupes} duplicata${dupes!==1?'s':''} ignorada${dupes!==1?'s':''}`:`${dupes} duplicate${dupes!==1?'s':''} skipped`); }
       }
       else if(cmd.type === 'CREATELIST'){
         const lid = bpId();
@@ -7876,6 +7902,27 @@ const DESTRUCTIVE = new Set(['DELETELIST', 'CLEARCHECKED', 'REMOVEITEMS']);
         compareLink = true;
         toasts.push(lang==='es'?`${cards.length} artículos cargados en Comparar`:lang==='pt'?`${cards.length} itens carregados em Comparar`:`Loaded ${cards.length} item${cards.length!==1?'s':''} into Compare`);
       }
+      else if(cmd.type === 'EDITITEM'){
+        const q = (x) => '"' + x + '"';
+        const list = pennyResolveList(d.list);
+        const target = String(d.item || d.from || '').trim();
+        if(!list || !target){ editNotes.push(lang==='es'?'No encontré esa lista o ese artículo para editarlo.':lang==='pt'?'Não encontrei essa lista ou esse item para editar.':"I couldn't find that list or item to edit."); return; }
+        const inList = groceryItems.filter(gi => gi.listId === list.id), key = pennyNameKey(target);
+        let hits = inList.filter(gi => pennyNameKey(gi.name) === key);
+        if(!hits.length) hits = inList.filter(gi => { const k = pennyNameKey(gi.name); return key && (k.includes(key) || key.includes(k)); });
+        if(!hits.length){ editNotes.push(lang==='es'?`No encontré ${q(target)} en ${q(list.name)}. ¿Quieres que lo agregue?`:lang==='pt'?`Não encontrei ${q(target)} em ${q(list.name)}. Quer que eu adicione?`:`I couldn't find ${q(target)} in ${q(list.name)}. Want me to add it instead?`); return; }
+        if(hits.length > 1){ editNotes.push(lang==='es'?`Encontré varios que coinciden con ${q(target)} en ${q(list.name)}: ${hits.map(h => h.name).join(', ')}. ¿Cuál quieres editar?`:lang==='pt'?`Encontrei vários que combinam com ${q(target)} em ${q(list.name)}: ${hits.map(h => h.name).join(', ')}. Qual você quer editar?`:`I found several matches for ${q(target)} in ${q(list.name)}: ${hits.map(h => h.name).join(', ')}. Which one do you want to edit?`); return; }
+        const it = hits[0], set = d.set || { name: d.newName, qty: d.qty, price: d.price, store: d.store, notes: d.notes };
+        const changes = [];
+        if(set.price !== undefined && set.price !== null && String(set.price).trim() !== ''){ const pr = pennyPrice(set.price); if(pr){ it.price = pr; changes.push(currSymbol + pr); } }
+        if(Number(set.qty) > 0){ it.qty = Number(set.qty); changes.push('×' + it.qty); }
+        if(typeof set.store === 'string' && set.store.trim()){ it.store = set.store.trim().slice(0, 60); changes.push('@ ' + it.store); }
+        if(typeof set.notes === 'string' && set.notes.trim()){ it.notes = set.notes.trim().slice(0, 200); changes.push(lang==='es'?'nota':lang==='pt'?'nota':'note'); }
+        if(typeof set.name === 'string' && set.name.trim() && set.name.trim() !== it.name){ it.name = set.name.trim().slice(0, 120); changes.push(lang==='es'?`nombre: ${it.name}`:lang==='pt'?`nome: ${it.name}`:`name: ${it.name}`); }
+        if(!changes.length){ editNotes.push(lang==='es'?`¿Qué quieres cambiar de ${q(it.name)}?`:lang==='pt'?`O que você quer mudar em ${q(it.name)}?`:`What would you like to change on ${q(it.name)}?`); return; }
+        saveItms = true; listLink = { name: list.name, id: list.id };
+        toasts.push((lang==='es'?`Actualizado ${q(it.name)}`:lang==='pt'?`Atualizado ${q(it.name)}`:`Updated ${q(it.name)}`) + ': ' + changes.join(', '));
+      }
       else if(cmd.type === 'MOVEITEMS'){
         const fromList = pennyResolveList(d.from);
         const toList = pennyEnsureList(d.to);
@@ -7895,8 +7942,20 @@ const DESTRUCTIVE = new Set(['DELETELIST', 'CLEARCHECKED', 'REMOVEITEMS']);
   if(saveItms) saveU('gitems', groceryItems);
   if(saveLists || saveItms){ renderListNav(); renderGroceryContent(); }
   if(toasts.length) showToast(toasts.join(' · '), 'ok');
+  const asks = [];
+  dupeInfo.slice(0, 3).forEach(({ list, existing }) => {
+    const pr = parseFloat(existing.price) > 0 ? ', ' + currSymbol + parseFloat(existing.price).toFixed(2) : '';
+    const detail = ' (×' + (existing.qty || 1) + pr + ')';
+    asks.push(lang==='es'?`Ya tienes "${existing.name}" en "${list.name}"${detail}. ¿Quieres que lo edite o que agregue uno completamente nuevo?`
+      :lang==='pt'?`Você já tem "${existing.name}" em "${list.name}"${detail}. Quer que eu edite ou adicione um totalmente novo?`
+      :`You already have "${existing.name}" in "${list.name}"${detail}. Do you want me to edit it, or add an entirely new one?`);
+  });
+  asks.push(...editNotes);
+  if(asks.length){
+    cleanText = (toasts.length && cleanText ? cleanText + '\n\n' : '') + asks.join('\n\n');
+  }
   // Never let a cheerful "Of course!" stand when nothing actually changed.
-  if(!toasts.length && !saveLists && !saveItms && !compareLink){
+  if(!asks.length && !toasts.length && !saveLists && !saveItms && !compareLink){
     cleanText = lang==='es'?'No pude hacer eso esta vez. ¿Quieres que lo intente de nuevo?':lang==='pt'?'Não consegui fazer isso desta vez. Quer que eu tente de novo?':"I couldn't do that one. Want me to try again?";
   }
   // If the model sent only a command, give the user a normal sentence instead of a blank or technical bubble.
