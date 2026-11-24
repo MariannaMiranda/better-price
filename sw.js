@@ -4,7 +4,7 @@
  * - NEVER cached/intercepted: /api/*, Supabase, Stripe, Groq, non-GET. Data sync is done by the page (outbox in
  *   localStorage), not here, so there is no Background Sync dependency (iOS Safari doesn't support it).
  * Bump VERSION on every deploy that changes the precache list. */
-const VERSION = 'bp-v3';
+const VERSION = 'bp-v4';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 const SAME_ORIGIN_PRECACHE = ['/', '/manifest.webmanifest', '/bp-store.js', '/bp-ui.js', '/favicon.svg', '/apple-touch-icon.png',
