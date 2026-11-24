@@ -686,7 +686,17 @@
     add: d => call(() => S.sb.from('deals').insert(d).select().single()),
     update: (id, d) => call(() => S.sb.from('deals').update(d).eq('id', id).select().single()),
     clip: (id, clipped) => call(() => S.sb.from('deals').update({ clipped }).eq('id', id)),
-    remove: id => call(() => S.sb.from('deals').update({ deleted_at: new Date().toISOString() }).eq('id', id)),
+    async remove(id) {
+      // Soft delete first. If the database refuses it (policy/constraint on UPDATE) or touches no row, fall back to a hard delete
+      // and only report success when a row was really removed, so the UI never claims a delete that did not happen.
+      let rows = null;
+      try { rows = await call(() => S.sb.from('deals').update({ deleted_at: new Date().toISOString() }).eq('id', id).select('id')); }
+      catch (e) { console.warn('deal soft delete failed, trying hard delete', e); }
+      if (Array.isArray(rows) && rows.length) return rows;
+      const gone = await call(() => S.sb.from('deals').delete().eq('id', id).select('id'));
+      if (!Array.isArray(gone) || !gone.length) throw new Error('deal_delete_failed');
+      return gone;
+    },
     matchesForList: listId => call(() => S.sb.rpc('bp_match_deals', { p_list: listId })),
   };
 
