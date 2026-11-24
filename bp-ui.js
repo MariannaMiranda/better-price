@@ -109,7 +109,7 @@
       copy: 'Copy', name_truncated: '{name}',
       list_link: 'List (optional)', product_link: 'Product (optional)', no_link: 'None',
       dc_expired: 'Expired', name_truncated: '{name}',
-      dc_ad: 'Weekly ad', dc_coupon: 'Coupon', dc_regular: 'Regular', dc_effective: 'effective', dc_per_pack: 'per pack',
+      dc_ad: 'Weekly ad', dc_coupon: 'Coupon', dc_regular: 'Regular', dc_effective: 'effective', dc_per_pack: 'per pack', dc_for_packs: 'for {n} packs', dc_each_pack: '{price} per pack', joining: 'Joining…',
       dc_unsupported: 'Unit not supported', dc_ends: 'Ends {date}', dc_ends_today: 'Ends today', dc_ends_tomorrow: 'Ends tomorrow',
       dc_best: 'Best deal', dc_clip_needed: 'Clip to use', dc_vs_best: 'Your best {price}/{unit}',
       dc_more_one: '+{n} more deal', dc_more_other: '+{n} more deals',
@@ -255,7 +255,7 @@
       ph_dv: 'Valor del descuento / compra X', ph_get: 'Lleva Y (2x1)', valid_until_aria: 'Válido hasta',
       add_note: 'Ingresa por separado el precio en estante y el descuento; el precio unitario efectivo se calcula por ti. No se usan datos de minoristas.',
       add_deal: 'Agregar oferta',
-      dc_ad: 'Folleto semanal', dc_coupon: 'Cupón', dc_regular: 'Regular', dc_effective: 'efectivo', dc_per_pack: 'por paquete',
+      dc_ad: 'Folleto semanal', dc_coupon: 'Cupón', dc_regular: 'Regular', dc_effective: 'efectivo', dc_per_pack: 'por paquete', dc_for_packs: 'por {n} paquetes', dc_each_pack: '{price} por paquete', joining: 'Uniéndose…',
       dc_unsupported: 'Unidad no compatible', dc_ends: 'Termina {date}', dc_ends_today: 'Termina hoy', dc_ends_tomorrow: 'Termina mañana',
       dc_best: 'Mejor oferta', dc_clip_needed: 'Actívalo para usarlo', dc_vs_best: 'Tu mejor {price}/{unit}',
       dc_more_one: '+{n} oferta más', dc_more_other: '+{n} ofertas más',
@@ -402,7 +402,7 @@
       ph_dv: 'Valor do desconto / leve X', ph_get: 'Ganhe Y (leve+ganhe)', valid_until_aria: 'Válido até',
       add_note: 'Informe o preço da prateleira e o desconto separadamente; o preço unitário efetivo é calculado para você. Nenhum feed de varejista é usado.',
       add_deal: 'Adicionar oferta',
-      dc_ad: 'Encarte semanal', dc_coupon: 'Cupom', dc_regular: 'Normal', dc_effective: 'efetivo', dc_per_pack: 'por pacote',
+      dc_ad: 'Encarte semanal', dc_coupon: 'Cupom', dc_regular: 'Normal', dc_effective: 'efetivo', dc_per_pack: 'por pacote', dc_for_packs: 'por {n} pacotes', dc_each_pack: '{price} por pacote', joining: 'Entrando…',
       dc_unsupported: 'Unidade não compatível', dc_ends: 'Termina {date}', dc_ends_today: 'Termina hoje', dc_ends_tomorrow: 'Termina amanhã',
       dc_best: 'Melhor oferta', dc_clip_needed: 'Ative para usar', dc_vs_best: 'Seu melhor {price}/{unit}',
       dc_more_one: '+{n} oferta a mais', dc_more_other: '+{n} ofertas a mais',
@@ -618,6 +618,9 @@
   .bpx-select-scroll{max-height:160px;overflow:auto}
   .bpx-rep-add{display:grid;grid-template-columns:1fr auto;gap:7px;margin:10px 0}
   .bpx-rep-actions{display:flex;gap:6px;flex:none;align-items:center}
+  .bpx-inline-err{color:var(--danger,#dc2626);font-weight:600;margin-top:6px}.bpx-inline-err[hidden]{display:none}
+  .bpx-rep .bpx-grow{flex:1 1 140px;overflow-wrap:anywhere}
+  @media (max-width:420px){.bpx-rep .bpx-grow{flex:1 1 calc(100% - 40px)}.bpx-rep .bpx-rep-actions{margin-left:auto}}
   .bpx-rep-add input{min-width:0}
   `;
 
@@ -818,8 +821,18 @@
       if (a === 'back') return showTab('book');
       if (a === 'readalerts') { await bp.price.markAlertsRead(); alertCount = 0; setBadge(); return showTab('book'); }
       if (a === 'settarget') return saveTarget(el.dataset.k);
-      if (a === 'deltarget') { await bp.price.deleteTarget(el.dataset.id); toast(tr('t_removed'), 'ok'); return renderProduct(el.dataset.k); }
-      if (a === 'delentry') { await bp.price.remove(el.dataset.id); toast(tr('p_removed'), 'ok'); return renderProduct(el.dataset.k); }
+      if (a === 'deltarget') {
+        await bp.price.deleteTarget(el.dataset.id);
+        pbTargets = (pbTargets || []).filter(x => String(x.id) !== String(el.dataset.id));   // renderProduct reads this cache
+        try { pbTargets = await bp.price.targets(); } catch (e) { /* offline: keep the local removal */ }
+        if ((pbTargets || []).some(x => String(x.id) === String(el.dataset.id))) { toast(tr('e_generic')); return renderProduct(el.dataset.k); }
+        toast(tr('t_removed'), 'ok'); return renderProduct(el.dataset.k);
+      }
+      if (a === 'delentry') {
+        await bp.price.remove(el.dataset.id);
+        pbRows = (pbRows || []).filter(r => String(r.id) !== String(el.dataset.id));          // same stale-cache problem as alerts
+        toast(tr('p_removed'), 'ok'); return renderProduct(el.dataset.k);
+      }
       if (a === 'toggle') {                                   // Deals tab: reveal one secondary panel at a time
         const open = document.getElementById(el.dataset.t).hidden;
         ['dlAddPanel'].forEach(id => {
@@ -858,13 +871,13 @@
         const role = a === 'setrole' ? el.value : el.dataset.role;
         if (a === 'setrole') el.value = el.dataset.currentRole;     // show the old role until the change is confirmed
         el.closest('details')?.removeAttribute('open');
-        return askConfirm(tr('role_confirm_title'), tr('role_confirm_msg'), async () => {
+        return askConfirm(tr('role_confirm_title'), tr('role_confirm_msg') + (el.dataset.label ? ' (' + el.dataset.label + ')' : ''), async () => {
           await bp.households.setMemberRole(hid, uid, role);
           toast(tr('member_role_saved'), 'ok'); await showTab('house');
         });
       }
       if (a === 'transfer') {
-        return askConfirm(tr('transfer_leadership'), tr('confirm_transfer'), async () => {
+        return askConfirm(tr('transfer_leadership'), tr('confirm_transfer') + (el.dataset.label ? ' (' + el.dataset.label + ')' : ''), async () => {
           await bp.households.transferLeadership(el.dataset.hid, el.dataset.uid);
           toast(tr('leadership_transferred'), 'ok'); await showTab('house');
         });
@@ -884,7 +897,7 @@
         });
       }
       if (a === 'kick') {
-        return askConfirm(tr('remove'), tr('confirm_kick'), async () => {
+        return askConfirm(tr('remove'), tr('confirm_kick') + (el.dataset.label ? ' (' + el.dataset.label + ')' : ''), async () => {
           await bp.households.removeMember(el.dataset.hid, el.dataset.uid);
           toast(tr('member_removed'), 'ok'); await showTab('house');
         });
@@ -1031,7 +1044,10 @@
     const coupon = d.kind === 'coupon', needClip = coupon && !d.clipped, ends = endsText(d), good = diff != null && diff < -1;
     const cls = ['bpx-dc', good ? 'good' : '', needClip ? 'needclip' : ''].filter(Boolean).join(' ');
     const how = [howText(d)];
-    if (e) how.push(`${h(tr('dc_regular'))} <s>${money2(d.pkg_price, cur)}</s> → <b>${money2(e.net, cur)}</b> ${h(tr('dc_per_pack'))}`); else how.push('');
+    const packs = +d.pkg_qty > 1 ? +d.pkg_qty : 1;
+    if (e) how.push(packs > 1
+      ? `${h(tr('dc_regular'))} <s>${money2(d.pkg_price, cur)}</s> → <b>${money2(e.net, cur)}</b> ${h(tr('dc_for_packs', { n: packs }))} (${h(tr('dc_each_pack', { price: money2(e.net / packs, cur) }))})`
+      : `${h(tr('dc_regular'))} <s>${money2(d.pkg_price, cur)}</s> → <b>${money2(e.net, cur)}</b> ${h(tr('dc_per_pack'))}`); else how.push('');
     const howHtml = h(how[0]) + (e ? ' · ' + how[1] : '') + (d.discount_type === 'bogo' ? ` <span title="${h(tr('bogo_note'))}">*</span>` : '');
     return `<div class="${cls}" role="group" aria-label="${h(d.product_name)}">
       <div class="bpx-dc-l">
@@ -1220,21 +1236,28 @@
       return `<div class="bpx-card"><div class="bpx-row bpx-group-head"><div class="bpx-grow bpx-name">${h(x.name)}</div><div class="bpx-group-actions"><button class="bpx-gear-btn" type="button" data-a="groupmenu" data-id="${h(x.id)}" aria-label="${h(tr('group_settings'))}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button><div class="bpx-group-menu" id="bpxMenu${h(x.id)}" hidden role="menu">${owner ? `<button type="button" role="menuitem" data-a="renamegroup" data-id="${h(x.id)}" data-name="${h(x.name)}">${h(tr('rename_group'))}</button><button type="button" role="menuitem" data-a="invite" data-id="${h(x.id)}">${h(tr('invite'))}</button>` : ''}<button type="button" role="menuitem" data-a="leave" data-id="${h(x.id)}" data-owner="${owner}">${h(tr('leave'))}</button>${owner ? `<button type="button" class="d" role="menuitem" data-a="deletegroup" data-id="${h(x.id)}">${h(tr('delete_group'))}</button>` : ''}</div></div></div>
         <div class="bpx-roles-note">${h(tr('roles_help'))}</div>
         <div id="bpxInv${h(x.id)}"></div>
-        ${x.members.map(m => {
+        ${(() => {
+          // Masked emails can collide (m***@gmail.com twice). Number the duplicates so the owner knows which member an action hits.
+          const seen = {}, base = x.members.map(m => firstName(m) + '|' + m.role);
+          x.members.forEach((m, i) => { m._dup = base.filter(b => b === base[i]).length > 1 ? (seen[base[i]] = (seen[base[i]] || 0) + 1) : 0; });
+          return '';
+        })()}${x.members.map(m => {
           const role = m.role === 'owner' ? 'leader' : m.role === 'checker' ? 'checker' : 'editor';
+          const label = firstName(m) + (m._dup ? ' #' + m._dup : '');
           const controls = owner && !m.is_me
-            ? `<details class="bpx-member-edit-wrap"><summary class="bpx-btn">${h(tr('edit_member'))}</summary><div class="bpx-member-menu" role="menu">${role !== 'editor' ? `<button type="button" role="menuitem" data-a="setmemberrole" data-role="editor" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('editor'))}</button>` : ''}${role !== 'checker' ? `<button type="button" role="menuitem" data-a="setmemberrole" data-role="checker" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('checker'))}</button>` : ''}<button type="button" role="menuitem" data-a="transfer" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('make_leader'))}</button><button type="button" class="d" role="menuitem" data-a="kick" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}">${h(tr('remove'))}</button></div></details>`
+            ? `<details class="bpx-member-edit-wrap"><summary class="bpx-btn" aria-label="${h(tr('edit_member') + ': ' + label)}">${h(tr('edit_member'))}</summary><div class="bpx-member-menu" role="menu"><div class="bpx-note" style="margin:0 0 4px;font-weight:700">${h(label)}</div>${role !== 'editor' ? `<button type="button" role="menuitem" data-a="setmemberrole" data-role="editor" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}" data-label="${h(label)}">${h(tr('editor'))}</button>` : ''}${role !== 'checker' ? `<button type="button" role="menuitem" data-a="setmemberrole" data-role="checker" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}" data-label="${h(label)}">${h(tr('checker'))}</button>` : ''}<button type="button" role="menuitem" data-a="transfer" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}" data-label="${h(label)}">${h(tr('make_leader'))}</button><button type="button" class="d" role="menuitem" data-a="kick" data-hid="${h(x.id)}" data-uid="${h(m.user_id)}" data-label="${h(label)}">${h(tr('remove'))}</button></div></details>`
             : '';
-          return `<div class="bpx-member-row"><span class="bpx-member-name">${h(firstName(m))}${m.is_me ? ' ' + h(tr('you')) : ''} · ${h(tr(role))}</span>${controls}</div>`;
+          return `<div class="bpx-member-row"><span class="bpx-member-name">${h(label)}${m.is_me ? ' ' + h(tr('you')) : ''} · ${h(tr(role))}</span>${controls}</div>`;
         }).join('')}</div>`;
     }).join('') : `<div class="bpx-note">${h(tr('hh_intro'))}</div>`;
     html += `<div class="bpx-card"><span class="bpx-lbl" style="margin-top:0">${h(tr('hh_create_lbl'))}</span><div class="bpx-note">${h(tr('groups_independent_note'))}</div><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhName" maxlength="80" placeholder="${h(tr('hh_ph'))}"><button class="bpx-btn p" data-a="mkhouse">${h(tr('create'))}</button></div>
-      <span class="bpx-lbl">${h(tr('join_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhCode" maxlength="16" autocapitalize="characters" placeholder="${h(tr('code_ph'))}"><button class="bpx-btn" data-a="joinhouse">${h(tr('join'))}</button></div></div>`;
+      <span class="bpx-lbl">${h(tr('join_lbl'))}</span><div class="bpx-row"><input class="bpx-in bpx-grow" id="hhCode" maxlength="16" autocapitalize="characters" placeholder="${h(tr('code_ph'))}" oninput="var e=document.getElementById('hhJoinErr');if(e)e.hidden=true"><button class="bpx-btn" data-a="joinhouse">${h(tr('join'))}</button></div><div class="bpx-note bpx-inline-err" id="hhJoinErr" role="alert" hidden></div></div>`;
     const shareableGroups = hs.filter(canShareIn);
-    const manageable = lists.filter(l => l.ownerId === me || (l.householdId && hs.some(x => String(x.id) === String(l.householdId) && canShareIn(x))));
+    const isMine = l => !l.ownerId || l.ownerId === me;     // a list created a moment ago has no ownerId yet
+    const manageable = lists.filter(l => isMine(l) || (l.householdId && hs.some(x => String(x.id) === String(l.householdId) && canShareIn(x))));
     if (hs.length && manageable.length) {
       html += `<span class="bpx-lbl">${h(tr('share_lbl'))}</span>` + manageable.map(l => {
-        const options = shareableGroups.filter(x => l.ownerId === me || String(l.householdId) === String(x.id));
+        const options = shareableGroups.filter(x => isMine(l) || String(l.householdId) === String(x.id));
         if (!options.length) return '';
         return `<div class="bpx-row" style="margin-bottom:6px"><span class="bpx-grow bpx-name">${h(l.name)}</span>
           <select class="bpx-in" style="width:auto" data-share="${h(l.id)}" aria-label="${h(tr('share_aria', { name: l.name }))}"><option value="">${h(tr('just_me'))}</option>${options.map(x => `<option value="${h(x.id)}"${String(l.householdId) === String(x.id) ? ' selected' : ''}>${h(x.name)}</option>`).join('')}</select></div>`;
@@ -1244,7 +1267,23 @@
     $$('select[data-share]', body()).forEach(sel => sel.onchange = () => { try { bp.shareList(sel.dataset.share, sel.value || null); toast(tr(sel.value ? 'shared' : 'private'), 'ok'); } catch (e) { toast(e.message); } });
   }
   async function mkHouse() { const n = $('#hhName').value.trim(); if (!n) return toast(tr('need_hh_name')); const group = await bp.households.create(n); toast(tr('hh_created_named', { name: group.name }), 'ok'); showTab('house'); }
-  async function joinHouse() { const c = $('#hhCode').value.trim(); if (!c) return toast(tr('need_code')); await bp.households.join(c); toast(tr('hh_joined'), 'ok'); showTab('house'); }
+  async function joinHouse() {
+    const inp = $('#hhCode'), err = $('#hhJoinErr'), btn = $('[data-a="joinhouse"]');
+    const show = m => { if (err) { err.textContent = m; err.hidden = !m; } if (inp) inp.setAttribute('aria-invalid', m ? 'true' : 'false'); };
+    const c = inp.value.trim().toUpperCase();
+    show('');
+    if (!c) { show(tr('need_code')); inp.focus(); return toast(tr('need_code')); }
+    const label = btn && btn.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = tr('joining'); }
+    try { await bp.households.join(c); }
+    catch (e) {
+      console.error(e);
+      const m = errMsg(e);
+      show(m); toast(m, ''); inp.focus(); inp.select();
+      return;
+    } finally { if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = label; } }
+    toast(tr('hh_joined'), 'ok'); showTab('house');
+  }
 
   const canEditGroup = x => x.members.some(m => m.is_me && ['owner', 'editor'].includes(m.role));
   async function copyCode(code) {
@@ -1260,7 +1299,7 @@
       const favs = await bp.favorites.list(list && list.householdId);
       const onList = new Set((ui.host.listItems(lid) || []).map(i => bp.normKey(i.name)));
       const rows = favs.filter(f => !onList.has(f.name_key));
-      b.innerHTML = `<div class="bpx-note">${h(tr('rep_help'))}</div><div class="bpx-note">${h(tr('rep_note'))}</div><form class="bpx-rep-add" id="bpxRepAdd"><input class="bpx-in" id="bpxRepName" maxlength="120" placeholder="${h(tr('rep_custom_ph'))}" aria-label="${h(tr('rep_custom_ph'))}" required><button class="bpx-btn" type="submit">${h(tr('rep_add_custom'))}</button></form>${rows.length ? `${rows.map((f, i) => `<label class="bpx-card bpx-row"><input type="checkbox" data-i="${i}"${f.pinned || f.add_count > 1 ? ' checked' : ''}>
+      b.innerHTML = `<div class="bpx-note">${h(tr('rep_help'))}</div><div class="bpx-note">${h(tr('rep_note'))}</div><form class="bpx-rep-add" id="bpxRepAdd"><input class="bpx-in" id="bpxRepName" maxlength="120" placeholder="${h(tr('rep_custom_ph'))}" aria-label="${h(tr('rep_custom_ph'))}" required><button class="bpx-btn" type="submit">${h(tr('rep_add_custom'))}</button></form>${rows.length ? `${rows.map((f, i) => `<label class="bpx-card bpx-row bpx-rep"><input type="checkbox" data-i="${i}"${f.pinned || f.add_count > 1 ? ' checked' : ''}>
         <span class="bpx-grow"><span class="bpx-name">${h(f.name)}</span><br><span class="bpx-sub">${h(tr('rep_bought', { n: f.add_count, date: fmtDate(f.last_added_at.slice(0, 10)) }))}${f.default_store ? ' · ' + h(f.default_store) : ''}</span></span>
         <button class="bpx-btn" data-pin="${h(f.id)}" data-v="${f.pinned ? 0 : 1}" aria-label="${h(tr(f.pinned ? 'unpin_aria' : 'pin_aria', { name: f.name }))}">${h(tr(f.pinned ? 'unpin' : 'pin'))}</button>
         <span class="bpx-rep-actions"><button class="bpx-btn" data-ren="${h(f.id)}" data-name="${h(f.name)}" aria-label="${h(tr('rep_rename_aria', { name: f.name }))}">${h(tr('rep_rename'))}</button>
