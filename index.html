@@ -1298,7 +1298,7 @@ body.dark .bm-num{color:#34d399;}
         <div id="fpTitle" style="font-size:22px;font-weight:800;margin-bottom:6px;">Reset your password</div>
         <div id="fpSub" style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;">Enter the email you signed up with and we'll send you a link to choose a new password.</div>
         <div class="input-wrap">
-          <input class="auth-input" type="email" id="fpEmail" placeholder="Email" autocomplete="email" onkeydown="if(event.key==='Enter')sendPasswordReset()">
+          <input class="auth-input" type="email" id="fpEmail" placeholder="Email" autocomplete="email" oninput="clearErrs()" onkeydown="if(event.key==='Enter')sendPasswordReset()">
           <div class="err-bubble" id="err-fpemail"><span class="err-icon">!</span><span class="msg"></span></div>
         </div>
         <button class="auth-btn" id="fpBtn" onclick="sendPasswordReset()">Send reset link</button>
@@ -3578,12 +3578,16 @@ function openForgotPassword(){
 function closeForgotPassword(){ _authShowOnly('main'); setMode('login'); }
 let _fpTimer = null;
 async function sendPasswordReset(){
-  const email = document.getElementById('fpEmail').value.trim().toLowerCase();
+  const fpInput = document.getElementById('fpEmail');
+  const email = fpInput.value.trim().toLowerCase();
   const t = T();
-  if(!email) return showErr('fpemail', t.errEmailReq);
-  if(!email.includes('@')) return showErr('fpemail', t.errEmailAt);
+  // Inline message under the field, plus a toast in case the bubble is off-screen, and focus so the user can fix it right away.
+  const fpFail = msg => { showErr('fpemail', msg); showToast(msg, ''); try{ fpInput.focus(); }catch(e){} };
+  if(!email) return fpFail(_t3('Please enter your email address.', 'Ingresa tu dirección de correo electrónico.', 'Informe seu endereço de e-mail.'));
+  if(!email.includes('@')) return fpFail(t.errEmailAt);
   const dom = email.split('@')[1] || '';
-  if(!dom || !dom.includes('.')) return showErr('fpemail', t.errEmailExt);
+  if(!dom || !dom.includes('.')) return fpFail(t.errEmailExt);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fpFail(_t3('Please enter a valid email address.', 'Ingresa un correo electrónico válido.', 'Informe um e-mail válido.'));
   const btn = document.getElementById('fpBtn'), msg = document.getElementById('fpMsg');
   btn.disabled = true;
   try {
