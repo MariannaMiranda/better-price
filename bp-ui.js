@@ -123,7 +123,7 @@
 
       hh_intro: 'Create a group for a home, office, daycare, restaurant, or any team that shares shopping lists.',
       invite: 'Invite', invite_again: 'New code', leave: 'Leave group', you: '(you)', owner: 'Leader', member: 'List Editor',
-      delete_group: 'Delete group', confirm_delete_group: 'Delete this group for everyone? Shared lists will become private for their owners.',
+      confirm_delete_deal: 'Are you sure you want to delete this offer?', delete_group: 'Delete group', confirm_delete_group: 'Delete this group for everyone? Shared lists will become private for their owners.',
       confirm_leave_owner: 'Leave this group? The longest-standing List Editor will become the new Leader. Your lists will become private.',
       group_left: 'You left the group.', group_deleted: 'Group deleted.',
       member_removed: 'Member removed.', member_role_saved: 'Member role updated.',
@@ -269,7 +269,7 @@
 
       hh_intro: 'Crea un grupo para un hogar, oficina, guardería, restaurante o cualquier equipo que comparta listas de compras.',
       invite: 'Invitar', invite_again: 'Nuevo código', leave: 'Salir del grupo', you: '(tú)', owner: 'Líder', member: 'Editor de listas',
-      delete_group: 'Eliminar grupo', confirm_delete_group: '¿Eliminar este grupo para todos? Las listas compartidas volverán a ser privadas para sus propietarios.',
+      confirm_delete_deal: '¿Seguro que quieres eliminar esta oferta?', delete_group: 'Eliminar grupo', confirm_delete_group: '¿Eliminar este grupo para todos? Las listas compartidas volverán a ser privadas para sus propietarios.',
       confirm_leave_owner: '¿Salir del grupo? El editor de listas que lleve más tiempo será el nuevo líder. Tus listas volverán a ser privadas.',
       group_left: 'Saliste del grupo.', group_deleted: 'Grupo eliminado.',
       member_removed: 'Se eliminó al miembro.', member_role_saved: 'Se actualizó el rol.',
@@ -416,7 +416,7 @@
 
       hh_intro: 'Crie um grupo para uma casa, escritório, creche, restaurante ou qualquer equipe que compartilhe listas de compras.',
       invite: 'Convidar', invite_again: 'Novo código', leave: 'Sair do grupo', you: '(você)', owner: 'Líder', member: 'Editor de listas',
-      delete_group: 'Excluir grupo', confirm_delete_group: 'Excluir este grupo para todos? As listas compartilhadas voltarão a ser privadas para seus proprietários.',
+      confirm_delete_deal: 'Tem certeza de que deseja excluir esta oferta?', delete_group: 'Excluir grupo', confirm_delete_group: 'Excluir este grupo para todos? As listas compartilhadas voltarão a ser privadas para seus proprietários.',
       confirm_leave_owner: 'Sair do grupo? O Editor de listas com mais tempo no grupo será o novo Líder. Suas listas voltarão a ser privadas.',
       group_left: 'Você saiu do grupo.', group_deleted: 'Grupo excluído.',
       member_removed: 'Membro removido.', member_role_saved: 'Função atualizada.',
@@ -851,7 +851,12 @@
       if (a === 'adddeal' || a === 'savedeal') return submitDeal();
       if (a === 'editdeal') return beginEditDeal(el.dataset.id);
       if (a === 'clip') { await bp.deals.clip(el.dataset.id, el.dataset.v === '1'); patchCachedDeal(el.dataset.id, { clipped: el.dataset.v === '1' }); return showTab('deals'); }
-      if (a === 'deldeal') { await bp.deals.remove(el.dataset.id); mcache.forEach(c => { c.at = 0; }); return showTab('deals'); }
+      if (a === 'deldeal') {
+        const dealId = el.dataset.id;
+        return askConfirm(tr('delete'), tr('confirm_delete_deal'), async () => {
+          await bp.deals.remove(dealId); mcache.forEach(c => { c.at = 0; }); await showTab('deals');
+        });
+      }
       if (a === 'dealtocompare') return dealToCompare(el.dataset.id);
       if (a === 'mkhouse') return mkHouse();
       if (a === 'joinhouse') return joinHouse();
